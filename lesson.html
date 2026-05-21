@@ -6,7 +6,6 @@
 <title id="pageTitle">Lekcja</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Lato:wght@400;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="supabase-client.js"></script>
 <style>
@@ -131,11 +130,7 @@ tr:nth-child(even) td{background:#f7f9ff}
 .mw-en{color:#555;font-size:0.9rem}
 .mw-del{background:none;border:1px solid #ddd;border-radius:6px;padding:3px 8px;font-size:0.75rem;cursor:pointer;color:#888}
 .mw-del:hover{background:#ffebee;border-color:var(--red);color:var(--red)}
-.submit-bar{background:white;border-top:3px solid var(--blue);padding:1.5rem;text-align:center;position:sticky;bottom:0;box-shadow:0 -4px 20px rgba(0,0,0,0.1)}
-.submit-bar p{color:#555;font-size:0.9rem;margin-bottom:0.8rem}
-.submit-btn{background:var(--green);color:white;border:none;border-radius:10px;padding:14px 32px;font-family:'Nunito',sans-serif;font-weight:900;font-size:1rem;cursor:pointer;transition:all 0.2s}
-.submit-btn:hover{background:#05b889;transform:translateY(-2px)}
-.score-line{font-family:'Nunito',sans-serif;font-size:1rem;color:var(--blue);font-weight:700;margin-bottom:0.4rem}
+.save-indicator{color:rgba(255,255,255,0.55);font-size:0.75rem;padding:0 10px;white-space:nowrap;font-family:'Nunito',sans-serif;font-weight:700;transition:opacity 0.6s;opacity:0;flex-shrink:0}
 .loading{text-align:center;padding:3rem;font-size:1.5rem;color:var(--blue-mid)}
 .err-box{background:#ffebee;border:2px solid var(--red);border-radius:12px;padding:2rem;margin:2rem auto;max-width:500px;text-align:center;color:var(--red)}
 .poss-m{color:var(--blue);font-weight:700}
@@ -152,13 +147,9 @@ tr:nth-child(even) td{background:#f7f9ff}
 <div class="nav-bar">
   <a href="index.html" class="back-btn">&#8592; Lekcje</a>
   <nav class="nav-tabs" id="navTabs"></nav>
+  <div class="save-indicator" id="saveStatus"></div>
 </div>
 <div id="mainContent"><div class="loading">&#128218; Ładowanie lekcji...</div></div>
-<div class="submit-bar" id="submitBar" style="display:none">
-  <div class="score-line" id="scoreDisp">Wypełnij ćwiczenia i wyślij wyniki nauczycielowi.</div>
-  <p>Gotowe? Wyślij wyniki do nauczyciela!</p>
-  <button class="submit-btn" id="sendBtn">&#128228; Wyślij wyniki</button>
-</div>
 
 <script>
 // ── SECURITY: sanitize teacher-authored HTML (strips scripts/event handlers) ──
@@ -183,7 +174,6 @@ function txt(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replac
 
 // ── STATE ──
 let lesson = null;
-let globalConfig = null;
 const QUIZ_DATA = {}; // keyed by questionId → {answer, options}
 const FILL_DATA = {}; // keyed by fillId    → {answer}
 let quizAnswered = {};
@@ -191,6 +181,7 @@ let fillChecked  = {};
 let writeTexts   = {};
 let fcStats      = {known:0, unknown:0};
 let fcIdx        = 0;
+let checklistState = {};
 
 // ── INIT ──
 document.addEventListener('DOMContentLoaded', async () => {
@@ -202,22 +193,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   const id = new URLSearchParams(location.search).get('id');
   if (!id) { showErr('Brak parametru ?id= w URL. Wróć do <a href="index.html">listy lekcji</a>.'); return; }
   try {
-    const [cfgResult, lessonResult] = await Promise.all([
-      sb.from('config').select('*').eq('id', 1).single(),
-      sb.from('lessons').select('*').eq('id', id).single()
-    ]);
+    const progressQuery = storedId
+      ? sb.from('lesson_progress').select('*').eq('student_id', storedId).eq('lesson_id', id).maybeSingle()
+      : Promise.resolve({data: null});
 
-    if (cfgResult.data) {
-      const c = cfgResult.data;
-      globalConfig = {
-        emailjs: {
-          publicKey:  c.emailjs_public_key,
-          serviceId:  c.emailjs_service_id,
-          templateId: c.emailjs_template_id,
-          toEmail:    c.emailjs_to_email
-        }
-      };
-    }
+    const [lessonResult, progressResult] = await Promise.all([
+      sb.from('lessons').select('*').eq('id', id).single(),
+      progressQuery
+    ]);
 
     if (lessonResult.error || !lessonResult.data) {
       throw new Error('Nie znaleziono lekcji "' + id + '"');
@@ -226,13 +209,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const row = lessonResult.data;
     lesson = {
       id:           row.id,
-      studentCode:  row.student_code,
-      studentName:  row.student_name,
       title:        row.title,
       subtitle:     row.subtitle,
       level:        row.level,
-      lessonNumber: row.lesson_number,
-      date:         row.date,
       headerEmoji:  row.header_emoji,
       tabs:         row.tabs || [],
       vocabulary:   row.vocabulary,
@@ -244,9 +223,25 @@ document.addEventListener('DOMContentLoaded', async () => {
       speaking:     row.speaking
     };
 
-    // Verify lesson belongs to logged-in student
-    if (lesson.studentCode && lesson.studentCode.toLowerCase() !== storedCode.toLowerCase()) {
-      location.replace('index.html'); return;
+    // Restore saved progress from DB
+    if (progressResult.data) {
+      const prog = progressResult.data;
+      if (prog.mywords) localStorage.setItem('mw_' + id, JSON.stringify(prog.mywords));
+      if (prog.exercises) {
+        (prog.exercises.quiz || []).forEach(q => {
+          quizAnswered[q.question] = {correct:q.correct, chosen:q.chosen, answer:q.answer};
+        });
+        (prog.exercises.fill || []).forEach(f => {
+          fillChecked[f.item] = {typed:f.typed, answer:f.answer, correct:f.correct};
+        });
+      }
+      if (prog.flashcards) fcStats = {known: prog.flashcards.known||0, unknown: prog.flashcards.unknown||0};
+      if (prog.homework) {
+        Object.entries(prog.homework).forEach(([k, v]) => {
+          if (k.startsWith('check_')) checklistState[k.slice(6)] = v;
+          else writeTexts[k] = v;
+        });
+      }
     }
 
     buildPage();
@@ -294,9 +289,6 @@ function buildPage() {
     buildHeader(sec, t);
     buildSection(sec, t);
   });
-
-  document.getElementById('submitBar').style.display = 'block';
-  document.getElementById('sendBtn').addEventListener('click', submitResults);
 
   if (tabs.includes('flashcards') && lesson.flashcards?.length) initFC();
 }
@@ -553,7 +545,9 @@ function buildReading(sec) {
       const ta = el('textarea', 'write-box');
       ta.style.minHeight = '50px';
       ta.placeholder = q.placeholder || '';
-      ta.addEventListener('input', () => { writeTexts['r' + i] = ta.value; });
+      const rKey = 'r' + i;
+      if (writeTexts[rKey]) ta.value = writeTexts[rKey];
+      ta.addEventListener('input', () => { writeTexts[rKey] = ta.value; scheduleProgressSave(); });
       wrap.appendChild(p); wrap.appendChild(ta);
       c.appendChild(wrap);
     });
@@ -599,8 +593,22 @@ function buildQuiz(sec, ex, xi) {
     });
     wrap.appendChild(opts);
 
+    // Restore previously answered state
+    const prevQ = quizAnswered[qId];
+    if (prevQ) {
+      opts.querySelectorAll('.qopt').forEach(b => {
+        b.disabled = true;
+        if (b.textContent.trim() === prevQ.answer) b.classList.add('correct');
+        if (!prevQ.correct && b.textContent.trim() === prevQ.chosen) b.classList.add('wrong');
+      });
+    }
+
     const fb = el('div', 'feedback');
     fb.id = qId + '_fb';
+    if (prevQ) {
+      fb.textContent = prevQ.correct ? '✅ Correct!' : '❌ Correct answer: ' + prevQ.answer;
+      fb.className = 'feedback ' + (prevQ.correct ? 'ok' : 'bad');
+    }
     wrap.appendChild(fb);
     card2.appendChild(wrap);
   });
@@ -628,6 +636,7 @@ function handleQuizClick(e) {
 
   quizAnswered[qId] = {correct, chosen, answer};
   updateScore();
+  scheduleProgressSave();
 }
 
 function buildFill(sec, ex, xi) {
@@ -642,14 +651,22 @@ function buildFill(sec, ex, xi) {
     if (item.before) row.appendChild(el('span', null, item.before));
     const inp = el('input', 'fill-input');
     inp.type = 'text'; inp.placeholder = '...'; inp.id = fId;
-    inp.addEventListener('input', () => { fillChecked[fId] = null; }); // reset on retype
+    const prevF = fillChecked[fId];
+    if (prevF) {
+      inp.value = prevF.typed;
+      inp.classList.add(prevF.correct ? 'correct' : 'wrong');
+      inp.disabled = true;
+    }
+    inp.addEventListener('input', () => { fillChecked[fId] = null; scheduleProgressSave(); });
     row.appendChild(inp);
     if (item.after) row.appendChild(el('span', null, item.after));
     if (item.hint)  row.appendChild(el('span', 'fill-hint', '(' + item.hint + ')'));
     card2.appendChild(row);
   });
 
+  const allFillDone = (ex.items||[]).length > 0 && (ex.items||[]).every((_,ii) => fillChecked['f'+xi+'_'+ii]);
   const checkBtn = el('button', 'check-btn', '✅ Check Answers');
+  if (allFillDone) { checkBtn.disabled = true; checkBtn.style.opacity = '0.6'; }
   checkBtn.addEventListener('click', () => checkFill(xi, ex));
   card2.appendChild(checkBtn);
 
@@ -657,6 +674,18 @@ function buildFill(sec, ex, xi) {
   res.id = 'fill_res_' + xi;
   res.style.cssText = 'margin-top:0.8rem;font-size:0.9rem;line-height:1.8';
   card2.appendChild(res);
+
+  if (allFillDone) {
+    const items = ex.items || [];
+    const ok2 = items.filter((_,ii) => fillChecked['f'+xi+'_'+ii]?.correct).length;
+    res.appendChild(el('strong', null, 'Wynik: ' + ok2 + '/' + items.length));
+    items.forEach((_,ii) => {
+      const r = fillChecked['f'+xi+'_'+ii]; if (!r) return;
+      res.appendChild(document.createElement('br'));
+      res.appendChild(document.createTextNode((r.correct?'✅':'❌')+' "'+r.typed+'"'+(r.correct?'':' → '+r.answer)));
+    });
+  }
+
   sec.appendChild(card2);
 }
 
@@ -684,6 +713,7 @@ function checkFill(xi, ex) {
     lines.forEach(l => { const br = document.createElement('br'); res.appendChild(br); res.appendChild(document.createTextNode(l)); });
   }
   updateScore();
+  scheduleProgressSave();
 }
 
 function buildTrans(sec, ex, xi) {
@@ -698,7 +728,9 @@ function buildTrans(sec, ex, xi) {
     p.textContent = (ii + 1) + '. ' + item.en;
     const ta = el('textarea', 'write-box');
     ta.style.minHeight = '50px'; ta.placeholder = item.hint || '';
-    ta.addEventListener('input', () => { writeTexts['t' + xi + '_' + ii] = ta.value; });
+    const tKey = 't' + xi + '_' + ii;
+    if (writeTexts[tKey]) ta.value = writeTexts[tKey];
+    ta.addEventListener('input', () => { writeTexts[tKey] = ta.value; scheduleProgressSave(); });
     wrap.appendChild(p); wrap.appendChild(ta);
     card2.appendChild(wrap);
   });
@@ -815,7 +847,7 @@ function renderFC() {
 }
 function flipFC() { document.getElementById('flashcard')?.classList.toggle('flipped'); }
 function navFC(d) { fcIdx = (fcIdx + d + lesson.flashcards.length) % lesson.flashcards.length; renderFC(); }
-function markFC(known) { if (known) fcStats.known++; else fcStats.unknown++; updateScore(); navFC(1); }
+function markFC(known) { if (known) fcStats.known++; else fcStats.unknown++; updateScore(); scheduleProgressSave(); navFC(1); }
 
 // ── HOMEWORK ──
 function buildHomework(sec) {
@@ -833,7 +865,9 @@ function buildHomework(sec) {
       }
       const ta = el('textarea', 'write-box');
       ta.placeholder = 'Napisz tutaj...';
-      ta.addEventListener('input', () => { writeTexts['hw' + i] = ta.value; });
+      const hwKey = 'hw' + i;
+      if (writeTexts[hwKey]) ta.value = writeTexts[hwKey];
+      ta.addEventListener('input', () => { writeTexts[hwKey] = ta.value; scheduleProgressSave(); });
       body.appendChild(ta);
     } else if (task.type === 'checklist') {
       (task.items || []).forEach((item, ii) => {
@@ -841,8 +875,9 @@ function buildHomework(sec) {
         const cli = el('div', 'cl-item');
         const cb = el('input');
         cb.type = 'checkbox'; cb.id = cid;
-        cb.addEventListener('change', () => cli.classList.toggle('done', cb.checked));
-        cli.addEventListener('click', e => { if (e.target !== cb) { cb.checked = !cb.checked; cli.classList.toggle('done', cb.checked); } });
+        if (checklistState[cid]) { cb.checked = true; cli.classList.add('done'); }
+        cb.addEventListener('change', () => { cli.classList.toggle('done', cb.checked); checklistState[cid] = cb.checked; scheduleProgressSave(); });
+        cli.addEventListener('click', e => { if (e.target !== cb) { cb.checked = !cb.checked; cli.classList.toggle('done', cb.checked); checklistState[cid] = cb.checked; scheduleProgressSave(); } });
         const lbl = el('label', null, item); lbl.htmlFor = cid;
         cli.appendChild(cb); cli.appendChild(lbl);
         body.appendChild(cli);
@@ -856,30 +891,80 @@ function buildHomework(sec) {
 
 // ── MY WORDS ──
 function buildMyWords(sec) {
-  const words = getSaved();
   const c = card('default');
   c.id = 'mywords-container';
-  c.appendChild(el('h3', null, '📝 Twoje słówka (' + words.length + ')'));
 
+  // Header
+  const hdr = el('h3', null, '📝 Twoje słówka');
+  hdr.id = 'mw-hdr';
+  c.appendChild(hdr);
+
+  // Manual entry form
+  const addRow = document.createElement('div');
+  addRow.style.cssText = 'display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap';
+  const plInput = document.createElement('input');
+  plInput.placeholder = 'Słówko po polsku...';
+  plInput.style.cssText = 'flex:1;min-width:120px;padding:8px 10px;border:2px solid #e0e5f0;border-radius:8px;font-size:0.9rem;outline:none;font-family:Lato,sans-serif';
+  const enInput = document.createElement('input');
+  enInput.placeholder = 'English word...';
+  enInput.style.cssText = 'flex:1;min-width:120px;padding:8px 10px;border:2px solid #e0e5f0;border-radius:8px;font-size:0.9rem;outline:none;font-family:Lato,sans-serif';
+  const addBtn = document.createElement('button');
+  addBtn.textContent = '+ Dodaj';
+  addBtn.style.cssText = 'padding:8px 16px;background:var(--green);color:white;border:none;border-radius:8px;font-family:Nunito,sans-serif;font-weight:800;font-size:0.9rem;cursor:pointer;white-space:nowrap';
+  const doAdd = () => {
+    const pl = plInput.value.trim();
+    const en = enInput.value.trim();
+    if (!pl && !en) return;
+    const words = getSaved();
+    if (!words.some(w => w.pl === pl && w.en === en)) {
+      words.push({pl: pl||'—', en: en||'—', manual: true});
+      localStorage.setItem('mw_' + lesson.id, JSON.stringify(words));
+    }
+    plInput.value = ''; enInput.value = '';
+    refreshMyWordsView();
+    scheduleProgressSave();
+  };
+  addBtn.addEventListener('click', doAdd);
+  [plInput, enInput].forEach(inp => inp.addEventListener('keydown', e => { if (e.key === 'Enter') doAdd(); }));
+  addRow.appendChild(plInput); addRow.appendChild(enInput); addRow.appendChild(addBtn);
+  c.appendChild(addRow);
+
+  // Word list
+  const list = el('div'); list.id = 'mw-list';
+  c.appendChild(list);
+  sec.appendChild(c);
+  refreshMyWordsView();
+}
+
+function refreshMyWordsView() {
+  const words = getSaved();
+  const list = document.getElementById('mw-list');
+  if (!list) return;
+  list.textContent = '';
+  const hdr = document.getElementById('mw-hdr');
+  if (hdr) hdr.textContent = '📝 Twoje słówka (' + words.length + ')';
   if (!words.length) {
     const p = el('p');
-    p.style.cssText = 'color:#888;font-size:0.9rem;padding:1rem 0';
-    p.textContent = 'Nie masz jeszcze zapisanych słówek. Idź do zakładki Vocabulary i kliknij ☆ przy słówku!';
-    c.appendChild(p);
+    p.style.cssText = 'color:#888;font-size:0.9rem;padding:0.5rem 0';
+    p.textContent = 'Brak słówek. Dodaj ręcznie powyżej lub kliknij ☆ w zakładce Vocabulary.';
+    list.appendChild(p);
   } else {
-    const list = el('div'); list.id = 'mw-list';
-    words.forEach((w, i) => { list.appendChild(makeWordRow(w, i)); });
-    c.appendChild(list);
+    words.forEach((w, i) => list.appendChild(makeWordRow(w, i)));
   }
-  sec.appendChild(c);
 }
 
 function makeWordRow(w, i) {
   const row = el('div', 'mw-item');
+  if (w.manual) row.style.borderLeft = '3px solid var(--green)';
   const info = document.createElement('div');
   info.appendChild(el('span', 'mw-pl', w.pl));
   info.appendChild(document.createTextNode(' — '));
   info.appendChild(el('span', 'mw-en', w.en));
+  if (w.manual) {
+    const tag = el('span', null, ' ✏️');
+    tag.title = 'Dodano ręcznie'; tag.style.opacity = '0.5';
+    info.appendChild(tag);
+  }
   const delBtn = el('button', 'mw-del', '✕');
   delBtn.addEventListener('click', () => removeWord(i));
   row.appendChild(info); row.appendChild(delBtn);
@@ -894,15 +979,55 @@ function toggleSave(btn, pl, en) {
   if (idx >= 0) { words.splice(idx, 1); btn.textContent = '☆'; btn.classList.remove('saved'); }
   else          { words.push({pl, en}); btn.textContent = '★'; btn.classList.add('saved'); }
   localStorage.setItem('mw_' + lesson.id, JSON.stringify(words));
+  refreshMyWordsView();
+  scheduleProgressSave();
 }
 function removeWord(i) {
   const words = getSaved(); words.splice(i, 1);
   localStorage.setItem('mw_' + lesson.id, JSON.stringify(words));
-  const list = document.getElementById('mw-list');
-  if (list) { list.innerHTML = ''; words.forEach((w, j) => list.appendChild(makeWordRow(w, j))); }
-  const hdr = document.querySelector('#mywords-container h3');
-  if (hdr) hdr.textContent = '📝 Twoje słówka (' + words.length + ')';
+  refreshMyWordsView();
+  scheduleProgressSave();
 }
+
+let progressSaveTimer = null;
+function showSaveStatus(msg, fade) {
+  const el2 = document.getElementById('saveStatus');
+  if (!el2) return;
+  el2.textContent = msg; el2.style.opacity = '1';
+  if (fade) setTimeout(() => { el2.style.opacity = '0'; }, fade);
+}
+async function flushProgressSave() {
+  const studentId = localStorage.getItem('studentId');
+  if (!studentId || !lesson?.id) return;
+  const {total, ok} = calcScore();
+  const pct = total > 0 ? Math.round(ok / total * 100) : null;
+  const exercisesData = {
+    quiz: Object.entries(quizAnswered).map(([k,v])=>({question:k,chosen:v.chosen,answer:v.answer,correct:v.correct})),
+    fill: Object.entries(fillChecked).filter(([,v])=>v).map(([k,v])=>({item:k,typed:v.typed,answer:v.answer,correct:v.correct}))
+  };
+  const homeworkData = {};
+  Object.entries(writeTexts).forEach(([k,v]) => { if (v) homeworkData[k] = v; });
+  Object.entries(checklistState).forEach(([k,v]) => { if (v !== undefined) homeworkData['check_'+k] = v; });
+  const {error} = await sb.from('lesson_progress').upsert({
+    student_id: studentId,
+    lesson_id:  lesson.id,
+    score:      pct,
+    exercises:  exercisesData,
+    flashcards: {known: fcStats.known, unknown: fcStats.unknown},
+    homework:   Object.keys(homeworkData).length ? homeworkData : null,
+    mywords:    getSaved()
+  }, {onConflict: 'student_id,lesson_id'});
+  if (!error) showSaveStatus('✓ Zapisano', 2500);
+  else showSaveStatus('⚠ Błąd zapisu', 4000);
+}
+function scheduleProgressSave() {
+  showSaveStatus('💾 Zapisuję...');
+  clearTimeout(progressSaveTimer);
+  progressSaveTimer = setTimeout(flushProgressSave, 2000);
+}
+window.addEventListener('beforeunload', () => {
+  if (progressSaveTimer) { clearTimeout(progressSaveTimer); flushProgressSave(); }
+});
 
 // ── SCORE ──
 function calcScore() {
@@ -911,101 +1036,7 @@ function calcScore() {
   Object.values(fillChecked).forEach(a => { if (!a) return; total++; if (a.correct) ok++; });
   return {total, ok};
 }
-function updateScore() {
-  const {total, ok} = calcScore();
-  const el2 = document.getElementById('scoreDisp');
-  if (!el2) return;
-  if (total > 0) {
-    const pct = Math.round(ok / total * 100);
-    let txt2 = 'Ćwiczenia: ' + ok + '/' + total + ' (' + pct + '%)';
-    if (fcStats.known + fcStats.unknown > 0) txt2 += ' · Fiszki: ' + fcStats.known + ' zna / ' + fcStats.unknown + ' nie zna';
-    el2.textContent = txt2;
-  }
-}
-
-// ── SAVE PROGRESS TO SUPABASE ──
-async function saveProgressToSupabase(ok, total) {
-  const studentId = localStorage.getItem('studentId');
-  if (!studentId || !lesson?.id) return;
-  const pct = total > 0 ? Math.round(ok / total * 100) : null;
-  const exercisesData = {
-    quiz: Object.entries(quizAnswered).map(([k,v])=>({question:k,chosen:v.chosen,answer:v.answer,correct:v.correct})),
-    fill: Object.entries(fillChecked).filter(([,v])=>v).map(([k,v])=>({item:k,typed:v.typed,answer:v.answer,correct:v.correct}))
-  };
-  const flashcardsData = {known: fcStats.known, unknown: fcStats.unknown};
-  const homeworkData = Object.keys(writeTexts).length ? writeTexts : null;
-  await sb.from('lesson_progress').upsert({
-    student_id: studentId,
-    lesson_id:  lesson.id,
-    score:      pct,
-    exercises:  exercisesData,
-    flashcards: flashcardsData,
-    homework:   homeworkData
-  }, {onConflict: 'student_id,lesson_id'});
-}
-
-// ── SUBMIT ──
-async function submitResults() {
-  const btn = document.getElementById('sendBtn');
-  btn.textContent = '⏳ Wysyłam...';
-  btn.disabled = true;
-
-  const student = localStorage.getItem('studentName') || lesson.studentName || 'Uczeń';
-  const {total, ok} = calcScore();
-  const date = new Date().toLocaleDateString('pl-PL');
-
-  const quizLines = Object.entries(quizAnswered).map(([k,v]) =>
-    (v.correct?'✓':'✗') + ' ' + k + ': "' + v.chosen + '" (oczekiwano: "' + v.answer + '")'
-  ).join('\n') || '—';
-
-  const fillLines = Object.entries(fillChecked).filter(([,v])=>v).map(([k,v]) =>
-    (v.correct?'✓':'✗') + ' ' + k + ': "' + v.typed + '" (oczekiwano: "' + v.answer + '")'
-  ).join('\n') || '—';
-
-  const writeLines = Object.entries(writeTexts).filter(([,v])=>v).map(([k,v]) =>
-    '[' + k + ']\n' + v
-  ).join('\n\n') || '—';
-
-  const fcLine = 'Zna: ' + fcStats.known + ' / Nie zna: ' + fcStats.unknown;
-
-  const ejs = globalConfig?.emailjs;
-
-  if (ejs?.serviceId && ejs?.templateId && ejs?.publicKey) {
-    try {
-      await emailjs.send(
-        ejs.serviceId,
-        ejs.templateId,
-        {
-          to_email:        ejs.toEmail || '',
-          subject:         'Wyniki lekcji: ' + lesson.title + ' — ' + student,
-          student_name:    student,
-          lesson_title:    lesson.title,
-          lesson_id:       lesson.id,
-          date:            date,
-          score:           ok + '/' + total,
-          quiz_results:    quizLines,
-          fill_results:    fillLines,
-          write_texts:     writeLines,
-          flashcard_stats: fcLine
-        },
-        {publicKey: ejs.publicKey}
-      );
-      await saveProgressToSupabase(ok, total);
-      btn.textContent = '✅ Wysłano!';
-      setTimeout(() => { btn.textContent = '📨 Wyślij wyniki'; btn.disabled = false; }, 3000);
-    } catch(err) {
-      await saveProgressToSupabase(ok, total);
-      btn.textContent = '📨 Wyślij wyniki';
-      btn.disabled = false;
-      alert('⚠️ Błąd EmailJS: ' + (err.text || err.message || JSON.stringify(err)));
-    }
-    return;
-  }
-
-  await saveProgressToSupabase(ok, total);
-  btn.textContent = '✅ Postęp zapisany!';
-  setTimeout(() => { btn.textContent = '📨 Wyślij wyniki'; btn.disabled = false; }, 3000);
-}
+function updateScore() { /* score visible to admin via DB; no on-screen display needed */ }
 </script>
 </body>
 </html>

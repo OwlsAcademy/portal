@@ -114,26 +114,23 @@ async function loadLessons(code) {
 
     const { data: assignments, error: lErr } = await sb
       .from('student_lessons')
-      .select('lesson_id, lessons(id, title, subtitle, level, lesson_number, date, header_emoji, tabs)')
+      .select('lesson_id, lesson_order, lessons(id, title, subtitle, level, header_emoji, tabs)')
       .eq('student_id', found.id)
-      .order('lesson_id');
+      .order('lesson_order', {ascending: true});
 
     if (lErr) throw lErr;
 
     const lessons = (assignments || [])
-      .map(a => a.lessons)
-      .filter(Boolean)
-      .sort((a, b) => (a.lesson_number || 0) - (b.lesson_number || 0))
-      .map(l => ({
-        id:           l.id,
-        title:        l.title,
-        subtitle:     l.subtitle,
-        level:        l.level,
-        lessonNumber: l.lesson_number,
-        date:         l.date,
-        headerEmoji:  l.header_emoji,
-        emoji:        l.header_emoji,
-        tabs:         l.tabs || []
+      .filter(a => a.lessons)
+      .map(a => ({
+        id:           a.lessons.id,
+        title:        a.lessons.title,
+        subtitle:     a.lessons.subtitle,
+        level:        a.lessons.level,
+        lessonNumber: a.lesson_order,
+        headerEmoji:  a.lessons.header_emoji,
+        emoji:        a.lessons.header_emoji,
+        tabs:         a.lessons.tabs || []
       }));
 
     showLessons(lessons, found.name);
@@ -177,7 +174,6 @@ function showLessons(lessons, name) {
 
     const meta = el('div', 'lesson-meta');
     if (l.level) meta.appendChild(el('span', 'chip level', l.level));
-    if (l.date)  meta.appendChild(el('span', 'chip date', l.date));
     (l.tabs || []).forEach(t => {
       meta.appendChild(el('span', 'chip', (TAB_ICONS[t] || '') + ' ' + t));
     });

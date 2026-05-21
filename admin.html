@@ -82,6 +82,9 @@ h1,h2,h3,h4{font-family:'Nunito',sans-serif}
 .score-chip.bad{background:#fee2e2;color:#991b1b}
 .assign-student-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #f0f0f0}
 .assign-student-row:last-child{border-bottom:none}
+.progress-table tr{cursor:pointer;transition:background 0.15s}
+.progress-table tbody tr:hover td{background:#fafbff}
+.progress-table tr[style*="table-row"] td{cursor:default}
 </style>
 </head>
 <body>
@@ -140,17 +143,20 @@ h1,h2,h3,h4{font-family:'Nunito',sans-serif}
       <div class="hint" style="background:#f0f4ff;border-radius:8px;padding:0.7rem 1rem;margin-bottom:1rem">
         &#128161; Lekcja jest oddzielna od uczni&oacute;w. Przypisz j&#261; do uczni&oacute;w po zapisaniu w bazie (przycisk <strong>Przypisz do uczni&oacute;w</strong> w panelu bocznym).
       </div>
-      <div class="two-field">
-        <div class="field"><label>ID lekcji *</label><input id="f_id" placeholder="np. pogoda-001"><div class="hint">Bez spacji, ma&#322;e litery. Unikalny klucz g&#322;&oacute;wny.</div></div>
-        <div class="field"><label>Numer lekcji</label><input id="f_num" type="number" value="1" min="1"></div>
+      <div class="field">
+        <label>ID lekcji (UUID)</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <code id="f_id_display" style="flex:1;background:#f0f4ff;border:2px solid #e0e5f0;border-radius:8px;padding:9px 12px;font-size:0.8rem;color:var(--blue);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:'Courier New',monospace">— (zostanie wygenerowane)</code>
+          <button id="newLessonBtn" class="add-btn" style="margin:0;padding:8px 14px;white-space:nowrap;flex-shrink:0">&#43; Nowa lekcja</button>
+        </div>
+        <div class="hint">UUID generowany automatycznie — niezmienialny po zapisaniu.</div>
       </div>
       <div class="field"><label>Tytu&#322; lekcji *</label><input id="f_title" placeholder="np. Pogoda &mdash; Weather"></div>
       <div class="field"><label>Podtytu&#322;</label><input id="f_sub" placeholder="np. Weather vocabulary &middot; Past, Present &amp; Future"></div>
-      <div class="three-field">
+      <div class="two-field">
         <div class="field"><label>Poziom</label>
           <select id="f_level"><option>A1</option><option>A2</option><option>B1</option><option>B2</option><option>C1</option><option>C2</option></select>
         </div>
-        <div class="field"><label>Data lekcji</label><input id="f_date" type="date"></div>
         <div class="field"><label>Emoji nag&#322;&oacute;wka</label><input id="f_emoji" placeholder="np. &#127780;&#65039;"></div>
       </div>
       <h3 style="margin-top:1.5rem">Zak&#322;adki lekcji</h3>
@@ -184,6 +190,13 @@ h1,h2,h3,h4{font-family:'Nunito',sans-serif}
     <!-- FLASHCARDS -->
     <div class="form-section" id="tab-flashcards">
       <h3>Fiszki</h3>
+      <div style="display:flex;align-items:center;gap:0.7rem;flex-wrap:wrap;margin-bottom:1rem;padding:0.8rem 1rem;background:#f8f9fe;border-radius:8px;border:1px solid #e8ecff">
+        <span style="font-family:'Nunito',sans-serif;font-weight:700;font-size:0.85rem;color:var(--blue)">&#128196; Import CSV:</span>
+        <input type="file" id="fcCsvFile" accept=".csv,.txt" style="display:none">
+        <button class="add-btn" id="fcCsvBtn" style="margin:0;padding:7px 14px">&#11014; Wczytaj CSV</button>
+        <span style="font-size:0.75rem;color:#888">Format kolumn: S&#322;&oacute;wko;T&#322;umaczenie;Przyk&#322;ad;Emoji &mdash; jeden wiersz = jedna fiszka</span>
+        <div id="fcCsvStatus" style="font-size:0.8rem;font-family:'Nunito',sans-serif;font-weight:700;min-height:1em"></div>
+      </div>
       <div id="fcList"></div>
       <button class="add-btn" id="addFCBtn">&#43; Dodaj fiszk&#281;</button>
     </div>
@@ -240,6 +253,17 @@ h1,h2,h3,h4{font-family:'Nunito',sans-serif}
       <div style="margin-top:1.2rem;padding-top:1.2rem;border-top:1px solid #eee">
         <button class="action-btn" id="downloadStudentsBtn" style="background:var(--blue);color:white;width:auto;display:inline-block;padding:10px 24px">&#11015; Kopia zapasowa (JSON)</button>
         <div class="status" id="studentsDownloadStatus" style="text-align:left;margin-top:0.4rem"></div>
+      </div>
+      <div style="margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid #eee">
+        <h4 style="color:var(--blue);margin-bottom:0.8rem;font-family:'Nunito',sans-serif;font-size:0.95rem">&#128260; Kolejno&#347;&#263; lekcji ucznia</h4>
+        <div class="field" style="margin-bottom:0.8rem">
+          <label>Wybierz ucznia</label>
+          <select id="reorder_student_select" style="width:100%;padding:8px 10px;border:2px solid #e0e5f0;border-radius:8px;font-size:0.9rem;outline:none;color:var(--blue)">
+            <option value="">— wybierz ucznia —</option>
+          </select>
+        </div>
+        <div id="reorderLessonList" style="margin-top:0.5rem"></div>
+        <div class="status" id="reorderStatus" style="text-align:left;margin-top:0.5rem"></div>
       </div>
     </div>
 
@@ -457,26 +481,27 @@ document.querySelectorAll('.ftab').forEach(btn => {
     if (btn.dataset.tab === 'progress') loadProgressView();
   });
 });
-['f_id','f_num','f_title','f_sub','f_level','f_date','f_emoji',
+['f_title','f_sub','f_level','f_emoji',
  'v_sub','adv_grammar','adv_reading','adv_speaking']
   .forEach(id => document.getElementById(id)?.addEventListener('input', scheduleUpdate));
-document.getElementById('f_date').value = new Date().toISOString().slice(0,10);
-document.getElementById('f_id').addEventListener('input', () => {
-  delete document.getElementById('f_id').dataset.autoId;
-  document.getElementById('f_id').dataset.manualId = '1';
+
+document.getElementById('newLessonBtn').addEventListener('click', () => {
+  currentLessonId = crypto.randomUUID();
+  document.getElementById('f_id_display').textContent = currentLessonId;
+  hideAssignCard();
   scheduleUpdate();
 });
 
 // ── IMPORT JSON ──
 function loadFromJSON(obj) {
-  const idField = document.getElementById('f_id');
-  idField.value = obj.id || ''; delete idField.dataset.autoId; idField.dataset.manualId = '1';
-  document.getElementById('f_num').value   = obj.lessonNumber || 1;
+  if (obj.id) {
+    currentLessonId = obj.id;
+    document.getElementById('f_id_display').textContent = obj.id;
+  }
   document.getElementById('f_title').value = obj.title || '';
   document.getElementById('f_sub').value   = obj.subtitle || '';
   const lvl = document.getElementById('f_level');
   if (obj.level && Array.from(lvl.options).some(o => o.value === obj.level)) lvl.value = obj.level;
-  document.getElementById('f_date').value  = obj.date || new Date().toISOString().slice(0,10);
   document.getElementById('f_emoji').value = obj.headerEmoji || obj.emoji || '';
   const tabs = obj.tabs || [];
   document.querySelectorAll('#tabsGrid input').forEach(cb => {
@@ -702,6 +727,30 @@ function renderExercises() {
 
 // ── FLASHCARDS ──
 document.getElementById('addFCBtn').addEventListener('click',()=>{flashcards.push({emoji:'',word:'',translation:'',example:''});renderFC();scheduleUpdate();});
+document.getElementById('fcCsvBtn').addEventListener('click', () => document.getElementById('fcCsvFile').click());
+document.getElementById('fcCsvFile').addEventListener('change', () => {
+  const file = document.getElementById('fcCsvFile').files[0]; if (!file) return;
+  const statusEl = document.getElementById('fcCsvStatus');
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const lines = ev.target.result.split(/\r?\n/).filter(l => l.trim());
+    let added = 0, skipped = 0;
+    lines.forEach(line => {
+      const sep = line.includes(';') ? ';' : ',';
+      const cols = line.split(sep).map(c => c.trim().replace(/^"(.*)"$/s, '$1'));
+      const [word, translation, example, emoji] = cols;
+      if (!word && !translation) { skipped++; return; }
+      flashcards.push({emoji: emoji||'', word: word||'', translation: translation||'', example: example||''});
+      added++;
+    });
+    renderFC(); scheduleUpdate();
+    statusEl.textContent = '✅ Dodano ' + added + (skipped ? ' (' + skipped + ' puste)' : '');
+    statusEl.style.color = 'var(--green)';
+    setTimeout(() => { statusEl.textContent = ''; }, 5000);
+    document.getElementById('fcCsvFile').value = '';
+  };
+  reader.readAsText(file, 'UTF-8');
+});
 function renderFC() {
   const list = document.getElementById('fcList'); list.textContent='';
   flashcards.forEach((fc,i)=>{
@@ -794,13 +843,11 @@ document.querySelectorAll('[data-template]').forEach(btn=>{
 function buildJSON() {
   const selectedTabs = Array.from(document.querySelectorAll('#tabsGrid input:checked')).map(cb => cb.value);
   const obj = {
-    id:           document.getElementById('f_id').value.trim() || 'lesson-001',
-    title:        document.getElementById('f_title').value.trim(),
-    subtitle:     document.getElementById('f_sub').value.trim() || undefined,
-    level:        document.getElementById('f_level').value,
-    lessonNumber: parseInt(document.getElementById('f_num').value) || 1,
-    date:         document.getElementById('f_date').value,
-    headerEmoji:  document.getElementById('f_emoji').value.trim() || undefined,
+    id:          currentLessonId || '(nowe — kliknij Nowa lekcja)',
+    title:       document.getElementById('f_title').value.trim(),
+    subtitle:    document.getElementById('f_sub').value.trim() || undefined,
+    level:       document.getElementById('f_level').value,
+    headerEmoji: document.getElementById('f_emoji').value.trim() || undefined,
     tabs: selectedTabs
   };
   if (selectedTabs.includes('vocabulary') && (vocabSections.length || phrases.length)) {
@@ -834,22 +881,20 @@ function scheduleUpdate() {
 
 // ── SUPABASE: SAVE LESSON ──
 document.getElementById('saveToSupabaseBtn').addEventListener('click', async () => {
+  if (!currentLessonId) { setStatus('❌ Kliknij "Nowa lekcja" aby wygenerować ID', true); return; }
   const obj = buildJSON();
-  if (!obj.id) { setStatus('❌ Uzupełnij ID lekcji', true); return; }
   const btn = document.getElementById('saveToSupabaseBtn');
   btn.textContent = 'Zapisuję...'; btn.disabled = true;
   const { error } = await sb.from('lessons').upsert({
-    id: obj.id, title: obj.title||null, subtitle: obj.subtitle||null,
-    level: obj.level||null, lesson_number: obj.lessonNumber||1,
-    date: obj.date||null, header_emoji: obj.headerEmoji||null, tabs: obj.tabs||[],
+    id: currentLessonId, title: obj.title||null, subtitle: obj.subtitle||null,
+    level: obj.level||null, header_emoji: obj.headerEmoji||null, tabs: obj.tabs||[],
     vocabulary: obj.vocabulary||null, grammar: obj.grammar||null,
     reading: obj.reading||null, exercises: obj.exercises||null,
     flashcards: obj.flashcards||null, homework: obj.homework||null, speaking: obj.speaking||null
   });
   btn.textContent = '☁️ Zapisz lekcję w Supabase'; btn.disabled = false;
   if (error) { setStatus('❌ Błąd: ' + error.message, true); return; }
-  setStatus('✅ Zapisano: ' + obj.id);
-  currentLessonId = obj.id;
+  setStatus('✅ Zapisano: ' + currentLessonId);
   renderLessonIndex();
   showAssignCard(obj.id);
 });
@@ -872,12 +917,10 @@ async function loadLessonFromDB(id) {
   if (error || !row) { setStatus('❌ Błąd: ' + (error?.message||'brak'), true); return; }
   loadFromJSON({
     id:row.id, title:row.title, subtitle:row.subtitle, level:row.level,
-    lessonNumber:row.lesson_number, date:row.date, headerEmoji:row.header_emoji,
-    tabs:row.tabs||[], vocabulary:row.vocabulary, grammar:row.grammar,
-    reading:row.reading, exercises:row.exercises, flashcards:row.flashcards,
-    homework:row.homework, speaking:row.speaking
+    headerEmoji:row.header_emoji, tabs:row.tabs||[], vocabulary:row.vocabulary,
+    grammar:row.grammar, reading:row.reading, exercises:row.exercises,
+    flashcards:row.flashcards, homework:row.homework, speaking:row.speaking
   });
-  currentLessonId = id;
   setStatus('✅ Wczytano: ' + id);
   document.querySelector('.ftab[data-tab="basic"]').click();
   showAssignCard(id);
@@ -887,7 +930,7 @@ async function exportLessonJSON(id) {
   const { data: row, error } = await sb.from('lessons').select('*').eq('id', id).single();
   if (error || !row) { alert('Błąd: ' + (error?.message||'brak')); return; }
   const obj = { id:row.id, title:row.title, subtitle:row.subtitle, level:row.level,
-    lessonNumber:row.lesson_number, date:row.date, headerEmoji:row.header_emoji, tabs:row.tabs||[],
+    headerEmoji:row.header_emoji, tabs:row.tabs||[],
     ...(row.vocabulary?{vocabulary:row.vocabulary}:{}), ...(row.grammar?{grammar:row.grammar}:{}),
     ...(row.reading?{reading:row.reading}:{}), ...(row.exercises?{exercises:row.exercises}:{}),
     ...(row.flashcards?{flashcards:row.flashcards}:{}), ...(row.homework?{homework:row.homework}:{}),
@@ -909,8 +952,8 @@ async function renderLessonIndex() {
   const list = document.getElementById('lessonIndexList'); list.textContent = '';
   const search = (document.getElementById('dbSearchInput')?.value || '').toLowerCase().trim();
   let query = sb.from('lessons')
-    .select('id,title,level,lesson_number,header_emoji,date')
-    .order('lesson_number', {ascending:true});
+    .select('id,title,level,header_emoji')
+    .order('title', {ascending:true});
   const { data, error } = await query;
   if (error) {
     const p = el('p'); p.style.cssText='color:var(--red);font-size:0.8rem';
@@ -933,7 +976,7 @@ async function renderLessonIndex() {
     const name = el('strong', null, (r.header_emoji||'📚') + ' ' + (r.title || r.id || '—'));
     name.style.cssText='display:block;font-family:Nunito,sans-serif;color:var(--blue)';
     const meta = el('span'); meta.style.color='#888';
-    meta.textContent = r.id + ' · L' + (r.lesson_number||'?') + ' · ' + (r.level||'') + (r.date?' · '+r.date:'');
+    meta.textContent = r.id.slice(0,18) + '… · ' + (r.level||'');
     info.appendChild(name); info.appendChild(meta);
     const editBtn = el('button','add-btn','✏️'); editBtn.title='Wczytaj do edytora';
     editBtn.style.cssText='padding:2px 7px;font-size:0.75rem;margin:0;border-style:solid;border-width:1px';
@@ -1055,13 +1098,74 @@ async function renderStudents() {
       if (confirm('Usunąć ucznia '+s.name+'? Przypisania lekcji zostaną usunięte.')) {
         const {error:delErr} = await sb.from('students').delete().eq('id',s.id);
         if (delErr) { alert('Błąd: '+delErr.message); return; }
-        renderStudents();
+        renderStudents(); loadReorderSelect();
       }
     });
     row.appendChild(avatar); row.appendChild(info); row.appendChild(editBtn); row.appendChild(delBtn);
     list.appendChild(row);
   });
 }
+
+// ── LESSON REORDER ──
+async function loadReorderSelect() {
+  const { data: students } = await sb.from('students').select('id,name').order('name');
+  const sel = document.getElementById('reorder_student_select');
+  while (sel.options.length > 1) sel.remove(1);
+  (students || []).forEach(s => {
+    const opt = document.createElement('option'); opt.value = s.id; opt.textContent = s.name;
+    sel.appendChild(opt);
+  });
+}
+async function renderReorderList(studentId) {
+  const wrap = document.getElementById('reorderLessonList'); wrap.textContent = '';
+  if (!studentId) return;
+  const { data, error } = await sb.from('student_lessons')
+    .select('id,lesson_order,lessons(id,title,header_emoji)')
+    .eq('student_id', studentId)
+    .order('lesson_order', {ascending:true});
+  if (error || !data || !data.length) {
+    wrap.textContent = 'Brak przypisanych lekcji.';
+    wrap.style.cssText = 'color:#aaa;font-size:0.9rem';
+    return;
+  }
+  let items = data.map(r => ({rowId:r.id, order:r.lesson_order, lesson:r.lessons}));
+  function renderItems() {
+    wrap.textContent = '';
+    items.forEach((item, idx) => {
+      const row = el('div'); row.style.cssText='display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;background:#f8f9fe;margin-bottom:4px;border:1px solid #e8ecff';
+      const numBadge = el('span', null, String(idx+1)+'.'); numBadge.style.cssText='font-family:Nunito,sans-serif;font-weight:800;color:var(--blue);min-width:22px;font-size:0.85rem';
+      const emoji = el('span', null, item.lesson?.header_emoji || '📚'); emoji.style.fontSize='1.1rem';
+      const title = el('span', null, item.lesson?.title || item.lesson?.id || '—'); title.style.cssText='flex:1;font-size:0.85rem;font-family:Nunito,sans-serif;font-weight:700;color:var(--blue)';
+      const upBtn = el('button', 'del-btn', '↑'); upBtn.title='Przesuń wyżej';
+      upBtn.disabled = idx === 0;
+      upBtn.addEventListener('click', () => { [items[idx-1],items[idx]]=[items[idx],items[idx-1]]; renderItems(); });
+      const dnBtn = el('button', 'del-btn', '↓'); dnBtn.title='Przesuń niżej';
+      dnBtn.disabled = idx === items.length-1;
+      dnBtn.addEventListener('click', () => { [items[idx],items[idx+1]]=[items[idx+1],items[idx]]; renderItems(); });
+      row.appendChild(numBadge); row.appendChild(emoji); row.appendChild(title); row.appendChild(upBtn); row.appendChild(dnBtn);
+      wrap.appendChild(row);
+    });
+    const saveBtn = el('button','action-btn primary','💾 Zapisz kolejność'); saveBtn.style.cssText='margin-top:0.8rem;width:auto;display:inline-block;padding:9px 24px';
+    saveBtn.addEventListener('click', async () => {
+      const statusEl = document.getElementById('reorderStatus');
+      statusEl.textContent = 'Zapisuję...'; statusEl.style.color = '#888';
+      const ops = items.map((item, idx) =>
+        sb.from('student_lessons').update({lesson_order: idx+1}).eq('id', item.rowId)
+      );
+      const results = await Promise.all(ops);
+      const err = results.find(r => r.error);
+      if (err) {
+        statusEl.textContent = '❌ Błąd: ' + err.error.message; statusEl.style.color = 'var(--red)';
+      } else {
+        statusEl.textContent = '✅ Kolejność zapisana'; statusEl.style.color = 'var(--green)';
+        setTimeout(() => { statusEl.textContent = ''; }, 3000);
+      }
+    });
+    wrap.appendChild(saveBtn);
+  }
+  renderItems();
+}
+document.getElementById('reorder_student_select').addEventListener('change', e => renderReorderList(e.target.value));
 
 document.getElementById('ns_name').addEventListener('input', ()=>{
   const pf = document.getElementById('ns_prefix');
@@ -1086,6 +1190,7 @@ document.getElementById('addStudentBtn').addEventListener('click', async ()=>{
   document.getElementById('ns_prefix').value='';
   delete document.getElementById('ns_prefix').dataset.touched;
   await renderStudents();
+  await loadReorderSelect();
   status.textContent='✅ Dodano: '+name; status.style.color='var(--green)';
   setTimeout(()=>{ status.textContent=''; },3000);
 });
@@ -1104,12 +1209,11 @@ async function loadProgressView() {
   const lessonId  = document.getElementById('prog_lesson_filter').value;
   const wrap = document.getElementById('progressTableWrap');
   wrap.textContent = '';
-  const p = el('p'); p.textContent='Ładuję...'; p.style.color='#aaa';
-  wrap.appendChild(p);
+  const p = el('p'); p.textContent='Ładuję...'; p.style.color='#aaa'; wrap.appendChild(p);
   let query = sb.from('lesson_progress')
-    .select('id,student_id,lesson_id,score,exercises,flashcards,homework,updated_at,students(name,code),lessons(title)')
+    .select('id,student_id,lesson_id,score,exercises,flashcards,homework,mywords,notes,updated_at,students(name,code),lessons(title,header_emoji)')
     .order('updated_at', {ascending:false})
-    .limit(50);
+    .limit(100);
   if (studentId) query = query.eq('student_id', studentId);
   if (lessonId)  query = query.eq('lesson_id', lessonId);
   const {data, error} = await query;
@@ -1125,33 +1229,157 @@ async function loadProgressView() {
   const table = el('table','progress-table');
   const thead = document.createElement('thead');
   const hrow = document.createElement('tr');
-  ['Uczeń','Lekcja','Wynik','Data','Szczegóły'].forEach(h=>{
-    const th = el('th',null,h); hrow.appendChild(th);
-  });
+  ['Uczeń','Lekcja','Wynik','Data',''].forEach(h=>{ hrow.appendChild(el('th',null,h)); });
   thead.appendChild(hrow); table.appendChild(thead);
   const tbody = document.createElement('tbody');
-  data.forEach(r=>{
-    const tr = document.createElement('tr');
+  data.forEach(r => {
     const studentName = r.students?.name || r.student_id.slice(0,8)+'…';
     const studentCode = r.students?.code || '';
+    const lessonEmoji = r.lessons?.header_emoji || '📚';
     const lessonTitle = r.lessons?.title || r.lesson_id;
-    const scoreVal = r.score != null ? r.score : null;
-    const scoreCls = scoreVal == null ? '' : scoreVal >= 80 ? 'good' : scoreVal >= 50 ? 'ok' : 'bad';
-    const scoreText = scoreVal != null ? scoreVal + '%' : '—';
-    const date = r.updated_at ? new Date(r.updated_at).toLocaleDateString('pl-PL') : '—';
-    const exCount = Array.isArray(r.exercises) ? r.exercises.length + ' ćw.' : r.exercises ? '✓' : '—';
-    const tdStu = el('td'); const nameEl = el('strong',null,studentName); nameEl.style.display='block';
-    tdStu.appendChild(nameEl); tdStu.appendChild(el('span',null,'('+studentCode+')'));
-    tdStu.lastChild.style.cssText='font-size:0.75rem;color:#aaa';
-    const tdLes = el('td',null,lessonTitle);
-    const tdScore = el('td'); const chip = el('span','score-chip '+(scoreCls||'ok'),scoreText); tdScore.appendChild(chip);
-    const tdDate = el('td',null,date);
-    const tdDet = el('td',null,exCount);
-    [tdStu,tdLes,tdScore,tdDate,tdDet].forEach(td=>tr.appendChild(td));
+    const scoreVal    = r.score != null ? r.score : null;
+    const scoreCls    = scoreVal == null ? 'ok' : scoreVal >= 80 ? 'good' : scoreVal >= 50 ? 'ok' : 'bad';
+    const scoreText   = scoreVal != null ? scoreVal + '%' : '—';
+    const date        = r.updated_at ? new Date(r.updated_at).toLocaleDateString('pl-PL') : '—';
+
+    // Summary row
+    const tr = document.createElement('tr');
+    tr.style.cursor = 'pointer';
+
+    const tdStu = el('td');
+    const nameEl = el('strong', null, studentName); nameEl.style.display='block';
+    const codeEl = el('span', null, studentCode); codeEl.style.cssText='font-size:0.75rem;color:#aaa';
+    tdStu.appendChild(nameEl); tdStu.appendChild(codeEl);
+
+    const tdLes = el('td');
+    tdLes.textContent = lessonEmoji + ' ';
+    tdLes.appendChild(el('span', null, r.lesson_id));
+    const lesTitle = el('small', null, lessonTitle);
+    lesTitle.style.cssText='display:block;color:#888';
+    tdLes.appendChild(lesTitle);
+
+    const tdScore = el('td');
+    tdScore.appendChild(el('span', 'score-chip ' + scoreCls, scoreText));
+
+    const tdDate = el('td', null, date);
+
+    const toggleBtn = el('button', 'add-btn', '▶ Szczegóły');
+    toggleBtn.style.cssText='padding:3px 10px;font-size:0.78rem;margin:0;border-style:solid;border-width:1px;white-space:nowrap';
+    const tdBtn = el('td'); tdBtn.appendChild(toggleBtn);
+
+    [tdStu, tdLes, tdScore, tdDate, tdBtn].forEach(td => tr.appendChild(td));
     tbody.appendChild(tr);
+
+    // Detail row (hidden initially)
+    const detailTr = document.createElement('tr');
+    detailTr.style.display = 'none';
+    const detailTd = document.createElement('td');
+    detailTd.colSpan = 5;
+    detailTd.style.cssText = 'background:#f8f9fe;padding:1rem 1.2rem;border-bottom:2px solid #e8ecff';
+    detailTd.appendChild(buildDetailPanel(r));
+    detailTr.appendChild(detailTd);
+    tbody.appendChild(detailTr);
+
+    toggleBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const open = detailTr.style.display !== 'none';
+      detailTr.style.display = open ? 'none' : 'table-row';
+      toggleBtn.textContent = open ? '▶ Szczegóły' : '▼ Ukryj';
+    });
+    tr.addEventListener('click', () => toggleBtn.click());
   });
   table.appendChild(tbody);
   wrap.appendChild(table);
+}
+
+function buildDetailPanel(r) {
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem';
+
+  // ── Exercises ──
+  const exBox = el('div'); exBox.style.cssText='background:white;border-radius:10px;padding:1rem;border:1px solid #e8ecff';
+  exBox.appendChild(el('strong', null, '✏️ Ćwiczenia'));
+  const ex = r.exercises;
+  if (ex && (ex.quiz?.length || ex.fill?.length)) {
+    const ul = el('ul'); ul.style.cssText='margin:0.5rem 0 0 1rem;font-size:0.82rem;line-height:1.8';
+    const quiz = ex.quiz || [];
+    const fill = ex.fill || [];
+    const allItems = [...quiz, ...fill];
+    const correct = allItems.filter(x=>x.correct).length;
+    const total   = allItems.length;
+    const pctEl = el('p', null, correct + '/' + total + ' poprawnych');
+    pctEl.style.cssText='font-size:0.82rem;color:#555;margin:0.3rem 0';
+    exBox.appendChild(pctEl);
+    allItems.slice(0,8).forEach(item => {
+      const li = el('li', null, (item.correct?'✓ ':'✗ ') + (item.question||item.item||'').slice(0,40));
+      li.style.color = item.correct ? '#1b5e20' : '#b71c1c';
+      ul.appendChild(li);
+    });
+    if (allItems.length > 8) ul.appendChild(el('li', null, '…i '+(allItems.length-8)+' więcej'));
+    exBox.appendChild(ul);
+  } else {
+    exBox.appendChild(el('p', null, 'Brak danych')).style.cssText='color:#aaa;font-size:0.82rem;margin-top:0.3rem';
+  }
+  wrap.appendChild(exBox);
+
+  // ── Flashcards ──
+  const fcBox = el('div'); fcBox.style.cssText='background:white;border-radius:10px;padding:1rem;border:1px solid #e8ecff';
+  fcBox.appendChild(el('strong', null, '🃏 Fiszki'));
+  const fc = r.flashcards;
+  if (fc && (fc.known != null || fc.unknown != null)) {
+    const known   = fc.known   || 0;
+    const unknown = fc.unknown || 0;
+    const total   = known + unknown;
+    const fcPct   = total > 0 ? Math.round(known/total*100) : 0;
+    const fcChip  = el('span', 'score-chip ' + (fcPct>=80?'good':fcPct>=50?'ok':'bad'), fcPct+'%');
+    fcChip.style.cssText += ';display:block;margin:0.5rem 0;width:fit-content';
+    fcBox.appendChild(fcChip);
+    fcBox.appendChild(el('p', null, '✅ Zna: '+known+' · ❌ Nie zna: '+unknown)).style.cssText='font-size:0.82rem;color:#555';
+  } else {
+    fcBox.appendChild(el('p', null, 'Brak danych')).style.cssText='color:#aaa;font-size:0.82rem;margin-top:0.3rem';
+  }
+  wrap.appendChild(fcBox);
+
+  // ── My Words ──
+  const mwBox = el('div'); mwBox.style.cssText='background:white;border-radius:10px;padding:1rem;border:1px solid #e8ecff';
+  mwBox.appendChild(el('strong', null, '📝 My Words'));
+  const mw = r.mywords;
+  if (Array.isArray(mw) && mw.length) {
+    const wordList = el('div'); wordList.style.cssText='margin-top:0.5rem;max-height:160px;overflow-y:auto';
+    mw.forEach(w => {
+      const row = el('div');
+      row.style.cssText='display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid #f0f0f0;font-size:0.82rem';
+      const plSpan = el('span', null, w.pl||'—'); plSpan.style.cssText='font-weight:700;color:var(--blue)';
+      const enSpan = el('span', null, w.en||'—'); enSpan.style.color='#555';
+      row.appendChild(plSpan); row.appendChild(enSpan);
+      wordList.appendChild(row);
+    });
+    mwBox.appendChild(el('p', null, mw.length + ' słówek')).style.cssText='font-size:0.82rem;color:#888;margin:0.3rem 0 0';
+    mwBox.appendChild(wordList);
+  } else {
+    mwBox.appendChild(el('p', null, 'Brak słówek')).style.cssText='color:#aaa;font-size:0.82rem;margin-top:0.3rem';
+  }
+  wrap.appendChild(mwBox);
+
+  // ── Homework ──
+  const hwBox = el('div'); hwBox.style.cssText='background:white;border-radius:10px;padding:1rem;border:1px solid #e8ecff';
+  hwBox.appendChild(el('strong', null, '🏠 Praca domowa'));
+  const hw = r.homework;
+  if (hw && Object.keys(hw).length) {
+    const hwList = el('div'); hwList.style.cssText='margin-top:0.5rem;max-height:140px;overflow-y:auto';
+    Object.entries(hw).forEach(([key, val]) => {
+      const item = el('div'); item.style.cssText='margin-bottom:0.5rem;font-size:0.82rem';
+      const lbl = el('strong', null, key + ':'); lbl.style.display='block'; lbl.style.color='var(--blue)';
+      const txt = el('p', null, String(val).slice(0,200)); txt.style.cssText='color:#555;margin:2px 0 0;white-space:pre-wrap';
+      item.appendChild(lbl); item.appendChild(txt); hwList.appendChild(item);
+    });
+    hwBox.appendChild(hwList);
+  } else {
+    hwBox.appendChild(el('p', null, 'Brak')).style.cssText='color:#aaa;font-size:0.82rem;margin-top:0.3rem';
+  }
+  wrap.appendChild(hwBox);
+
+  return wrap;
 }
 async function populateProgressFilters() {
   const [studRes, lesRes] = await Promise.all([
@@ -1204,6 +1432,7 @@ function initAdmin() {
   renderLessonIndex();
   loadConfigForm();
   populateProgressFilters();
+  loadReorderSelect();
   scheduleUpdate();
 }
 </script>

@@ -65,7 +65,10 @@ h1,h2,h3,h4{font-family:'Nunito',sans-serif}
 .info-box strong{color:var(--blue)}
 .info-box code{background:#e0e7ff;padding:1px 5px;border-radius:4px;font-family:'Courier New',monospace;color:var(--blue)}
 .status{font-size:0.82rem;color:var(--green);font-family:'Nunito',sans-serif;text-align:center;margin-top:0.5rem;min-height:1.2em;font-weight:700}
-.img-thumb{width:36px;height:36px;object-fit:cover;border-radius:4px;flex-shrink:0;border:1px solid #ddd}
+.img-thumb{width:36px;height:36px;object-fit:cover;border-radius:4px;flex-shrink:0;border:1px solid #ddd;cursor:zoom-in}
+.lb-ov{position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:zoom-out;animation:lbIn 0.15s ease}
+@keyframes lbIn{from{opacity:0}to{opacity:1}}
+.lb-ov img{max-width:92vw;max-height:92vh;object-fit:contain;border-radius:10px;box-shadow:0 12px 60px rgba(0,0,0,0.7);cursor:zoom-out}
 .img-upload-row{display:flex;align-items:center;gap:6px;margin-top:4px;flex-wrap:wrap}
 .db-search-row{display:flex;gap:0.5rem;margin-bottom:0.7rem}
 .db-search-row input,.db-search-row select{padding:7px 10px;border:1.5px solid #ddd;border-radius:6px;font-size:0.85rem;outline:none;color:#555}
@@ -1832,6 +1835,24 @@ document.getElementById('saveConfigBtn').addEventListener('click', async ()=>{
   const s = document.getElementById('configStatus');
   if (error) { s.textContent='❌ '+error.message; s.style.color='var(--red)'; }
   else { s.textContent='✅ Zapisano konfigurację'; s.style.color='var(--green)'; setTimeout(()=>{s.textContent='';},3000); }
+});
+
+// ── LIGHTBOX ──
+function openLightbox(src) {
+  let ov = document.getElementById('imgLightbox');
+  if (!ov) {
+    ov = document.createElement('div');
+    ov.id = 'imgLightbox'; ov.className = 'lb-ov';
+    const img = document.createElement('img');
+    ov.appendChild(img);
+    ov.addEventListener('click', () => ov.remove());
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') document.getElementById('imgLightbox')?.remove(); });
+    document.body.appendChild(ov);
+  }
+  ov.querySelector('img').src = src;
+}
+document.addEventListener('click', e => {
+  if (e.target.tagName === 'IMG' && e.target.classList.contains('img-thumb')) openLightbox(e.target.src);
 });
 
 // ── INIT ──

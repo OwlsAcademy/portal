@@ -138,9 +138,13 @@ tr:nth-child(even) td{background:#f7f9ff}
 .poss-n{color:var(--orange);font-weight:700}
 .two-col{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
 @media(max-width:620px){.two-col{grid-template-columns:1fr}.vocab-grid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr))}.lesson-header h1{font-size:1.4rem}.section{padding:1rem}.fc-btn{padding:9px 12px;font-size:0.82rem}}
-.lesson-img{max-width:100%;max-height:200px;object-fit:contain;border-radius:8px;margin:0.6rem auto;display:block}
-.vi-img{width:100%;max-height:80px;object-fit:contain;border-radius:6px;margin-bottom:4px;display:block}
-.fc-img{max-width:160px;max-height:90px;object-fit:contain;border-radius:8px;margin:0 auto 0.4rem;display:block}
+.lesson-img{max-width:100%;max-height:200px;object-fit:contain;border-radius:8px;margin:0.6rem auto;display:block;cursor:zoom-in}
+.vi-img{width:100%;max-height:80px;object-fit:contain;border-radius:6px;margin-bottom:4px;display:block;cursor:zoom-in}
+.fc-img{max-width:160px;max-height:90px;object-fit:contain;border-radius:8px;margin:0 auto 0.4rem;display:block;cursor:zoom-in}
+.zi{cursor:zoom-in}
+.lb-ov{position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:zoom-out;animation:lbIn 0.15s ease}
+@keyframes lbIn{from{opacity:0}to{opacity:1}}
+.lb-ov img{max-width:92vw;max-height:92vh;object-fit:contain;border-radius:10px;box-shadow:0 12px 60px rgba(0,0,0,0.7);cursor:zoom-out}
 </style>
 </head>
 <body>
@@ -412,7 +416,7 @@ function buildVocab(sec) {
       (s.rows || s.items || []).forEach(r => {
         const tr = el('tr');
         const td0 = el('td', 'pl-word');
-        if (r.image) { const img = document.createElement('img'); img.src = r.image; img.alt = r.pl||''; img.style.cssText = 'height:32px;object-fit:contain;margin-right:8px;vertical-align:middle;border-radius:3px;display:inline-block'; td0.appendChild(img); }
+        if (r.image) { const img = document.createElement('img'); img.src = r.image; img.alt = r.pl||''; img.className = 'zi'; img.style.cssText = 'height:32px;object-fit:contain;margin-right:8px;vertical-align:middle;border-radius:3px;display:inline-block;cursor:zoom-in'; td0.appendChild(img); }
         td0.appendChild(document.createTextNode(r.pl || ''));
         const td1 = el('td', 'en-word'); td1.textContent = r.en || '';
         tr.appendChild(td0); tr.appendChild(td1); t.appendChild(tr);
@@ -1017,6 +1021,27 @@ function removeWord(i) {
   refreshMyWordsView();
   scheduleProgressSave();
 }
+
+// ── LIGHTBOX ──
+function openLightbox(src) {
+  let ov = document.getElementById('imgLightbox');
+  if (!ov) {
+    ov = document.createElement('div');
+    ov.id = 'imgLightbox'; ov.className = 'lb-ov';
+    const img = document.createElement('img');
+    ov.appendChild(img);
+    ov.addEventListener('click', () => ov.remove());
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') document.getElementById('imgLightbox')?.remove(); });
+    document.body.appendChild(ov);
+  }
+  ov.querySelector('img').src = src;
+}
+document.addEventListener('click', e => {
+  if (e.target.tagName === 'IMG') {
+    const cls = e.target.className || '';
+    if (/lesson-img|vi-img|fc-img|(?:^|\s)zi(?:\s|$)/.test(cls)) openLightbox(e.target.src);
+  }
+});
 
 let progressSaveTimer = null;
 function showSaveStatus(msg, fade) {

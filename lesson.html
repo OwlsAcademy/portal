@@ -776,6 +776,12 @@ function buildSpeaking(sec) {
     (conv.prompts || []).forEach(p => {
       const wrap = document.createElement('div');
       wrap.style.marginBottom = '0.8rem';
+      if (p.image) {
+        const img = document.createElement('img');
+        img.src = p.image; img.alt = ''; img.className = 'lesson-img';
+        img.style.cssText = 'max-height:180px;margin-bottom:6px';
+        wrap.appendChild(img);
+      }
       const pr = el('div', 'speak-prompt');
       const strong = el('strong', null, 'Q: '); pr.appendChild(strong);
       pr.appendChild(document.createTextNode(p.q));

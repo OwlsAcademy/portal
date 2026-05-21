@@ -586,7 +586,7 @@ function loadFromJSON(obj) {
   speakingObj.warmup        = (s.warmup || []).map(w => typeof w==='string' ? {text:w,image:'',audio:''} : {text:w.text||'',image:w.image||'',audio:w.audio||''});
   speakingObj.conversations = (s.conversations || []).map(c => ({
     title:   c.title  || '',
-    prompts: (c.prompts||[]).map(p => ({q:p.q||'', qEn:p.qEn||'', answer:p.answer||''}))
+    prompts: (c.prompts||[]).map(p => ({q:p.q||'', qEn:p.qEn||'', answer:p.answer||'', image:p.image||''}))
   }));
   renderSpWarmup(); renderSpConv();
   exercises = (obj.exercises || []).map(ex => {
@@ -1133,7 +1133,7 @@ function renderRdComp() {
 
 // ── SPEAKING ──
 document.getElementById('addSpWarmupBtn').addEventListener('click', () => { speakingObj.warmup.push({text:'',image:'',audio:''}); renderSpWarmup(); scheduleUpdate(); });
-document.getElementById('addSpConvBtn').addEventListener('click',  () => { speakingObj.conversations.push({title:'', prompts:[{q:'', qEn:'', answer:''}]}); renderSpConv(); scheduleUpdate(); });
+document.getElementById('addSpConvBtn').addEventListener('click',  () => { speakingObj.conversations.push({title:'', prompts:[{q:'', qEn:'', answer:'', image:''}]}); renderSpConv(); scheduleUpdate(); });
 function renderSpWarmup() {
   const list = document.getElementById('spWarmupList'); list.textContent = '';
   speakingObj.warmup.forEach((item, i) => {
@@ -1183,13 +1183,27 @@ function renderSpConv() {
       pw.appendChild(field('Pytanie PL *', textInput(p.q||'', 'Co robisz w weekend?', v => { p.q=v; scheduleUpdate(); })));
       pw.appendChild(field('Pytanie EN (opcjonalnie)', textInput(p.qEn||'', 'What do you do on weekends?', v => { p.qEn=v; scheduleUpdate(); })));
       pw.appendChild(field('Przykładowa odpowiedź', textInput(p.answer||'', 'W weekendy gram w piłkę...', v => { p.answer=v; scheduleUpdate(); })));
+      // Image
+      const imgRow = el('div', 'img-upload-row');
+      if (p.image) {
+        const thumb = document.createElement('img'); thumb.src = p.image; thumb.className = 'img-thumb'; thumb.alt = '';
+        imgRow.appendChild(thumb);
+        const rem = el('button', 'del-btn', '✕ Obraz');
+        rem.addEventListener('click', () => { p.image = ''; renderSpConv(); scheduleUpdate(); });
+        imgRow.appendChild(rem);
+      }
+      const addImgBtn = el('button', 'add-btn', p.image ? '🔄 Zmień' : '🖼️ Obraz');
+      addImgBtn.style.cssText = 'padding:4px 8px;font-size:0.75rem;margin:0';
+      addImgBtn.addEventListener('click', () => pickImage(b64 => { p.image = b64; renderSpConv(); scheduleUpdate(); }));
+      imgRow.appendChild(addImgBtn);
+      pw.appendChild(imgRow);
       const delP = el('button', 'del-btn abs', '✕');
       delP.addEventListener('click', () => { conv.prompts.splice(pi,1); renderSpConv(); scheduleUpdate(); });
       pw.appendChild(delP); pList.appendChild(pw);
     });
     wrap.appendChild(pList);
     const addP = el('button', 'add-btn', '+ Dodaj pytanie');
-    addP.addEventListener('click', () => { conv.prompts.push({q:'',qEn:'',answer:''}); renderSpConv(); scheduleUpdate(); });
+    addP.addEventListener('click', () => { conv.prompts.push({q:'',qEn:'',answer:'',image:''}); renderSpConv(); scheduleUpdate(); });
     wrap.appendChild(addP);
     const delC = el('button', 'del-btn', '✕ Usuń konwersację'); delC.style.cssText = 'margin-top:0.5rem;display:block';
     delC.addEventListener('click', () => { speakingObj.conversations.splice(ci,1); renderSpConv(); scheduleUpdate(); });

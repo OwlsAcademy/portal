@@ -824,7 +824,7 @@ function buildFC(sec) {
   sec.appendChild(stats);
 }
 
-function initFC() { fcIdx = 0; fcStats = {known:0, unknown:0}; renderFC(); }
+function initFC() { fcIdx = 0; renderFC(); }
 function renderFC() {
   const cards = lesson.flashcards;
   if (!cards?.length) return;

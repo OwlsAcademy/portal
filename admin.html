@@ -128,10 +128,12 @@ h1,h2,h3,h4{font-family:'Nunito',sans-serif}
     <div class="form-tabs" id="formTabs">
       <button class="ftab active" data-tab="basic">&#9997; Podstawowe</button>
       <button class="ftab" data-tab="vocab">&#128218; Vocabulary</button>
+      <button class="ftab" data-tab="grammar">&#128214; Grammar</button>
+      <button class="ftab" data-tab="reading">&#128196; Reading</button>
       <button class="ftab" data-tab="exercises">&#9998; Exercises</button>
+      <button class="ftab" data-tab="speaking">&#128483; Speaking</button>
       <button class="ftab" data-tab="flashcards">&#127183; Flashcards</button>
       <button class="ftab" data-tab="homework">&#127968; Homework</button>
-      <button class="ftab" data-tab="advanced">&#128295; Zaawansowane</button>
       <button class="ftab" data-tab="students">&#128101; Uczniowie</button>
       <button class="ftab" data-tab="progress">&#128200; Post&#281;py</button>
       <button class="ftab" data-tab="settings">&#9881; Ustawienia</button>
@@ -211,28 +213,48 @@ h1,h2,h3,h4{font-family:'Nunito',sans-serif}
       </div>
     </div>
 
-    <!-- ADVANCED -->
-    <div class="form-section" id="tab-advanced">
-      <h3>Zaawansowane (JSON bezpo&#347;redni)</h3>
-      <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1rem">
-        <button class="add-btn" data-template="grammar">&#128196; Szablon Grammar</button>
-        <button class="add-btn" data-template="reading">&#128196; Szablon Reading</button>
-        <button class="add-btn" data-template="speaking">&#128196; Szablon Speaking</button>
+    <!-- GRAMMAR -->
+    <div class="form-section" id="tab-grammar">
+      <h3>Grammar</h3>
+      <div style="margin-bottom:0.8rem">
+        <button class="add-btn" data-template="grammar">&#128196; Wstaw szablon</button>
       </div>
       <div class="field">
-        <label>Grammar (JSON)</label>
-        <textarea id="adv_grammar" rows="10" placeholder='{"title":"Grammar","subtitle":"...","blocks":[]}'></textarea>
-        <div class="hint">Typy blok&oacute;w: info, table, examples, qa-table, two-col</div>
+        <textarea id="adv_grammar" rows="18" placeholder='{"title":"Grammar","subtitle":"...","blocks":[]}'></textarea>
+        <div class="hint">Typy blok&oacute;w: <strong>info</strong>, <strong>table</strong>, <strong>examples</strong>, <strong>qa-table</strong>, <strong>two-col</strong> &mdash; edycja w JSON</div>
       </div>
+    </div>
+
+    <!-- READING -->
+    <div class="form-section" id="tab-reading">
+      <h3>Reading</h3>
+      <div class="two-field">
+        <div class="field"><label>Tytu&#322; tekstu</label><input id="rd_title" placeholder="np. Moja rodzina"></div>
+        <div class="field"><label>Podtytu&#322;</label><input id="rd_sub" placeholder="np. Read carefully"></div>
+      </div>
+      <div class="field"><label>Notatka (nad tekstem)</label><input id="rd_note" placeholder="np. Yellow = kluczowe s&#322;owa"></div>
       <div class="field">
-        <label>Reading (JSON)</label>
-        <textarea id="adv_reading" rows="8" placeholder='{"title":"...","subtitle":"...","text":"...","comprehension":[]}'></textarea>
-        <div class="hint">W tek&#347;cie: &lt;span class="hl"&gt; = &#380;&oacute;&#322;te, &lt;span class="hlg"&gt; = zielone</div>
+        <label>Tekst &mdash; HTML dozwolony: <code style="font-size:0.78rem">&lt;span class="hl"&gt;</code> = &#380;&oacute;&#322;te, <code style="font-size:0.78rem">&lt;span class="hlg"&gt;</code> = zielone</label>
+        <textarea id="rd_text" rows="9" style="font-family:'Lato',sans-serif;font-size:0.88rem;line-height:1.6" placeholder="Tre&#347;&#263; tekstu..."></textarea>
       </div>
-      <div class="field">
-        <label>Speaking (JSON)</label>
-        <textarea id="adv_speaking" rows="7" placeholder='{"subtitle":"...","warmup":[],"conversations":[]}'></textarea>
-      </div>
+      <span class="sec-label">S&#322;ownictwo z tekstu</span>
+      <div id="rdVocabList"></div>
+      <button class="add-btn" id="addRdVocabBtn">&#43; Dodaj s&#322;&oacute;wko</button>
+      <span class="sec-label" style="margin-top:1.5rem">Pytania do tekstu</span>
+      <div id="rdCompList"></div>
+      <button class="add-btn" id="addRdCompBtn">&#43; Dodaj pytanie</button>
+    </div>
+
+    <!-- SPEAKING -->
+    <div class="form-section" id="tab-speaking">
+      <h3>Speaking</h3>
+      <div class="field"><label>Podtytu&#322;</label><input id="sp_sub" placeholder="np. Talk about your family"></div>
+      <span class="sec-label">Warmup &mdash; zdania do powt&oacute;rzenia</span>
+      <div id="spWarmupList"></div>
+      <button class="add-btn" id="addSpWarmupBtn">&#43; Dodaj zdanie warmup</button>
+      <span class="sec-label" style="margin-top:1.5rem">Konwersacje</span>
+      <div id="spConvList"></div>
+      <button class="add-btn" id="addSpConvBtn">&#43; Dodaj konwersacj&#281;</button>
     </div>
 
     <!-- STUDENTS -->
@@ -366,6 +388,8 @@ h1,h2,h3,h4{font-family:'Nunito',sans-serif}
 <script>
 // ── DATA ──
 let vocabSections = [], phrases = [], exercises = [], flashcards = [], homework = [];
+let readingObj  = {title:'', subtitle:'', note:'', text:'', vocab:[], comprehension:[]};
+let speakingObj = {subtitle:'', warmup:[], conversations:[]};
 let currentLessonId = null;
 
 // ── HELPERS ──
@@ -482,7 +506,7 @@ document.querySelectorAll('.ftab').forEach(btn => {
   });
 });
 ['f_title','f_sub','f_level','f_emoji',
- 'v_sub','adv_grammar','adv_reading','adv_speaking']
+ 'v_sub','adv_grammar','rd_title','rd_sub','rd_note','rd_text','sp_sub']
   .forEach(id => document.getElementById(id)?.addEventListener('input', scheduleUpdate));
 
 document.getElementById('newLessonBtn').addEventListener('click', () => {
@@ -517,10 +541,27 @@ function loadFromJSON(obj) {
     phrases = (obj.vocabulary.phrases || []).map(p => ({pl:p.pl||'',en:p.en||''}));
   } else { vocabSections = []; phrases = []; }
   renderVocabSections(); renderPhrases();
-  ['grammar','reading','speaking'].forEach(k => {
-    const ta = document.getElementById('adv_' + k);
-    if (ta) ta.value = obj[k] ? JSON.stringify(obj[k], null, 2) : '';
-  });
+  // Grammar: JSON editor
+  const taG = document.getElementById('adv_grammar');
+  if (taG) taG.value = obj.grammar ? JSON.stringify(obj.grammar, null, 2) : '';
+  // Reading: form fields
+  const r = obj.reading || {};
+  document.getElementById('rd_title').value = r.title    || '';
+  document.getElementById('rd_sub').value   = r.subtitle || '';
+  document.getElementById('rd_note').value  = r.note     || '';
+  document.getElementById('rd_text').value  = r.text     || '';
+  readingObj.vocab         = (r.vocab          || []).map(v => ({pl:v.pl||'', en:v.en||''}));
+  readingObj.comprehension = (r.comprehension  || []).map(c => ({question:c.question||'', placeholder:c.placeholder||''}));
+  renderRdVocab(); renderRdComp();
+  // Speaking: form fields
+  const s = obj.speaking || {};
+  document.getElementById('sp_sub').value = s.subtitle || '';
+  speakingObj.warmup        = (s.warmup        || []).slice();
+  speakingObj.conversations = (s.conversations || []).map(c => ({
+    title:   c.title  || '',
+    prompts: (c.prompts||[]).map(p => ({q:p.q||'', qEn:p.qEn||'', answer:p.answer||''}))
+  }));
+  renderSpWarmup(); renderSpConv();
   exercises = (obj.exercises || []).map(ex => {
     if (ex.type==='quiz')      return {type:'quiz',title:ex.title||'',desc:ex.desc||'',questions:(ex.questions||[]).map(q=>({q:q.q||'',options:q.options||['','','',''],answer:q.answer||'',image:q.image||''}))};
     if (ex.type==='fill')      return {type:'fill',title:ex.title||'',desc:ex.desc||'',items:(ex.items||[]).map(it=>({before:it.before||'',after:it.after||'',answer:it.answer||'',hint:it.hint||''}))};
@@ -827,17 +868,81 @@ function renderHW() {
 }
 
 // ── TEMPLATES ──
-const TEMPLATES = {
-  grammar: '{\n  "title": "Grammar Title",\n  "subtitle": "...",\n  "blocks": [\n    {"type":"info","title":"The Big Idea","heading":"...","text":"...","tip":"..."},\n    {"type":"table","color":"purple","title":"All forms","headers":["Person","Masculine","Feminine"],"rows":[["I","mój","moja"]],"tip":"..."},\n    {"type":"examples","color":"green","title":"Examples","items":[{"pl":"...","en":"..."}]}\n  ]\n}',
-  reading: '{\n  "title": "Moja rodzina",\n  "subtitle": "Read carefully",\n  "note": "Yellow = kluczowe słowa",\n  "text": "Treść tekstu tutaj...",\n  "vocab": [{"pl":"...","en":"..."}],\n  "comprehension": [{"question":"...","placeholder":"..."}]\n}',
-  speaking: '{\n  "subtitle": "Talk about...",\n  "warmup": ["Phrase 1","Phrase 2"],\n  "conversations": [{"title":"Topic","prompts":[{"q":"Pytanie?","qEn":"Question?","answer":"Odpowiedź."}]}]\n}'
-};
-document.querySelectorAll('[data-template]').forEach(btn=>{
+const GRAMMAR_TEMPLATE = '{\n  "title": "Grammar Title",\n  "subtitle": "...",\n  "blocks": [\n    {"type":"info","title":"The Big Idea","heading":"...","text":"...","tip":"..."},\n    {"type":"table","color":"purple","title":"All forms","headers":["Person","Masculine","Feminine"],"rows":[["I","mój","moja"]],"tip":"..."},\n    {"type":"examples","color":"green","title":"Examples","items":[{"pl":"...","en":"..."}]}\n  ]\n}';
+document.querySelectorAll('[data-template="grammar"]').forEach(btn=>{
   btn.addEventListener('click',()=>{
-    const ta = document.getElementById('adv_'+btn.dataset.template);
-    if (ta) { ta.value=TEMPLATES[btn.dataset.template]||''; scheduleUpdate(); }
+    const ta = document.getElementById('adv_grammar');
+    if (ta) { ta.value = GRAMMAR_TEMPLATE; scheduleUpdate(); }
   });
 });
+
+// ── READING ──
+document.getElementById('addRdVocabBtn').addEventListener('click', () => { readingObj.vocab.push({pl:'', en:''}); renderRdVocab(); scheduleUpdate(); });
+document.getElementById('addRdCompBtn').addEventListener('click',  () => { readingObj.comprehension.push({question:'', placeholder:''}); renderRdComp(); scheduleUpdate(); });
+function renderRdVocab() {
+  const list = document.getElementById('rdVocabList'); list.textContent = '';
+  readingObj.vocab.forEach((item, i) => {
+    const row = el('div', 'item-row');
+    const g = el('div', 'two-field');
+    const plI = textInput(item.pl, 'Polski', v => { item.pl=v; scheduleUpdate(); });
+    const enI = textInput(item.en, 'English', v => { item.en=v; scheduleUpdate(); });
+    g.appendChild(plI); g.appendChild(enI);
+    const del = el('button', 'del-btn', '✕');
+    del.addEventListener('click', () => { readingObj.vocab.splice(i,1); renderRdVocab(); scheduleUpdate(); });
+    row.appendChild(g); row.appendChild(del); list.appendChild(row);
+  });
+}
+function renderRdComp() {
+  const list = document.getElementById('rdCompList'); list.textContent = '';
+  readingObj.comprehension.forEach((item, i) => {
+    const row = el('div', 'item-row');
+    row.appendChild(field('Pytanie *', textInput(item.question, 'Co robi...?', v => { item.question=v; scheduleUpdate(); })));
+    row.appendChild(field('Placeholder (podpowiedź)', textInput(item.placeholder||'', 'np. Moja mama...', v => { item.placeholder=v; scheduleUpdate(); })));
+    const del = el('button', 'del-btn', '✕ Usuń pytanie'); del.style.cssText = 'margin-top:0.3rem;display:block';
+    del.addEventListener('click', () => { readingObj.comprehension.splice(i,1); renderRdComp(); scheduleUpdate(); });
+    row.appendChild(del); list.appendChild(row);
+  });
+}
+
+// ── SPEAKING ──
+document.getElementById('addSpWarmupBtn').addEventListener('click', () => { speakingObj.warmup.push(''); renderSpWarmup(); scheduleUpdate(); });
+document.getElementById('addSpConvBtn').addEventListener('click',  () => { speakingObj.conversations.push({title:'', prompts:[{q:'', qEn:'', answer:''}]}); renderSpConv(); scheduleUpdate(); });
+function renderSpWarmup() {
+  const list = document.getElementById('spWarmupList'); list.textContent = '';
+  speakingObj.warmup.forEach((phrase, i) => {
+    const row = el('div', 'item-row'); row.style.cssText = 'display:flex;gap:8px;align-items:center';
+    const inp = textInput(phrase, 'np. I have a big family.', v => { speakingObj.warmup[i]=v; scheduleUpdate(); });
+    inp.style.flex = '1';
+    const del = el('button', 'del-btn', '✕'); del.style.flexShrink = '0';
+    del.addEventListener('click', () => { speakingObj.warmup.splice(i,1); renderSpWarmup(); scheduleUpdate(); });
+    row.appendChild(inp); row.appendChild(del); list.appendChild(row);
+  });
+}
+function renderSpConv() {
+  const list = document.getElementById('spConvList'); list.textContent = '';
+  speakingObj.conversations.forEach((conv, ci) => {
+    const wrap = el('div', 'item-row'); wrap.style.marginBottom = '1rem';
+    wrap.appendChild(field('Tytuł konwersacji', textInput(conv.title||'', 'np. Family life', v => { conv.title=v; scheduleUpdate(); })));
+    wrap.appendChild(el('span', 'sec-label', 'Pytania i odpowiedzi'));
+    const pList = document.createElement('div');
+    (conv.prompts||[]).forEach((p, pi) => {
+      const pw = el('div'); pw.style.cssText = 'background:#f0f4ff;border-radius:8px;padding:0.7rem;margin-bottom:0.5rem;position:relative';
+      pw.appendChild(field('Pytanie PL *', textInput(p.q||'', 'Co robisz w weekend?', v => { p.q=v; scheduleUpdate(); })));
+      pw.appendChild(field('Pytanie EN (opcjonalnie)', textInput(p.qEn||'', 'What do you do on weekends?', v => { p.qEn=v; scheduleUpdate(); })));
+      pw.appendChild(field('Przykładowa odpowiedź', textInput(p.answer||'', 'W weekendy gram w piłkę...', v => { p.answer=v; scheduleUpdate(); })));
+      const delP = el('button', 'del-btn abs', '✕');
+      delP.addEventListener('click', () => { conv.prompts.splice(pi,1); renderSpConv(); scheduleUpdate(); });
+      pw.appendChild(delP); pList.appendChild(pw);
+    });
+    wrap.appendChild(pList);
+    const addP = el('button', 'add-btn', '+ Dodaj pytanie');
+    addP.addEventListener('click', () => { conv.prompts.push({q:'',qEn:'',answer:''}); renderSpConv(); scheduleUpdate(); });
+    wrap.appendChild(addP);
+    const delC = el('button', 'del-btn', '✕ Usuń konwersację'); delC.style.cssText = 'margin-top:0.5rem;display:block';
+    delC.addEventListener('click', () => { speakingObj.conversations.splice(ci,1); renderSpConv(); scheduleUpdate(); });
+    wrap.appendChild(delC); list.appendChild(wrap);
+  });
+}
 
 // ── BUILD JSON ──
 function buildJSON() {
@@ -859,12 +964,43 @@ function buildJSON() {
     if (!obj.vocabulary.phrases.length) delete obj.vocabulary.phrases;
     if (!obj.vocabulary.sections.length) delete obj.vocabulary.sections;
   }
-  ['grammar','reading','speaking'].forEach(key=>{
-    if (selectedTabs.includes(key)) {
-      const raw = document.getElementById('adv_'+key).value.trim();
-      if (raw) { try { obj[key]=JSON.parse(raw); } catch { obj[key]={_parseError:'Invalid JSON'}; } }
+  // Grammar: JSON editor
+  if (selectedTabs.includes('grammar')) {
+    const raw = document.getElementById('adv_grammar').value.trim();
+    if (raw) { try { obj.grammar = JSON.parse(raw); } catch { obj.grammar = {_parseError:'Invalid JSON'}; } }
+  }
+  // Reading: form fields
+  if (selectedTabs.includes('reading')) {
+    const rdTitle = document.getElementById('rd_title').value.trim();
+    const rdSub   = document.getElementById('rd_sub').value.trim();
+    const rdNote  = document.getElementById('rd_note').value.trim();
+    const rdText  = document.getElementById('rd_text').value.trim();
+    const vocab   = readingObj.vocab.filter(v => v.pl||v.en);
+    const comp    = readingObj.comprehension.filter(c => c.question);
+    if (rdTitle||rdSub||rdNote||rdText||vocab.length||comp.length) {
+      obj.reading = {};
+      if (rdTitle) obj.reading.title    = rdTitle;
+      if (rdSub)   obj.reading.subtitle = rdSub;
+      if (rdNote)  obj.reading.note     = rdNote;
+      if (rdText)  obj.reading.text     = rdText;
+      if (vocab.length) obj.reading.vocab         = vocab;
+      if (comp.length)  obj.reading.comprehension = comp;
     }
-  });
+  }
+  // Speaking: form fields
+  if (selectedTabs.includes('speaking')) {
+    const spSub  = document.getElementById('sp_sub').value.trim();
+    const warmup = speakingObj.warmup.filter(w => w.trim());
+    const convs  = speakingObj.conversations
+      .map(c => ({title:c.title||'', prompts:(c.prompts||[]).filter(p=>p.q||p.answer)}))
+      .filter(c => c.title||c.prompts.length);
+    if (spSub||warmup.length||convs.length) {
+      obj.speaking = {};
+      if (spSub)          obj.speaking.subtitle      = spSub;
+      if (warmup.length)  obj.speaking.warmup        = warmup;
+      if (convs.length)   obj.speaking.conversations = convs;
+    }
+  }
   if (selectedTabs.includes('exercises') && exercises.length) obj.exercises = exercises;
   if (selectedTabs.includes('flashcards') && flashcards.length) obj.flashcards = flashcards.filter(fc=>fc.word&&fc.translation);
   if (selectedTabs.includes('homework') && homework.length) obj.homework = homework;

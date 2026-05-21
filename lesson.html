@@ -923,6 +923,27 @@ function updateScore() {
   }
 }
 
+// ── SAVE PROGRESS TO SUPABASE ──
+async function saveProgressToSupabase(ok, total) {
+  const studentId = localStorage.getItem('studentId');
+  if (!studentId || !lesson?.id) return;
+  const pct = total > 0 ? Math.round(ok / total * 100) : null;
+  const exercisesData = {
+    quiz: Object.entries(quizAnswered).map(([k,v])=>({question:k,chosen:v.chosen,answer:v.answer,correct:v.correct})),
+    fill: Object.entries(fillChecked).filter(([,v])=>v).map(([k,v])=>({item:k,typed:v.typed,answer:v.answer,correct:v.correct}))
+  };
+  const flashcardsData = {known: fcStats.known, unknown: fcStats.unknown};
+  const homeworkData = Object.keys(writeTexts).length ? writeTexts : null;
+  await sb.from('lesson_progress').upsert({
+    student_id: studentId,
+    lesson_id:  lesson.id,
+    score:      pct,
+    exercises:  exercisesData,
+    flashcards: flashcardsData,
+    homework:   homeworkData
+  }, {onConflict: 'student_id,lesson_id'});
+}
+
 // ── SUBMIT ──
 async function submitResults() {
   const btn = document.getElementById('sendBtn');
@@ -969,9 +990,11 @@ async function submitResults() {
         },
         {publicKey: ejs.publicKey}
       );
+      await saveProgressToSupabase(ok, total);
       btn.textContent = '✅ Wysłano!';
       setTimeout(() => { btn.textContent = '📨 Wyślij wyniki'; btn.disabled = false; }, 3000);
     } catch(err) {
+      await saveProgressToSupabase(ok, total);
       btn.textContent = '📨 Wyślij wyniki';
       btn.disabled = false;
       alert('⚠️ Błąd EmailJS: ' + (err.text || err.message || JSON.stringify(err)));
@@ -979,9 +1002,9 @@ async function submitResults() {
     return;
   }
 
-  btn.textContent = '📨 Wyślij wyniki';
-  btn.disabled = false;
-  alert('⚠️ Wysyłanie nie jest skonfigurowane.\nSkontaktuj się z nauczycielem.');
+  await saveProgressToSupabase(ok, total);
+  btn.textContent = '✅ Postęp zapisany!';
+  setTimeout(() => { btn.textContent = '📨 Wyślij wyniki'; btn.disabled = false; }, 3000);
 }
 </script>
 </body>

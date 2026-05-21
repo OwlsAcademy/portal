@@ -112,25 +112,29 @@ async function loadLessons(code) {
     localStorage.setItem('studentId',   found.id);
     localStorage.setItem('studentName', found.name);
 
-    const { data: lessonRows, error: lErr } = await sb
-      .from('lessons')
-      .select('id, title, subtitle, level, lesson_number, date, header_emoji, tabs')
-      .eq('student_code', found.code)
-      .order('lesson_number', { ascending: true });
+    const { data: assignments, error: lErr } = await sb
+      .from('student_lessons')
+      .select('lesson_id, lessons(id, title, subtitle, level, lesson_number, date, header_emoji, tabs)')
+      .eq('student_id', found.id)
+      .order('lesson_id');
 
     if (lErr) throw lErr;
 
-    const lessons = (lessonRows || []).map(l => ({
-      id:           l.id,
-      title:        l.title,
-      subtitle:     l.subtitle,
-      level:        l.level,
-      lessonNumber: l.lesson_number,
-      date:         l.date,
-      headerEmoji:  l.header_emoji,
-      emoji:        l.header_emoji,
-      tabs:         l.tabs || []
-    }));
+    const lessons = (assignments || [])
+      .map(a => a.lessons)
+      .filter(Boolean)
+      .sort((a, b) => (a.lesson_number || 0) - (b.lesson_number || 0))
+      .map(l => ({
+        id:           l.id,
+        title:        l.title,
+        subtitle:     l.subtitle,
+        level:        l.level,
+        lessonNumber: l.lesson_number,
+        date:         l.date,
+        headerEmoji:  l.header_emoji,
+        emoji:        l.header_emoji,
+        tabs:         l.tabs || []
+      }));
 
     showLessons(lessons, found.name);
   } catch(e) {

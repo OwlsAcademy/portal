@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Owl's Academy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="supabase-client.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Lato',sans-serif;background:linear-gradient(135deg,#eef2ff,#ecfeff);min-height:100vh;color:#1a1a2e}
+h1,h2,h3,h4{font-family:'Nunito',sans-serif}
+:root{--blue:#1d3557;--blue-mid:#457b9d;--yellow:#ffd166;--green:#06d6a0;--red:#e63946}
+
+.hero{background:linear-gradient(135deg,var(--blue) 0%,#2d6a8f 100%);color:white;padding:3rem 1.5rem;text-align:center}
+.hero h1{font-size:2.2rem;margin-bottom:0.5rem}
+.hero-sub{opacity:0.85;font-size:1.05rem;margin-bottom:2rem}
+.hero-note{display:block;opacity:0.6;font-size:0.82rem;margin-top:1.5rem}
+
+.login-box{background:rgba(255,255,255,0.12);border:2px solid rgba(255,255,255,0.3);border-radius:16px;padding:2rem;max-width:400px;margin:0 auto;backdrop-filter:blur(4px)}
+.login-box label{display:block;font-family:'Nunito',sans-serif;font-weight:700;font-size:0.95rem;margin-bottom:0.5rem;opacity:0.9}
+.login-box input{width:100%;padding:12px 16px;border-radius:10px;border:2px solid rgba(255,255,255,0.4);background:rgba(255,255,255,0.15);color:white;font-size:1rem;font-family:'Lato',sans-serif;outline:none;transition:border 0.2s}
+.login-box input::placeholder{color:rgba(255,255,255,0.5)}
+.login-box input:focus{border-color:var(--yellow)}
+.login-btn{display:block;width:100%;margin-top:1rem;padding:13px;background:var(--yellow);color:var(--blue);border:none;border-radius:10px;font-family:'Nunito',sans-serif;font-weight:900;font-size:1rem;cursor:pointer;transition:all 0.2s}
+.login-btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,0.2)}
+.login-err{color:#ffb3b3;font-size:0.88rem;margin-top:0.7rem;display:none;font-family:'Nunito',sans-serif;font-weight:700}
+
+.lessons-area{max-width:860px;margin:0 auto;padding:2rem 1.5rem}
+.lessons-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem}
+.lessons-header h2{font-size:1.4rem;color:var(--blue)}
+.logout-btn{background:none;border:2px solid #ccc;border-radius:8px;padding:6px 14px;font-family:'Nunito',sans-serif;font-weight:700;font-size:0.85rem;cursor:pointer;color:#666;transition:all 0.2s}
+.logout-btn:hover{border-color:var(--red);color:var(--red)}
+.lesson-card{background:white;border-radius:14px;padding:1.5rem;margin-bottom:1rem;box-shadow:0 3px 12px rgba(0,0,0,0.07);display:flex;align-items:center;gap:1.2rem;cursor:pointer;text-decoration:none;color:inherit;border:2px solid transparent;transition:all 0.2s}
+.lesson-card:hover{border-color:var(--blue-mid);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.1)}
+.lesson-emoji{font-size:2.5rem;width:60px;text-align:center;flex-shrink:0}
+.lesson-info{flex:1}
+.lesson-title{font-family:'Nunito',sans-serif;font-weight:800;font-size:1.1rem;color:var(--blue);margin-bottom:0.3rem}
+.lesson-sub{font-size:0.85rem;color:#666;margin-bottom:0.4rem}
+.lesson-meta{display:flex;gap:0.5rem;flex-wrap:wrap}
+.chip{background:#f0f4ff;color:var(--blue);border-radius:20px;padding:2px 10px;font-size:0.75rem;font-family:'Nunito',sans-serif;font-weight:700}
+.chip.level{background:#e8f5e9;color:#1b5e20}
+.chip.date{background:#fff3e0;color:#6d3a00}
+.lesson-arrow{color:#ccc;font-size:1.4rem;flex-shrink:0}
+.no-lessons{text-align:center;padding:3rem;color:#888}
+.no-lessons p{font-size:1.1rem;margin-bottom:0.5rem}
+footer{text-align:center;padding:2rem;color:#aaa;font-size:0.82rem}
+footer a{color:var(--blue-mid)}
+</style>
+</head>
+<body>
+
+<div id="heroSection" class="hero">
+  <h1>&#129417; Owl's Academy</h1>
+  <p class="hero-sub">Twoja platforma językowa</p>
+  <div class="login-box">
+    <label for="codeInput">Wpisz swój kod dostępu:</label>
+    <input type="text" id="codeInput" placeholder="np. anna2024" autocomplete="off" autocapitalize="none" spellcheck="false">
+    <button class="login-btn" id="loginBtn">Wejdź &#8594;</button>
+    <div class="login-err" id="loginErr"></div>
+  </div>
+  <span class="hero-note">Nie pamiętasz kodu? Skontaktuj si&#x119; z nauczycielem.</span>
+</div>
+
+<div class="lessons-area" id="lessonsArea" style="display:none">
+  <div class="lessons-header">
+    <h2 id="greetingHdr">Twoje lekcje</h2>
+    <button class="logout-btn" id="logoutBtn">&#8592; Zmie&#x144; kod</button>
+  </div>
+  <div id="lessonsList"></div>
+</div>
+
+<footer>Owl's Academy &mdash; <a href="admin.html">Panel nauczyciela</a></footer>
+
+<script>
+const TAB_ICONS = {
+  vocabulary:'📚',grammar:'📖',reading:'📄',exercises:'✏️',
+  speaking:'🗣️',flashcards:'🃏',homework:'🏠',mywords:'📝'
+};
+
+// ── HELPERS ──
+function el(tag, cls, text) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text != null) e.textContent = text;
+  return e;
+}
+
+// ── LOGIN ──
+async function loadLessons(code) {
+  const errEl = document.getElementById('loginErr');
+  errEl.style.display = 'none';
+
+  try {
+    const { data: students, error } = await sb
+      .from('students')
+      .select('id, name, code, prefix')
+      .ilike('code', code);
+
+    if (error) throw error;
+
+    const found = (students || []).find(s => s.code.toLowerCase() === code.toLowerCase());
+    if (!found) {
+      errEl.textContent = '❌ Nieprawidłowy kod dostępu. Sprawdź pisownię lub skontaktuj się z nauczycielem.';
+      errEl.style.display = 'block';
+      return;
+    }
+
+    localStorage.setItem('lessonCode',  found.code);
+    localStorage.setItem('studentId',   found.id);
+    localStorage.setItem('studentName', found.name);
+
+    const { data: lessonRows, error: lErr } = await sb
+      .from('lessons')
+      .select('id, title, subtitle, level, lesson_number, date, header_emoji, tabs')
+      .eq('student_code', found.code)
+      .order('lesson_number', { ascending: true });
+
+    if (lErr) throw lErr;
+
+    const lessons = (lessonRows || []).map(l => ({
+      id:           l.id,
+      title:        l.title,
+      subtitle:     l.subtitle,
+      level:        l.level,
+      lessonNumber: l.lesson_number,
+      date:         l.date,
+      headerEmoji:  l.header_emoji,
+      emoji:        l.header_emoji,
+      tabs:         l.tabs || []
+    }));
+
+    showLessons(lessons, found.name);
+  } catch(e) {
+    errEl.textContent = '⚠️ Błąd: ' + e.message;
+    errEl.style.display = 'block';
+  }
+}
+
+// ── SHOW LESSONS ──
+function showLessons(lessons, name) {
+  document.getElementById('heroSection').style.display = 'none';
+
+  const displayName = name || localStorage.getItem('studentName') || '';
+  const greet = document.getElementById('greetingHdr');
+  greet.textContent = displayName ? 'Cześć, ' + displayName + '! 👋 Twoje lekcje:' : 'Twoje lekcje';
+
+  document.getElementById('lessonsArea').style.display = 'block';
+
+  const list = document.getElementById('lessonsList');
+  list.textContent = '';
+
+  if (!lessons.length) {
+    const wrap = el('div', 'no-lessons');
+    wrap.appendChild(el('p', null, 'Brak lekcji.'));
+    wrap.appendChild(el('p', null, 'Skontaktuj się z nauczycielem.'));
+    list.appendChild(wrap);
+    return;
+  }
+
+  lessons.forEach(l => {
+    const a = document.createElement('a');
+    a.className = 'lesson-card';
+    a.href = 'lesson.html?id=' + encodeURIComponent(l.id);
+
+    const emojiDiv = el('div', 'lesson-emoji', l.emoji || l.headerEmoji || '📚');
+
+    const info = el('div', 'lesson-info');
+    info.appendChild(el('div', 'lesson-title', 'Lekcja ' + (l.lessonNumber || '') + ': ' + (l.title || '')));
+    if (l.subtitle) info.appendChild(el('div', 'lesson-sub', l.subtitle));
+
+    const meta = el('div', 'lesson-meta');
+    if (l.level) meta.appendChild(el('span', 'chip level', l.level));
+    if (l.date)  meta.appendChild(el('span', 'chip date', l.date));
+    (l.tabs || []).forEach(t => {
+      meta.appendChild(el('span', 'chip', (TAB_ICONS[t] || '') + ' ' + t));
+    });
+    info.appendChild(meta);
+
+    a.appendChild(emojiDiv);
+    a.appendChild(info);
+    a.appendChild(el('div', 'lesson-arrow', '→'));
+    list.appendChild(a);
+  });
+}
+
+// ── EVENTS ──
+document.getElementById('loginBtn').addEventListener('click', async () => {
+  const code = document.getElementById('codeInput').value.trim();
+  if (!code) return;
+  const btn = document.getElementById('loginBtn');
+  btn.textContent = 'Szukam...';
+  btn.disabled = true;
+  await loadLessons(code);
+  btn.textContent = 'Wejdź →';
+  btn.disabled = false;
+});
+
+document.getElementById('codeInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('loginBtn').click();
+});
+
+document.getElementById('logoutBtn').addEventListener('click', () => {
+  localStorage.removeItem('lessonCode');
+  localStorage.removeItem('studentId');
+  localStorage.removeItem('studentName');
+  location.reload();
+});
+
+// ── AUTO-LOGIN (via stored code) ──
+const savedCode = localStorage.getItem('lessonCode');
+const savedId   = localStorage.getItem('studentId');
+if (savedId && savedCode) {
+  loadLessons(savedCode);
+} else if (savedCode) {
+  document.getElementById('codeInput').value = savedCode;
+  loadLessons(savedCode);
+}
+</script>
+</body>
+</html>

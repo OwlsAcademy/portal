@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title id="pageTitle">Lekcja</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="supabase-client.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Lato',sans-serif;background:#f0f4ff;color:#1a1a2e;min-height:100vh}
+h1,h2,h3,h4{font-family:'Nunito',sans-serif}
+:root{
+  --red:#e63946;--blue:#1d3557;--blue-mid:#457b9d;
+  --blue-light:#a8dadc;--cream:#f1faee;--yellow:#ffd166;
+  --green:#06d6a0;--orange:#f77f00;--purple:#7b2d8b;--pink:#f72585
+}
+.nav-bar{display:flex;background:var(--blue);align-items:center;padding:0 0.5rem;position:sticky;top:0;z-index:200;box-shadow:0 2px 8px rgba(0,0,0,0.2)}
+.back-btn{color:rgba(255,255,255,0.7);text-decoration:none;padding:12px 10px;font-family:'Nunito',sans-serif;font-weight:700;white-space:nowrap;transition:color 0.2s}
+.back-btn:hover{color:white}
+.nav-tabs{display:flex;flex:1;padding:0 0.5rem;gap:4px;overflow-x:auto;scrollbar-width:none}
+.nav-tabs::-webkit-scrollbar{display:none}
+.nav-tab{padding:14px 14px;background:transparent;border:none;color:rgba(255,255,255,0.6);font-family:'Nunito',sans-serif;font-weight:700;font-size:13px;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;transition:all 0.2s}
+.nav-tab:hover{color:white}
+.nav-tab.active{color:var(--yellow);border-bottom-color:var(--yellow)}
+.section{display:none;padding:1.5rem;max-width:920px;margin:0 auto}
+.section.active{display:block}
+.lesson-header{background:linear-gradient(135deg,var(--blue) 0%,var(--blue-mid) 100%);color:white;border-radius:16px;padding:2rem;margin-bottom:1.5rem;position:relative;overflow:hidden}
+.lesson-header .hdr-emoji{position:absolute;right:1.5rem;top:1.5rem;font-size:3rem;opacity:0.3}
+.lesson-header h1{font-size:1.8rem;margin-bottom:0.5rem}
+.lesson-header p{opacity:0.85;font-size:0.95rem}
+.badge{display:inline-block;background:var(--yellow);color:var(--blue);border-radius:20px;padding:3px 12px;font-size:12px;font-weight:700;margin-bottom:0.8rem;font-family:'Nunito',sans-serif}
+.card{background:white;border-radius:12px;padding:1.5rem;margin-bottom:1.2rem;box-shadow:0 2px 8px rgba(0,0,0,0.06);border-left:5px solid var(--blue-mid)}
+.card.green{border-left-color:var(--green)}.card.red{border-left-color:var(--red)}
+.card.yellow{border-left-color:var(--yellow)}.card.purple{border-left-color:var(--purple)}
+.card.orange{border-left-color:var(--orange)}.card.pink{border-left-color:var(--pink)}
+.card h3{font-size:1rem;color:var(--blue);margin-bottom:1rem}
+.vocab-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:0.5rem}
+.vocab-item{background:#f0f4ff;border-radius:10px;padding:12px;text-align:center;border:2px solid transparent;transition:all 0.2s;position:relative}
+.vocab-item:hover{border-color:var(--blue-mid);transform:translateY(-2px)}
+.vocab-item .vi-emoji{font-size:1.8rem;margin-bottom:4px}
+.vocab-item .vi-pl{font-weight:700;font-size:0.95rem;color:var(--blue);font-family:'Nunito',sans-serif}
+.vocab-item .vi-en{font-size:0.75rem;color:#666;margin-top:2px}
+.save-btn{position:absolute;top:6px;right:6px;background:none;border:1px solid #ddd;border-radius:5px;padding:2px 5px;font-size:0.7rem;cursor:pointer;color:#888;display:none}
+.vocab-item:hover .save-btn{display:block}
+.save-btn:hover,.save-btn.saved{background:var(--green);color:white;border-color:var(--green);display:block}
+table{width:100%;border-collapse:collapse;margin-top:0.5rem;font-size:0.9rem}
+th{background:var(--blue);color:white;padding:10px 12px;text-align:left;font-family:'Nunito',sans-serif}
+td{padding:9px 12px;border-bottom:1px solid #eee}
+tr:nth-child(even) td{background:#f7f9ff}
+.pl-word{font-weight:700;color:var(--blue);font-size:1rem}
+.en-word{color:#555}
+.grammar-box{background:#fff8e1;border:2px solid var(--yellow);border-radius:10px;padding:1rem 1.2rem;margin:0.8rem 0}
+.grammar-box h4{color:#8B6914;margin-bottom:0.5rem;font-size:0.95rem}
+.grammar-box p{font-size:0.88rem;color:#555;line-height:1.6}
+.tip-box{background:#fff3e0;border:2px solid var(--orange);border-radius:10px;padding:0.8rem 1rem;margin:0.8rem 0;font-size:0.88rem;color:#5d3a00}
+.tip-box strong{color:var(--orange)}
+.ex-box{background:#e8f5e9;border-left:4px solid var(--green);border-radius:0 8px 8px 0;padding:0.8rem 1rem;margin:0.5rem 0}
+.ex-box .ex-pl{font-weight:700;color:#1b5e20;font-size:1rem}
+.ex-box .ex-en{color:#555;font-size:0.88rem}
+.reading-box{background:white;border-radius:12px;padding:1.5rem;margin-bottom:1.2rem;box-shadow:0 2px 8px rgba(0,0,0,0.06);border:2px solid var(--blue-light)}
+.reading-box h3{color:var(--blue);margin-bottom:1rem;font-size:1.1rem}
+.reading-text{font-size:0.97rem;line-height:2;color:#333}
+/* These classes are used in teacher-authored reading texts stored in lesson JSON */
+.hl{background:var(--yellow);border-radius:3px;padding:1px 3px;font-weight:700;color:var(--blue)}
+.hlg{background:#c8f7dc;border-radius:3px;padding:1px 3px;font-weight:700;color:#1b5e20}
+.exercise-card{background:white;border-radius:12px;padding:1.5rem;margin-bottom:1.2rem;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
+.exercise-card h4{color:var(--blue);font-size:1rem;margin-bottom:0.4rem;padding-bottom:0.5rem;border-bottom:2px solid #f0f4ff}
+.ex-desc{font-size:0.84rem;color:#777;margin-bottom:1rem}
+.quiz-q{margin-bottom:1.2rem}
+.quiz-q p{font-weight:600;margin-bottom:0.6rem;color:#333;font-size:0.95rem}
+.quiz-opts{display:flex;flex-wrap:wrap;gap:8px}
+.qopt{background:#f0f4ff;border:2px solid #d0d8ff;border-radius:8px;padding:8px 16px;cursor:pointer;font-size:0.9rem;font-weight:600;color:var(--blue);transition:all 0.2s;font-family:'Nunito',sans-serif}
+.qopt:hover:not(:disabled){background:var(--blue);color:white}
+.qopt.correct{background:#e8f5e9!important;border-color:var(--green)!important;color:#1b5e20!important}
+.qopt.wrong{background:#ffebee!important;border-color:var(--red)!important;color:#b71c1c!important}
+.qopt:disabled{cursor:default}
+.feedback{margin-top:0.5rem;font-size:0.85rem;font-weight:700;min-height:20px}
+.feedback.ok{color:#1b5e20}.feedback.bad{color:#b71c1c}
+.fill-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;font-size:0.93rem}
+.fill-input{border:2px solid #c5cae9;border-radius:6px;padding:4px 10px;font-size:1rem;width:160px;text-align:center;font-family:'Nunito',sans-serif;font-weight:700;color:var(--blue);outline:none;transition:border 0.2s}
+.fill-input:focus{border-color:var(--blue-mid)}
+.fill-input.correct{border-color:var(--green);background:#e8f5e9;color:#1b5e20}
+.fill-input.wrong{border-color:var(--red);background:#ffebee;color:#b71c1c}
+.fill-hint{font-size:0.8rem;color:#888;font-style:italic}
+.check-btn{background:var(--blue);color:white;border:none;border-radius:8px;padding:10px 24px;font-family:'Nunito',sans-serif;font-weight:700;font-size:0.9rem;cursor:pointer;margin-top:0.8rem}
+.check-btn:hover{background:var(--blue-mid)}
+.write-box{width:100%;min-height:80px;margin-top:0.5rem;border:2px dashed #c5cae9;border-radius:8px;padding:0.7rem;font-size:0.9rem;font-family:'Lato',sans-serif;color:var(--blue);resize:vertical;outline:none;transition:border 0.2s}
+.write-box:focus{border-color:var(--blue-mid);border-style:solid}
+.write-box::placeholder{color:#aaa;font-style:italic}
+.speak-card{background:linear-gradient(135deg,#e8f4fd,#e1f0e8);border:2px solid var(--blue-light);border-radius:12px;padding:1.2rem;margin-bottom:1rem}
+.speak-card h4{color:var(--blue);margin-bottom:0.8rem}
+.speak-prompt{background:white;border-radius:8px;padding:0.8rem 1rem;margin:6px 0;font-size:0.92rem;color:#333;border-left:3px solid var(--blue-mid)}
+.speak-answer{font-size:0.85rem;color:#555;background:#f0f7f0;border-radius:6px;padding:6px 10px;margin-top:4px;border-left:3px solid var(--green);display:none}
+.ans-btn{background:none;border:1px solid #ccc;border-radius:6px;padding:3px 10px;font-size:0.78rem;cursor:pointer;color:#666;margin-top:4px}
+.ans-btn:hover{background:#eee}
+.fc-wrap{perspective:1000px;margin:1rem auto;max-width:400px}
+.flashcard{width:100%;height:200px;position:relative;transform-style:preserve-3d;transition:transform 0.5s;cursor:pointer}
+.flashcard.flipped{transform:rotateY(180deg)}
+.fc-front,.fc-back{position:absolute;inset:0;backface-visibility:hidden;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1.5rem;text-align:center}
+.fc-front{background:var(--blue);color:white}
+.fc-back{background:var(--cream);color:var(--blue);transform:rotateY(180deg);border:3px solid var(--blue-light)}
+.fc-emoji{font-size:2.5rem;margin-bottom:0.3rem}
+.fc-word{font-size:1.6rem;font-weight:900;font-family:'Nunito',sans-serif;margin-bottom:0.2rem}
+.fc-hint{font-size:0.85rem;opacity:0.7}
+.fc-trans{font-size:1.4rem;font-weight:900;font-family:'Nunito',sans-serif;color:var(--red);margin-bottom:0.2rem}
+.fc-ex{font-size:0.85rem;color:#555}
+.fc-ctrls{display:flex;justify-content:center;gap:12px;margin-top:1rem;flex-wrap:wrap}
+.fc-btn{background:var(--blue);color:white;border:none;border-radius:8px;padding:9px 20px;cursor:pointer;font-family:'Nunito',sans-serif;font-weight:700;font-size:0.9rem}
+.fc-btn:hover{background:var(--blue-mid)}
+.fc-btn.sec{background:white;color:var(--blue);border:2px solid var(--blue)}
+.fc-btn.sec:hover{background:#f0f4ff}
+.fc-btn.know{background:var(--green)}.fc-btn.know:hover{background:#05b889}
+.fc-btn.nope{background:var(--red)}.fc-btn.nope:hover{background:#c0273a}
+.prog-bar{background:#e0e0e0;border-radius:10px;height:8px;margin-bottom:0.3rem}
+.prog-fill{height:100%;border-radius:10px;background:linear-gradient(90deg,var(--green),var(--blue-mid));transition:width 0.4s}
+.hw-task{background:white;border-radius:12px;padding:1.3rem;margin-bottom:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.06);display:flex;gap:1rem;align-items:flex-start}
+.hw-num{background:var(--red);color:white;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:1rem;font-family:'Nunito',sans-serif;flex-shrink:0;margin-top:2px}
+.hw-body{flex:1}
+.hw-task h4{color:var(--blue);font-size:0.95rem;margin-bottom:0.4rem}
+.hw-task p{font-size:0.88rem;color:#555;line-height:1.7}
+.cl-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #eee;cursor:pointer;user-select:none}
+.cl-item input[type=checkbox]{width:18px;height:18px;accent-color:var(--green);cursor:pointer}
+.cl-item label{font-size:0.9rem;color:#333;cursor:pointer}
+.cl-item.done label{text-decoration:line-through;color:#aaa}
+.mw-item{background:#f0f4ff;border-radius:10px;padding:10px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.mw-pl{font-weight:700;color:var(--blue)}
+.mw-en{color:#555;font-size:0.9rem}
+.mw-del{background:none;border:1px solid #ddd;border-radius:6px;padding:3px 8px;font-size:0.75rem;cursor:pointer;color:#888}
+.mw-del:hover{background:#ffebee;border-color:var(--red);color:var(--red)}
+.submit-bar{background:white;border-top:3px solid var(--blue);padding:1.5rem;text-align:center;position:sticky;bottom:0;box-shadow:0 -4px 20px rgba(0,0,0,0.1)}
+.submit-bar p{color:#555;font-size:0.9rem;margin-bottom:0.8rem}
+.submit-btn{background:var(--green);color:white;border:none;border-radius:10px;padding:14px 32px;font-family:'Nunito',sans-serif;font-weight:900;font-size:1rem;cursor:pointer;transition:all 0.2s}
+.submit-btn:hover{background:#05b889;transform:translateY(-2px)}
+.score-line{font-family:'Nunito',sans-serif;font-size:1rem;color:var(--blue);font-weight:700;margin-bottom:0.4rem}
+.loading{text-align:center;padding:3rem;font-size:1.5rem;color:var(--blue-mid)}
+.err-box{background:#ffebee;border:2px solid var(--red);border-radius:12px;padding:2rem;margin:2rem auto;max-width:500px;text-align:center;color:var(--red)}
+.poss-m{color:var(--blue);font-weight:700}
+.poss-f{color:var(--pink);font-weight:700}
+.poss-n{color:var(--orange);font-weight:700}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+@media(max-width:620px){.two-col{grid-template-columns:1fr}.vocab-grid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr))}.lesson-header h1{font-size:1.4rem}.section{padding:1rem}.fc-btn{padding:9px 12px;font-size:0.82rem}}
+.lesson-img{max-width:100%;max-height:200px;object-fit:contain;border-radius:8px;margin:0.6rem auto;display:block}
+.vi-img{width:100%;max-height:80px;object-fit:contain;border-radius:6px;margin-bottom:4px;display:block}
+.fc-img{max-width:160px;max-height:90px;object-fit:contain;border-radius:8px;margin:0 auto 0.4rem;display:block}
+</style>
+</head>
+<body>
+<div class="nav-bar">
+  <a href="index.html" class="back-btn">&#8592; Lekcje</a>
+  <nav class="nav-tabs" id="navTabs"></nav>
+</div>
+<div id="mainContent"><div class="loading">&#128218; Ładowanie lekcji...</div></div>
+<div class="submit-bar" id="submitBar" style="display:none">
+  <div class="score-line" id="scoreDisp">Wypełnij ćwiczenia i wyślij wyniki nauczycielowi.</div>
+  <p>Gotowe? Wyślij wyniki do nauczyciela!</p>
+  <button class="submit-btn" id="sendBtn">&#128228; Wyślij wyniki</button>
+</div>
+
+<script>
+// ── SECURITY: sanitize teacher-authored HTML (strips scripts/event handlers) ──
+function san(html) {
+  if (typeof html !== 'string') return String(html == null ? '' : html);
+  const d = document.createElement('div');
+  d.textContent = ''; // reset
+  // Use a template trick: parse without executing
+  const t = document.createElement('template');
+  t.innerHTML = html.replace(/<script[\s\S]*?<\/script>/gi,'').replace(/<iframe[\s\S]*?>/gi,'');
+  t.content.querySelectorAll('*').forEach(el => {
+    Array.from(el.attributes).forEach(a => {
+      if (/^on/i.test(a.name) || (a.name === 'href' && /^javascript:/i.test(a.value))) el.removeAttribute(a.name);
+    });
+  });
+  const tmp = document.createElement('div');
+  tmp.appendChild(t.content.cloneNode(true));
+  return tmp.innerHTML;
+}
+// Safe text (no HTML)
+function txt(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ── STATE ──
+let lesson = null;
+let globalConfig = null;
+const QUIZ_DATA = {}; // keyed by questionId → {answer, options}
+const FILL_DATA = {}; // keyed by fillId    → {answer}
+let quizAnswered = {};
+let fillChecked  = {};
+let writeTexts   = {};
+let fcStats      = {known:0, unknown:0};
+let fcIdx        = 0;
+
+// ── INIT ──
+document.addEventListener('DOMContentLoaded', async () => {
+  // ── AUTH CHECK ──
+  const storedId   = localStorage.getItem('studentId');
+  const storedCode = localStorage.getItem('lessonCode');
+  if (!storedId || !storedCode) { location.replace('index.html'); return; }
+
+  const id = new URLSearchParams(location.search).get('id');
+  if (!id) { showErr('Brak parametru ?id= w URL. Wróć do <a href="index.html">listy lekcji</a>.'); return; }
+  try {
+    const [cfgResult, lessonResult] = await Promise.all([
+      sb.from('config').select('*').eq('id', 1).single(),
+      sb.from('lessons').select('*').eq('id', id).single()
+    ]);
+
+    if (cfgResult.data) {
+      const c = cfgResult.data;
+      globalConfig = {
+        emailjs: {
+          publicKey:  c.emailjs_public_key,
+          serviceId:  c.emailjs_service_id,
+          templateId: c.emailjs_template_id,
+          toEmail:    c.emailjs_to_email
+        }
+      };
+    }
+
+    if (lessonResult.error || !lessonResult.data) {
+      throw new Error('Nie znaleziono lekcji "' + id + '"');
+    }
+
+    const row = lessonResult.data;
+    lesson = {
+      id:           row.id,
+      studentCode:  row.student_code,
+      studentName:  row.student_name,
+      title:        row.title,
+      subtitle:     row.subtitle,
+      level:        row.level,
+      lessonNumber: row.lesson_number,
+      date:         row.date,
+      headerEmoji:  row.header_emoji,
+      tabs:         row.tabs || [],
+      vocabulary:   row.vocabulary,
+      grammar:      row.grammar,
+      reading:      row.reading,
+      exercises:    row.exercises,
+      flashcards:   row.flashcards,
+      homework:     row.homework,
+      speaking:     row.speaking
+    };
+
+    // Verify lesson belongs to logged-in student
+    if (lesson.studentCode && lesson.studentCode.toLowerCase() !== storedCode.toLowerCase()) {
+      location.replace('index.html'); return;
+    }
+
+    buildPage();
+  } catch(e) {
+    showErr('Nie można załadować lekcji "' + txt(id) + '".<br><small>' + txt(e.message) + '</small>');
+  }
+});
+
+function showErr(msg) {
+  document.getElementById('mainContent').innerHTML = '<div class="err-box">&#9888; ' + msg + '</div>';
+}
+
+// ── BUILD PAGE ──
+const TAB_LABELS = {
+  vocabulary:'&#128218; Vocabulary', grammar:'&#128214; Grammar', reading:'&#128214; Reading',
+  exercises:'&#9999; Exercises', speaking:'&#128483; Speaking', flashcards:'&#127183; Flashcards',
+  homework:'&#127968; Homework', mywords:'&#128221; My Words'
+};
+const BADGE = {
+  vocabulary:'VOCABULARY', grammar:'GRAMMAR', reading:'READING', exercises:'EXERCISES',
+  speaking:'SPEAKING PRACTICE', flashcards:'FLASHCARDS', homework:'HOMEWORK', mywords:'MY WORDS'
+};
+
+function buildPage() {
+  document.getElementById('pageTitle').textContent = (lesson.title || 'Lekcja') + ' — Owl\'s Academy';
+  const tabs = lesson.tabs || ['vocabulary'];
+
+  const nav = document.getElementById('navTabs');
+  nav.innerHTML = '';
+  tabs.forEach((t, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'nav-tab' + (i === 0 ? ' active' : '');
+    btn.innerHTML = TAB_LABELS[t] || txt(t);
+    btn.addEventListener('click', () => showSection(t, btn));
+    nav.appendChild(btn);
+  });
+
+  const content = document.getElementById('mainContent');
+  content.innerHTML = '';
+  tabs.forEach((t, i) => {
+    const sec = document.createElement('div');
+    sec.id = 'sec-' + t;
+    sec.className = 'section' + (i === 0 ? ' active' : '');
+    content.appendChild(sec);
+    buildHeader(sec, t);
+    buildSection(sec, t);
+  });
+
+  document.getElementById('submitBar').style.display = 'block';
+  document.getElementById('sendBtn').addEventListener('click', submitResults);
+
+  if (tabs.includes('flashcards') && lesson.flashcards?.length) initFC();
+}
+
+function showSection(name, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('sec-' + name)?.classList.add('active');
+  btn?.classList.add('active');
+}
+
+function buildHeader(sec, tab) {
+  let title = '', sub = '';
+  if (tab === 'vocabulary') { title = lesson.title || ''; sub = lesson.vocabulary?.subtitle || lesson.subtitle || ''; }
+  else if (tab === 'grammar')   { title = lesson.grammar?.title   || 'Grammar';   sub = lesson.grammar?.subtitle  || ''; }
+  else if (tab === 'reading')   { title = lesson.reading?.title   || 'Reading';   sub = lesson.reading?.subtitle  || 'Read carefully'; }
+  else if (tab === 'exercises') { title = 'Practice Time! ✏️';    sub = 'Test your knowledge'; }
+  else if (tab === 'speaking')  { title = 'Time to Talk! 🗣️';     sub = lesson.speaking?.subtitle || ''; }
+  else if (tab === 'flashcards'){ title = 'Flashcards 🃏';         sub = 'Review vocabulary'; }
+  else if (tab === 'homework')  { title = 'Homework 🏠';           sub = 'Complete before next lesson'; }
+  else if (tab === 'mywords')   { title = 'My Vocabulary 📝';      sub = 'Words you saved'; }
+
+  const hdr = document.createElement('div');
+  hdr.className = 'lesson-header';
+
+  const badge = document.createElement('div');
+  badge.className = 'badge';
+  badge.textContent = (BADGE[tab] || tab.toUpperCase()) + (lesson.level ? ' · ' + lesson.level : '');
+  hdr.appendChild(badge);
+
+  const h1 = document.createElement('h1');
+  h1.textContent = title + (tab === 'vocabulary' && lesson.headerEmoji ? ' ' + lesson.headerEmoji : '');
+  hdr.appendChild(h1);
+
+  const p = document.createElement('p');
+  p.textContent = sub;
+  hdr.appendChild(p);
+
+  if (lesson.headerEmoji) {
+    const em = document.createElement('span');
+    em.className = 'hdr-emoji';
+    em.textContent = lesson.headerEmoji;
+    hdr.appendChild(em);
+  }
+
+  sec.appendChild(hdr);
+}
+
+function buildSection(sec, tab) {
+  switch(tab) {
+    case 'vocabulary':  buildVocab(sec);     break;
+    case 'grammar':     buildGrammar(sec);   break;
+    case 'reading':     buildReading(sec);   break;
+    case 'exercises':   buildExercises(sec); break;
+    case 'speaking':    buildSpeaking(sec);  break;
+    case 'flashcards':  buildFC(sec);        break;
+    case 'homework':    buildHomework(sec);  break;
+    case 'mywords':     buildMyWords(sec);   break;
+  }
+}
+
+// ── HELPERS: DOM ──
+function el(tag, className, text) {
+  const e = document.createElement(tag);
+  if (className) e.className = className;
+  if (text != null) e.textContent = text;
+  return e;
+}
+function card(color) {
+  return el('div', color && color !== 'default' ? 'card ' + color : 'card');
+}
+function makeTable(headers, rows, plCol, enCol) {
+  const t = el('table');
+  const hr = el('tr'); headers.forEach(h => { const th = el('th'); th.textContent = h; hr.appendChild(th); }); t.appendChild(hr);
+  rows.forEach(row => {
+    const tr = el('tr');
+    row.forEach((cell, i) => {
+      const td = document.createElement('td');
+      if (i === plCol) td.className = 'pl-word';
+      else if (i === enCol) td.className = 'en-word';
+      if (typeof cell === 'object' && cell !== null) {
+        // gender-coded cells like {m:'mój'} or {f:'moja'}
+        Object.entries(cell).forEach(([k, v]) => {
+          const span = document.createElement('span');
+          span.className = k === 'm' ? 'poss-m' : k === 'f' ? 'poss-f' : k === 'n' ? 'poss-n' : '';
+          span.textContent = v;
+          td.appendChild(span);
+        });
+      } else { td.textContent = cell == null ? '' : cell; }
+      tr.appendChild(td);
+    });
+    t.appendChild(tr);
+  });
+  return t;
+}
+function tipBox(text) {
+  const d = el('div', 'tip-box');
+  const s = el('strong', null, '💡 '); d.appendChild(s);
+  d.appendChild(document.createTextNode(text));
+  return d;
+}
+function grammarBox(heading, text, tip) {
+  const d = el('div', 'grammar-box');
+  if (heading) { const h4 = el('h4', null, heading); d.appendChild(h4); }
+  const p = el('p'); p.textContent = text || ''; d.appendChild(p);
+  if (tip) d.appendChild(tipBox(tip));
+  return d;
+}
+
+// ── VOCABULARY ──
+function buildVocab(sec) {
+  const v = lesson.vocabulary;
+  if (!v) return;
+  (v.sections || []).forEach(s => {
+    const c = card(s.color);
+    const h3 = el('h3', null, s.title || '');
+    c.appendChild(h3);
+    if (s.type === 'table' || s.rows) {
+      const t = el('table');
+      const hr = el('tr'); ['Polish','English'].forEach(h => { const th = el('th'); th.textContent = h; hr.appendChild(th); }); t.appendChild(hr);
+      (s.rows || s.items || []).forEach(r => {
+        const tr = el('tr');
+        const td0 = el('td', 'pl-word');
+        if (r.image) { const img = document.createElement('img'); img.src = r.image; img.alt = r.pl||''; img.style.cssText = 'height:32px;object-fit:contain;margin-right:8px;vertical-align:middle;border-radius:3px;display:inline-block'; td0.appendChild(img); }
+        td0.appendChild(document.createTextNode(r.pl || ''));
+        const td1 = el('td', 'en-word'); td1.textContent = r.en || '';
+        tr.appendChild(td0); tr.appendChild(td1); t.appendChild(tr);
+      });
+      c.appendChild(t);
+    } else {
+      const grid = el('div', 'vocab-grid');
+      (s.items || []).forEach(item => {
+        const vi = el('div', 'vocab-item');
+        if (item.image) { const img = document.createElement('img'); img.className = 'vi-img'; img.alt = item.pl || ''; img.src = item.image; vi.appendChild(img); }
+        if (item.emoji) { const e = el('div', 'vi-emoji'); e.textContent = item.emoji; vi.appendChild(e); }
+        vi.appendChild(el('div', 'vi-pl', item.pl));
+        vi.appendChild(el('div', 'vi-en', item.en));
+        const sb = el('button', 'save-btn', isSaved(item.pl, item.en) ? '★' : '☆');
+        if (isSaved(item.pl, item.en)) sb.classList.add('saved');
+        sb.title = 'Zapisz słówko';
+        sb.addEventListener('click', e => { e.stopPropagation(); toggleSave(sb, item.pl, item.en); });
+        vi.appendChild(sb);
+        grid.appendChild(vi);
+      });
+      c.appendChild(grid);
+    }
+    sec.appendChild(c);
+  });
+  if (v.phrases?.length) {
+    const c = card('purple');
+    c.appendChild(el('h3', null, '💬 Useful Phrases'));
+    c.appendChild(makeTable(['Polish','English'], v.phrases.map(p=>[p.pl,p.en]), 0, 1));
+    sec.appendChild(c);
+  }
+}
+
+// ── GRAMMAR ──
+function buildGrammar(sec) {
+  const g = lesson.grammar;
+  if (!g) return;
+  (g.blocks || []).forEach(b => {
+    switch(b.type) {
+      case 'info': {
+        const c = card(b.color);
+        c.appendChild(el('h3', null, b.title || ''));
+        c.appendChild(grammarBox(b.heading, (b.text||'').replace(/\\n/g,'\n'), b.tip));
+        sec.appendChild(c); break;
+      }
+      case 'table': {
+        const c = card(b.color || 'purple');
+        c.appendChild(el('h3', null, b.title || ''));
+        c.appendChild(makeTable(b.headers || [], b.rows || [], -1, -1));
+        if (b.tip) { const t = tipBox(b.tip); t.style.marginTop = '1rem'; c.appendChild(t); }
+        sec.appendChild(c); break;
+      }
+      case 'examples': {
+        const c = card(b.color || 'green');
+        c.appendChild(el('h3', null, b.title || '✅ Examples'));
+        (b.items || []).forEach(ex => {
+          const d = el('div', 'ex-box');
+          if (ex.image) { const img = document.createElement('img'); img.className = 'lesson-img'; img.alt = ex.pl||''; img.src = ex.image; d.appendChild(img); }
+          d.appendChild(el('div', 'ex-pl', ex.pl));
+          d.appendChild(el('div', 'ex-en', ex.en));
+          c.appendChild(d);
+        });
+        sec.appendChild(c); break;
+      }
+      case 'qa-table': {
+        const c = card(b.color || 'red');
+        c.appendChild(el('h3', null, b.title || '❓ Q&A'));
+        c.appendChild(makeTable(b.headers || ['Polish','Example answer'], (b.rows||[]).map(r=>[r[0],r[1]||'']), 0, 1));
+        sec.appendChild(c); break;
+      }
+      case 'two-col': {
+        const c = card(b.color || 'yellow');
+        c.appendChild(el('h3', null, b.title || ''));
+        const grid = el('div', 'two-col');
+        (b.columns || []).forEach(col => {
+          const d = document.createElement('div');
+          const hdr = el('p'); hdr.style.cssText = 'font-weight:700;margin-bottom:0.5rem;font-size:0.9rem'; hdr.textContent = col.header || '';
+          if (col.color) hdr.style.color = col.color;
+          d.appendChild(hdr);
+          d.appendChild(makeTable([], (col.items||[]).map(r=>[r.pl,r.en]), 0, 1));
+          grid.appendChild(d);
+        });
+        c.appendChild(grid);
+        if (b.tip) { const t = tipBox(b.tip); t.style.marginTop = '1rem'; c.appendChild(t); }
+        sec.appendChild(c); break;
+      }
+    }
+  });
+}
+
+// ── READING ──
+function buildReading(sec) {
+  const r = lesson.reading;
+  if (!r) return;
+
+  const box = el('div', 'reading-box');
+  box.appendChild(el('h3', null, r.title || 'Reading'));
+  if (r.note) {
+    const note = el('p');
+    note.style.cssText = 'font-size:0.85rem;color:#888;margin-bottom:1rem';
+    // note may contain safe HTML for colored spans — teacher-authored
+    note.innerHTML = san(r.note);
+    box.appendChild(note);
+  }
+  const rt = el('p', 'reading-text');
+  // reading text may contain <span class="hl"> teacher-authored highlight spans
+  rt.innerHTML = san(r.text || '');
+  box.appendChild(rt);
+  sec.appendChild(box);
+
+  if (r.vocab?.length) {
+    const c = card('yellow');
+    c.appendChild(el('h3', null, '📚 Vocabulary from the text'));
+    c.appendChild(makeTable(['Polish','English'], r.vocab.map(v=>[v.pl,v.en]), 0, 1));
+    sec.appendChild(c);
+  }
+
+  if (r.comprehension?.length) {
+    const c = card('green');
+    c.appendChild(el('h3', null, '❓ Comprehension Questions'));
+    const note2 = el('p');
+    note2.style.cssText = 'font-size:0.9rem;color:#555;margin-bottom:1rem';
+    note2.textContent = 'Answer in Polish.';
+    c.appendChild(note2);
+    r.comprehension.forEach((q, i) => {
+      const wrap = document.createElement('div');
+      wrap.style.marginBottom = '1rem';
+      const p = el('p');
+      p.style.cssText = 'font-weight:700;color:var(--blue);font-size:0.95rem;margin-bottom:0.3rem';
+      p.textContent = (i + 1) + '. ' + q.question;
+      const ta = el('textarea', 'write-box');
+      ta.style.minHeight = '50px';
+      ta.placeholder = q.placeholder || '';
+      ta.addEventListener('input', () => { writeTexts['r' + i] = ta.value; });
+      wrap.appendChild(p); wrap.appendChild(ta);
+      c.appendChild(wrap);
+    });
+    sec.appendChild(c);
+  }
+}
+
+// ── EXERCISES ──
+function buildExercises(sec) {
+  if (!lesson.exercises?.length) { sec.appendChild(el('p', null, 'Brak ćwiczeń.')); return; }
+  lesson.exercises.forEach((ex, xi) => {
+    switch(ex.type) {
+      case 'quiz':      buildQuiz(sec, ex, xi);  break;
+      case 'fill':      buildFill(sec, ex, xi);  break;
+      case 'translate': buildTrans(sec, ex, xi); break;
+    }
+  });
+}
+
+function buildQuiz(sec, ex, xi) {
+  const card2 = el('div', 'exercise-card');
+  card2.appendChild(el('h4', null, ex.title || 'Quiz'));
+  if (ex.desc) card2.appendChild(el('p', 'ex-desc', ex.desc));
+
+  (ex.questions || []).forEach((q, qi) => {
+    const qId = 'q' + xi + '_' + qi;
+    QUIZ_DATA[qId] = {answer: q.answer, options: q.options || []};
+
+    const wrap = el('div', 'quiz-q');
+    wrap.id = qId;
+    const p = el('p');
+    p.innerHTML = san(q.q); // teacher-authored question may have <strong> etc.
+    wrap.appendChild(p);
+    if (q.image) { const img = document.createElement('img'); img.className = 'lesson-img'; img.alt = ''; img.src = q.image; wrap.appendChild(img); }
+
+    const opts = el('div', 'quiz-opts');
+    (q.options || []).forEach((opt, oi) => {
+      const btn = el('button', 'qopt', opt);
+      btn.dataset.qid = qId;
+      btn.dataset.oi  = oi;
+      btn.addEventListener('click', handleQuizClick);
+      opts.appendChild(btn);
+    });
+    wrap.appendChild(opts);
+
+    const fb = el('div', 'feedback');
+    fb.id = qId + '_fb';
+    wrap.appendChild(fb);
+    card2.appendChild(wrap);
+  });
+  sec.appendChild(card2);
+}
+
+function handleQuizClick(e) {
+  const btn = e.currentTarget;
+  const qId = btn.dataset.qid;
+  const oi  = parseInt(btn.dataset.oi);
+  const {answer, options} = QUIZ_DATA[qId];
+  const chosen = options[oi];
+  if (quizAnswered[qId]) return;
+
+  const container = document.getElementById(qId);
+  container.querySelectorAll('.qopt').forEach(b => {
+    b.disabled = true;
+    if (b.textContent.trim() === answer) b.classList.add('correct');
+  });
+  const correct = chosen === answer;
+  if (!correct) btn.classList.add('wrong');
+
+  const fb = document.getElementById(qId + '_fb');
+  if (fb) { fb.textContent = correct ? '✅ Correct!' : '❌ Correct answer: ' + answer; fb.className = 'feedback ' + (correct ? 'ok' : 'bad'); }
+
+  quizAnswered[qId] = {correct, chosen, answer};
+  updateScore();
+}
+
+function buildFill(sec, ex, xi) {
+  const card2 = el('div', 'exercise-card');
+  card2.appendChild(el('h4', null, ex.title || 'Fill in'));
+  if (ex.desc) card2.appendChild(el('p', 'ex-desc', ex.desc));
+
+  (ex.items || []).forEach((item, ii) => {
+    const fId = 'f' + xi + '_' + ii;
+    FILL_DATA[fId] = {answer: item.answer};
+    const row = el('div', 'fill-row');
+    if (item.before) row.appendChild(el('span', null, item.before));
+    const inp = el('input', 'fill-input');
+    inp.type = 'text'; inp.placeholder = '...'; inp.id = fId;
+    inp.addEventListener('input', () => { fillChecked[fId] = null; }); // reset on retype
+    row.appendChild(inp);
+    if (item.after) row.appendChild(el('span', null, item.after));
+    if (item.hint)  row.appendChild(el('span', 'fill-hint', '(' + item.hint + ')'));
+    card2.appendChild(row);
+  });
+
+  const checkBtn = el('button', 'check-btn', '✅ Check Answers');
+  checkBtn.addEventListener('click', () => checkFill(xi, ex));
+  card2.appendChild(checkBtn);
+
+  const res = el('div');
+  res.id = 'fill_res_' + xi;
+  res.style.cssText = 'margin-top:0.8rem;font-size:0.9rem;line-height:1.8';
+  card2.appendChild(res);
+  sec.appendChild(card2);
+}
+
+function checkFill(xi, ex) {
+  let ok = 0; const lines = [];
+  (ex.items || []).forEach((item, ii) => {
+    const fId = 'f' + xi + '_' + ii;
+    const inp = document.getElementById(fId);
+    if (!inp) return;
+    const typed = inp.value.trim();
+    const isOk = typed.toLowerCase() === item.answer.toLowerCase();
+    inp.classList.remove('correct','wrong');
+    inp.classList.add(isOk ? 'correct' : 'wrong');
+    inp.disabled = true;
+    fillChecked[fId] = {typed, answer: item.answer, correct: isOk};
+    if (isOk) ok++;
+    lines.push((isOk ? '✅' : '❌') + ' "' + typed + '"' + (isOk ? '' : ' → ' + item.answer));
+  });
+  const res = document.getElementById('fill_res_' + xi);
+  if (res) {
+    const total = (ex.items || []).length;
+    res.innerHTML = '';
+    const strong = el('strong', null, 'Wynik: ' + ok + '/' + total);
+    res.appendChild(strong);
+    lines.forEach(l => { const br = document.createElement('br'); res.appendChild(br); res.appendChild(document.createTextNode(l)); });
+  }
+  updateScore();
+}
+
+function buildTrans(sec, ex, xi) {
+  const card2 = el('div', 'exercise-card');
+  card2.appendChild(el('h4', null, ex.title || 'Translate'));
+  if (ex.desc) card2.appendChild(el('p', 'ex-desc', ex.desc));
+  (ex.items || []).forEach((item, ii) => {
+    const wrap = document.createElement('div');
+    wrap.style.marginBottom = '1rem';
+    const p = el('p');
+    p.style.cssText = 'font-weight:600;color:#333;font-size:0.95rem;margin-bottom:4px';
+    p.textContent = (ii + 1) + '. ' + item.en;
+    const ta = el('textarea', 'write-box');
+    ta.style.minHeight = '50px'; ta.placeholder = item.hint || '';
+    ta.addEventListener('input', () => { writeTexts['t' + xi + '_' + ii] = ta.value; });
+    wrap.appendChild(p); wrap.appendChild(ta);
+    card2.appendChild(wrap);
+  });
+  sec.appendChild(card2);
+}
+
+// ── SPEAKING ──
+function buildSpeaking(sec) {
+  const s = lesson.speaking;
+  if (!s) return;
+  if (s.warmup?.length) {
+    const c = el('div', 'speak-card');
+    c.appendChild(el('h4', null, '🔊 Warm-up — Repeat these phrases'));
+    s.warmup.forEach(p => { const d = el('div', 'speak-prompt', p); c.appendChild(d); });
+    sec.appendChild(c);
+  }
+  (s.conversations || []).forEach(conv => {
+    const c = el('div', 'speak-card');
+    c.appendChild(el('h4', null, conv.title || 'Conversation'));
+    (conv.prompts || []).forEach(p => {
+      const wrap = document.createElement('div');
+      wrap.style.marginBottom = '0.8rem';
+      const pr = el('div', 'speak-prompt');
+      const strong = el('strong', null, 'Q: '); pr.appendChild(strong);
+      pr.appendChild(document.createTextNode(p.q));
+      if (p.qEn) { const sp = el('span'); sp.style.cssText = 'font-size:0.82rem;color:#555'; sp.textContent = ' (' + p.qEn + ')'; pr.appendChild(sp); }
+      const showBtn = el('button', 'ans-btn', '💡 Show example answer');
+      const ans = el('div', 'speak-answer', p.answer || '');
+      showBtn.addEventListener('click', () => {
+        const vis = ans.style.display === 'block';
+        ans.style.display = vis ? 'none' : 'block';
+        showBtn.textContent = vis ? '💡 Show example answer' : '🔼 Ukryj';
+      });
+      wrap.appendChild(pr); wrap.appendChild(showBtn); wrap.appendChild(ans);
+      c.appendChild(wrap);
+    });
+    sec.appendChild(c);
+  });
+}
+
+// ── FLASHCARDS ──
+function buildFC(sec) {
+  const cards = lesson.flashcards;
+  if (!cards?.length) { sec.appendChild(el('p', null, 'Brak fiszek.')); return; }
+
+  const progCard = el('div', 'card');
+  progCard.appendChild(el('h3', null, '📊 Progress'));
+  const pb = el('div', 'prog-bar');
+  const pf = el('div', 'prog-fill'); pf.id = 'fc_prog'; pf.style.width = '0%';
+  pb.appendChild(pf); progCard.appendChild(pb);
+  const ctr = el('div', null, 'Card 1 of ' + cards.length);
+  ctr.id = 'fc_ctr'; ctr.style.cssText = 'text-align:center;color:#888;font-size:0.85rem';
+  progCard.appendChild(ctr);
+  sec.appendChild(progCard);
+
+  const wrap = el('div', 'fc-wrap');
+  const fc = el('div', 'flashcard'); fc.id = 'flashcard';
+  fc.addEventListener('click', flipFC);
+
+  const front = el('div', 'fc-front');
+  const fImg  = document.createElement('img'); fImg.id = 'fc_img'; fImg.className = 'fc-img'; fImg.alt = ''; fImg.style.display = 'none';
+  const fEmoji = el('div', 'fc-emoji'); fEmoji.id = 'fc_emoji';
+  const fWord  = el('div', 'fc-word');  fWord.id  = 'fc_word';
+  const fHint  = el('div', 'fc-hint', 'Kliknij aby odwrócić / Click to flip');
+  front.appendChild(fImg); front.appendChild(fEmoji); front.appendChild(fWord); front.appendChild(fHint);
+
+  const back = el('div', 'fc-back');
+  const bTrans = el('div', 'fc-trans'); bTrans.id = 'fc_trans';
+  const bEx    = el('div', 'fc-ex');    bEx.id    = 'fc_ex';
+  back.appendChild(bTrans); back.appendChild(bEx);
+
+  fc.appendChild(front); fc.appendChild(back);
+  wrap.appendChild(fc);
+  sec.appendChild(wrap);
+
+  const ctrls = el('div', 'fc-ctrls');
+  const nopeBtn = el('button', 'fc-btn nope', '👎 Nie znam');
+  const prevBtn = el('button', 'fc-btn sec',  '← Prev');
+  const nextBtn = el('button', 'fc-btn sec',  'Next →');
+  const knowBtn = el('button', 'fc-btn know', '👍 Znam');
+  nopeBtn.addEventListener('click', () => markFC(false));
+  prevBtn.addEventListener('click', () => navFC(-1));
+  nextBtn.addEventListener('click', () => navFC(1));
+  knowBtn.addEventListener('click', () => markFC(true));
+  ctrls.appendChild(nopeBtn); ctrls.appendChild(prevBtn); ctrls.appendChild(nextBtn); ctrls.appendChild(knowBtn);
+  sec.appendChild(ctrls);
+
+  const stats = el('p'); stats.id = 'fc_stats';
+  stats.style.cssText = 'text-align:center;margin-top:0.8rem;font-size:0.9rem;color:#555';
+  stats.textContent = 'Known: 0 · Unknown: 0';
+  sec.appendChild(stats);
+}
+
+function initFC() { fcIdx = 0; fcStats = {known:0, unknown:0}; renderFC(); }
+function renderFC() {
+  const cards = lesson.flashcards;
+  if (!cards?.length) return;
+  const raw = cards[fcIdx];
+  // Support both {word,translation} and {front,back} formats
+  const c = (raw.word !== undefined) ? raw : {word: raw.front||'', translation: raw.back||'', emoji: raw.emoji||'', example: raw.example||'', image: raw.image||raw.frontImage||''};
+  const el2 = id => document.getElementById(id);
+  const fc = el2('flashcard');
+  if (!fc) return;
+  fc.classList.remove('flipped');
+  const imgEl = el2('fc_img');
+  if (imgEl) { if (c.image) { imgEl.src = c.image; imgEl.style.display = 'block'; } else { imgEl.style.display = 'none'; } }
+  el2('fc_emoji').textContent = c.emoji || (c.image ? '' : '📚');
+  el2('fc_word').textContent  = c.word;
+  el2('fc_trans').textContent = c.translation;
+  el2('fc_ex').textContent    = c.example || '';
+  el2('fc_ctr').textContent   = 'Card ' + (fcIdx + 1) + ' of ' + cards.length;
+  el2('fc_prog').style.width  = ((fcIdx + 1) / cards.length * 100) + '%';
+  el2('fc_stats').textContent = 'Known: ' + fcStats.known + ' · Unknown: ' + fcStats.unknown;
+}
+function flipFC() { document.getElementById('flashcard')?.classList.toggle('flipped'); }
+function navFC(d) { fcIdx = (fcIdx + d + lesson.flashcards.length) % lesson.flashcards.length; renderFC(); }
+function markFC(known) { if (known) fcStats.known++; else fcStats.unknown++; updateScore(); navFC(1); }
+
+// ── HOMEWORK ──
+function buildHomework(sec) {
+  if (!lesson.homework?.length) return;
+  lesson.homework.forEach((task, i) => {
+    const hw = el('div', 'hw-task');
+    const num = el('div', 'hw-num', String(i + 1));
+    const body = el('div', 'hw-body');
+    body.appendChild(el('h4', null, task.title || 'Task'));
+
+    if (task.type === 'write') {
+      if (task.prompt) {
+        const p = el('p'); p.style.whiteSpace = 'pre-line'; p.textContent = task.prompt;
+        body.appendChild(p);
+      }
+      const ta = el('textarea', 'write-box');
+      ta.placeholder = 'Napisz tutaj...';
+      ta.addEventListener('input', () => { writeTexts['hw' + i] = ta.value; });
+      body.appendChild(ta);
+    } else if (task.type === 'checklist') {
+      (task.items || []).forEach((item, ii) => {
+        const cid = 'cl' + i + '_' + ii;
+        const cli = el('div', 'cl-item');
+        const cb = el('input');
+        cb.type = 'checkbox'; cb.id = cid;
+        cb.addEventListener('change', () => cli.classList.toggle('done', cb.checked));
+        cli.addEventListener('click', e => { if (e.target !== cb) { cb.checked = !cb.checked; cli.classList.toggle('done', cb.checked); } });
+        const lbl = el('label', null, item); lbl.htmlFor = cid;
+        cli.appendChild(cb); cli.appendChild(lbl);
+        body.appendChild(cli);
+      });
+    }
+
+    hw.appendChild(num); hw.appendChild(body);
+    sec.appendChild(hw);
+  });
+}
+
+// ── MY WORDS ──
+function buildMyWords(sec) {
+  const words = getSaved();
+  const c = card('default');
+  c.id = 'mywords-container';
+  c.appendChild(el('h3', null, '📝 Twoje słówka (' + words.length + ')'));
+
+  if (!words.length) {
+    const p = el('p');
+    p.style.cssText = 'color:#888;font-size:0.9rem;padding:1rem 0';
+    p.textContent = 'Nie masz jeszcze zapisanych słówek. Idź do zakładki Vocabulary i kliknij ☆ przy słówku!';
+    c.appendChild(p);
+  } else {
+    const list = el('div'); list.id = 'mw-list';
+    words.forEach((w, i) => { list.appendChild(makeWordRow(w, i)); });
+    c.appendChild(list);
+  }
+  sec.appendChild(c);
+}
+
+function makeWordRow(w, i) {
+  const row = el('div', 'mw-item');
+  const info = document.createElement('div');
+  info.appendChild(el('span', 'mw-pl', w.pl));
+  info.appendChild(document.createTextNode(' — '));
+  info.appendChild(el('span', 'mw-en', w.en));
+  const delBtn = el('button', 'mw-del', '✕');
+  delBtn.addEventListener('click', () => removeWord(i));
+  row.appendChild(info); row.appendChild(delBtn);
+  return row;
+}
+
+function getSaved() { return JSON.parse(localStorage.getItem('mw_' + (lesson?.id||'')) || '[]'); }
+function isSaved(pl, en) { return getSaved().some(w => w.pl === pl && w.en === en); }
+function toggleSave(btn, pl, en) {
+  const words = getSaved();
+  const idx = words.findIndex(w => w.pl === pl && w.en === en);
+  if (idx >= 0) { words.splice(idx, 1); btn.textContent = '☆'; btn.classList.remove('saved'); }
+  else          { words.push({pl, en}); btn.textContent = '★'; btn.classList.add('saved'); }
+  localStorage.setItem('mw_' + lesson.id, JSON.stringify(words));
+}
+function removeWord(i) {
+  const words = getSaved(); words.splice(i, 1);
+  localStorage.setItem('mw_' + lesson.id, JSON.stringify(words));
+  const list = document.getElementById('mw-list');
+  if (list) { list.innerHTML = ''; words.forEach((w, j) => list.appendChild(makeWordRow(w, j))); }
+  const hdr = document.querySelector('#mywords-container h3');
+  if (hdr) hdr.textContent = '📝 Twoje słówka (' + words.length + ')';
+}
+
+// ── SCORE ──
+function calcScore() {
+  let total=0, ok=0;
+  Object.values(quizAnswered).forEach(a => { total++; if (a.correct) ok++; });
+  Object.values(fillChecked).forEach(a => { if (!a) return; total++; if (a.correct) ok++; });
+  return {total, ok};
+}
+function updateScore() {
+  const {total, ok} = calcScore();
+  const el2 = document.getElementById('scoreDisp');
+  if (!el2) return;
+  if (total > 0) {
+    const pct = Math.round(ok / total * 100);
+    let txt2 = 'Ćwiczenia: ' + ok + '/' + total + ' (' + pct + '%)';
+    if (fcStats.known + fcStats.unknown > 0) txt2 += ' · Fiszki: ' + fcStats.known + ' zna / ' + fcStats.unknown + ' nie zna';
+    el2.textContent = txt2;
+  }
+}
+
+// ── SUBMIT ──
+async function submitResults() {
+  const btn = document.getElementById('sendBtn');
+  btn.textContent = '⏳ Wysyłam...';
+  btn.disabled = true;
+
+  const student = localStorage.getItem('studentName') || lesson.studentName || 'Uczeń';
+  const {total, ok} = calcScore();
+  const date = new Date().toLocaleDateString('pl-PL');
+
+  const quizLines = Object.entries(quizAnswered).map(([k,v]) =>
+    (v.correct?'✓':'✗') + ' ' + k + ': "' + v.chosen + '" (oczekiwano: "' + v.answer + '")'
+  ).join('\n') || '—';
+
+  const fillLines = Object.entries(fillChecked).filter(([,v])=>v).map(([k,v]) =>
+    (v.correct?'✓':'✗') + ' ' + k + ': "' + v.typed + '" (oczekiwano: "' + v.answer + '")'
+  ).join('\n') || '—';
+
+  const writeLines = Object.entries(writeTexts).filter(([,v])=>v).map(([k,v]) =>
+    '[' + k + ']\n' + v
+  ).join('\n\n') || '—';
+
+  const fcLine = 'Zna: ' + fcStats.known + ' / Nie zna: ' + fcStats.unknown;
+
+  const ejs = globalConfig?.emailjs;
+
+  if (ejs?.serviceId && ejs?.templateId && ejs?.publicKey) {
+    try {
+      await emailjs.send(
+        ejs.serviceId,
+        ejs.templateId,
+        {
+          to_email:        ejs.toEmail || '',
+          subject:         'Wyniki lekcji: ' + lesson.title + ' — ' + student,
+          student_name:    student,
+          lesson_title:    lesson.title,
+          lesson_id:       lesson.id,
+          date:            date,
+          score:           ok + '/' + total,
+          quiz_results:    quizLines,
+          fill_results:    fillLines,
+          write_texts:     writeLines,
+          flashcard_stats: fcLine
+        },
+        {publicKey: ejs.publicKey}
+      );
+      btn.textContent = '✅ Wysłano!';
+      setTimeout(() => { btn.textContent = '📨 Wyślij wyniki'; btn.disabled = false; }, 3000);
+    } catch(err) {
+      btn.textContent = '📨 Wyślij wyniki';
+      btn.disabled = false;
+      alert('⚠️ Błąd EmailJS: ' + (err.text || err.message || JSON.stringify(err)));
+    }
+    return;
+  }
+
+  btn.textContent = '📨 Wyślij wyniki';
+  btn.disabled = false;
+  alert('⚠️ Wysyłanie nie jest skonfigurowane.\nSkontaktuj się z nauczycielem.');
+}
+</script>
+</body>
+</html>

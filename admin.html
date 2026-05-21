@@ -216,13 +216,18 @@ h1,h2,h3,h4{font-family:'Nunito',sans-serif}
     <!-- GRAMMAR -->
     <div class="form-section" id="tab-grammar">
       <h3>Grammar</h3>
-      <div style="margin-bottom:0.8rem">
-        <button class="add-btn" data-template="grammar">&#128196; Wstaw szablon</button>
+      <div class="two-field" style="margin-bottom:1rem">
+        <div class="field"><label>Tytu&#322; sekcji Grammar</label><input id="gr_title" placeholder="np. Czasownik TO BE"></div>
+        <div class="field"><label>Podtytu&#322;</label><input id="gr_sub" placeholder="np. Present Simple"></div>
       </div>
-      <div class="field">
-        <textarea id="adv_grammar" rows="18" placeholder='{"title":"Grammar","subtitle":"...","blocks":[]}'></textarea>
-        <div class="hint">Typy blok&oacute;w: <strong>info</strong>, <strong>table</strong>, <strong>examples</strong>, <strong>qa-table</strong>, <strong>two-col</strong> &mdash; edycja w JSON</div>
+      <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1rem">
+        <button class="add-btn" data-grtype="info">&#43; Info</button>
+        <button class="add-btn" data-grtype="table">&#43; Tabela</button>
+        <button class="add-btn" data-grtype="examples">&#43; Przyk&#322;ady</button>
+        <button class="add-btn" data-grtype="qa-table">&#43; Q&amp;A</button>
+        <button class="add-btn" data-grtype="two-col">&#43; Dwie kolumny</button>
       </div>
+      <div id="grammarBlockList"></div>
     </div>
 
     <!-- READING -->
@@ -233,6 +238,13 @@ h1,h2,h3,h4{font-family:'Nunito',sans-serif}
         <div class="field"><label>Podtytu&#322;</label><input id="rd_sub" placeholder="np. Read carefully"></div>
       </div>
       <div class="field"><label>Notatka (nad tekstem)</label><input id="rd_note" placeholder="np. Yellow = kluczowe s&#322;owa"></div>
+      <div class="field">
+        <label>Ilustracja do tekstu</label>
+        <div class="img-upload-row" id="rdImgRow">
+          <button class="add-btn" id="rdImgBtn" style="margin:0;padding:7px 14px">&#128444; Dodaj obraz</button>
+          <span style="font-size:0.75rem;color:#aaa">opcjonalnie — pokazywana nad tekstem</span>
+        </div>
+      </div>
       <div class="field">
         <label>Tekst &mdash; HTML dozwolony: <code style="font-size:0.78rem">&lt;span class="hl"&gt;</code> = &#380;&oacute;&#322;te, <code style="font-size:0.78rem">&lt;span class="hlg"&gt;</code> = zielone</label>
         <textarea id="rd_text" rows="9" style="font-family:'Lato',sans-serif;font-size:0.88rem;line-height:1.6" placeholder="Tre&#347;&#263; tekstu..."></textarea>
@@ -250,6 +262,7 @@ h1,h2,h3,h4{font-family:'Nunito',sans-serif}
       <h3>Speaking</h3>
       <div class="field"><label>Podtytu&#322;</label><input id="sp_sub" placeholder="np. Talk about your family"></div>
       <span class="sec-label">Warmup &mdash; zdania do powt&oacute;rzenia</span>
+      <p class="hint" style="margin-bottom:0.5rem">Mo&#380;esz doda&#263; nagranie audio i obraz do ka&#380;dego zdania</p>
       <div id="spWarmupList"></div>
       <button class="add-btn" id="addSpWarmupBtn">&#43; Dodaj zdanie warmup</button>
       <span class="sec-label" style="margin-top:1.5rem">Konwersacje</span>
@@ -388,7 +401,8 @@ h1,h2,h3,h4{font-family:'Nunito',sans-serif}
 <script>
 // ── DATA ──
 let vocabSections = [], phrases = [], exercises = [], flashcards = [], homework = [];
-let readingObj  = {title:'', subtitle:'', note:'', text:'', vocab:[], comprehension:[]};
+let grammarBlocks = [];
+let readingObj  = {title:'', subtitle:'', note:'', text:'', image:'', vocab:[], comprehension:[]};
 let speakingObj = {subtitle:'', warmup:[], conversations:[]};
 let currentLessonId = null;
 
@@ -435,6 +449,16 @@ function toPrefix(name) {
 }
 function pickImage(callback) {
   const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
+  inp.addEventListener('change', () => {
+    const file = inp.files && inp.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => callback(ev.target.result);
+    reader.readAsDataURL(file);
+  });
+  inp.click();
+}
+function pickAudio(callback) {
+  const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'audio/*';
   inp.addEventListener('change', () => {
     const file = inp.files && inp.files[0]; if (!file) return;
     const reader = new FileReader();
@@ -506,7 +530,7 @@ document.querySelectorAll('.ftab').forEach(btn => {
   });
 });
 ['f_title','f_sub','f_level','f_emoji',
- 'v_sub','adv_grammar','rd_title','rd_sub','rd_note','rd_text','sp_sub']
+ 'v_sub','gr_title','gr_sub','rd_title','rd_sub','rd_note','rd_text','sp_sub']
   .forEach(id => document.getElementById(id)?.addEventListener('input', scheduleUpdate));
 
 document.getElementById('newLessonBtn').addEventListener('click', () => {
@@ -541,22 +565,25 @@ function loadFromJSON(obj) {
     phrases = (obj.vocabulary.phrases || []).map(p => ({pl:p.pl||'',en:p.en||''}));
   } else { vocabSections = []; phrases = []; }
   renderVocabSections(); renderPhrases();
-  // Grammar: JSON editor
-  const taG = document.getElementById('adv_grammar');
-  if (taG) taG.value = obj.grammar ? JSON.stringify(obj.grammar, null, 2) : '';
+  // Grammar: block editor
+  document.getElementById('gr_title').value = obj.grammar?.title    || '';
+  document.getElementById('gr_sub').value   = obj.grammar?.subtitle || '';
+  grammarBlocks = (obj.grammar?.blocks || []).map(b => JSON.parse(JSON.stringify(b)));
+  renderGrammarBlocks();
   // Reading: form fields
   const r = obj.reading || {};
   document.getElementById('rd_title').value = r.title    || '';
   document.getElementById('rd_sub').value   = r.subtitle || '';
   document.getElementById('rd_note').value  = r.note     || '';
   document.getElementById('rd_text').value  = r.text     || '';
+  readingObj.image         = r.image        || '';
   readingObj.vocab         = (r.vocab          || []).map(v => ({pl:v.pl||'', en:v.en||''}));
   readingObj.comprehension = (r.comprehension  || []).map(c => ({question:c.question||'', placeholder:c.placeholder||''}));
-  renderRdVocab(); renderRdComp();
+  renderRdVocab(); renderRdComp(); renderRdImage();
   // Speaking: form fields
   const s = obj.speaking || {};
   document.getElementById('sp_sub').value = s.subtitle || '';
-  speakingObj.warmup        = (s.warmup        || []).slice();
+  speakingObj.warmup        = (s.warmup || []).map(w => typeof w==='string' ? {text:w,image:'',audio:''} : {text:w.text||'',image:w.image||'',audio:w.audio||''});
   speakingObj.conversations = (s.conversations || []).map(c => ({
     title:   c.title  || '',
     prompts: (c.prompts||[]).map(p => ({q:p.q||'', qEn:p.qEn||'', answer:p.answer||''}))
@@ -867,18 +894,218 @@ function renderHW() {
   });
 }
 
-// ── TEMPLATES ──
-const GRAMMAR_TEMPLATE = '{\n  "title": "Grammar Title",\n  "subtitle": "...",\n  "blocks": [\n    {"type":"info","title":"The Big Idea","heading":"...","text":"...","tip":"..."},\n    {"type":"table","color":"purple","title":"All forms","headers":["Person","Masculine","Feminine"],"rows":[["I","mój","moja"]],"tip":"..."},\n    {"type":"examples","color":"green","title":"Examples","items":[{"pl":"...","en":"..."}]}\n  ]\n}';
-document.querySelectorAll('[data-template="grammar"]').forEach(btn=>{
-  btn.addEventListener('click',()=>{
-    const ta = document.getElementById('adv_grammar');
-    if (ta) { ta.value = GRAMMAR_TEMPLATE; scheduleUpdate(); }
+// ── GRAMMAR BLOCKS ──
+const GR_COLORS = ['default','green','red','yellow','purple','orange','pink'];
+document.querySelectorAll('[data-grtype]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const t = btn.dataset.grtype;
+    if (t==='info')      grammarBlocks.push({type:'info',color:'default',title:'',heading:'',text:'',tip:''});
+    if (t==='table')     grammarBlocks.push({type:'table',color:'purple',title:'',headers:[],rows:[],tip:''});
+    if (t==='examples')  grammarBlocks.push({type:'examples',color:'green',title:'',items:[]});
+    if (t==='qa-table')  grammarBlocks.push({type:'qa-table',color:'red',title:'',headers:['Polish','Answer'],rows:[]});
+    if (t==='two-col')   grammarBlocks.push({type:'two-col',color:'yellow',title:'',tip:'',columns:[{header:'',color:'',items:[]},{header:'',color:'',items:[]}]});
+    renderGrammarBlocks(); scheduleUpdate();
   });
 });
+
+function renderGrammarBlocks() {
+  const list = document.getElementById('grammarBlockList'); list.textContent = '';
+  grammarBlocks.forEach((blk, bi) => {
+    const wrap = el('div','item-row'); wrap.style.marginBottom='1.5rem';
+    const typeNames = {info:'ℹ️ Info',table:'📊 Tabela',examples:'✅ Przykłady','qa-table':'❓ Q&A','two-col':'⬛ Dwie kolumny'};
+    const typeTag = el('p',null,typeNames[blk.type]||blk.type);
+    typeTag.style.cssText='font-family:Nunito,sans-serif;font-weight:800;font-size:0.8rem;color:var(--blue-mid);text-transform:uppercase;margin-bottom:0.6rem';
+    wrap.appendChild(typeTag);
+
+    // Color + Title (common)
+    const row1 = el('div','two-field');
+    const cSel = document.createElement('select');
+    GR_COLORS.forEach(c=>{ const o=document.createElement('option');o.value=c;o.textContent=c;if(c===blk.color)o.selected=true;cSel.appendChild(o); });
+    cSel.addEventListener('change',()=>{blk.color=cSel.value;scheduleUpdate();});
+    row1.appendChild(field('Kolor',cSel));
+    row1.appendChild(field('Tytuł',textInput(blk.title||'','np. Formy czasownika',v=>{blk.title=v;scheduleUpdate();})));
+    wrap.appendChild(row1);
+
+    if (blk.type==='info') {
+      wrap.appendChild(field('Nagłówek',textInput(blk.heading||'','np. The Big Idea',v=>{blk.heading=v;scheduleUpdate();})));
+      const ta=document.createElement('textarea'); ta.rows=4; ta.value=blk.text||''; ta.placeholder='Treść...';
+      ta.style.cssText='font-family:Lato,sans-serif;font-size:0.88rem';
+      ta.addEventListener('input',()=>{blk.text=ta.value;scheduleUpdate();});
+      wrap.appendChild(field('Tekst',ta));
+      wrap.appendChild(field('Tip',textInput(blk.tip||'','np. Remember: ...',v=>{blk.tip=v;scheduleUpdate();})));
+    }
+
+    if (blk.type==='table') {
+      if (!blk.headers) blk.headers=[]; if (!blk.rows) blk.rows=[];
+      wrap.appendChild(el('span','sec-label','Nagłówki kolumn'));
+      const hWrap=document.createElement('div');
+      function renderGrHeaders() {
+        hWrap.textContent='';
+        blk.headers.forEach((h,hi)=>{
+          const r=document.createElement('div'); r.style.cssText='display:flex;gap:6px;margin-bottom:4px';
+          const inp=textInput(h,'Nagłówek',v=>{blk.headers[hi]=v;scheduleUpdate();});
+          inp.style.cssText='flex:1;padding:6px 10px;border:1.5px solid #ddd;border-radius:6px;font-size:0.85rem';
+          const del=el('button','del-btn','✕');
+          del.addEventListener('click',()=>{blk.headers.splice(hi,1);blk.rows.forEach(rr=>rr.splice(hi,1));renderGrHeaders();renderGrRows();scheduleUpdate();});
+          r.appendChild(inp); r.appendChild(del); hWrap.appendChild(r);
+        });
+        const addH=el('button','add-btn','+ Kolumna'); addH.style.cssText='padding:4px 10px;font-size:0.78rem';
+        addH.addEventListener('click',()=>{blk.headers.push('');blk.rows.forEach(rr=>rr.push(''));renderGrHeaders();renderGrRows();scheduleUpdate();});
+        hWrap.appendChild(addH);
+      }
+      renderGrHeaders(); wrap.appendChild(hWrap);
+      wrap.appendChild(el('span','sec-label','Wiersze'));
+      const rWrap=document.createElement('div');
+      function renderGrRows() {
+        rWrap.textContent='';
+        blk.rows.forEach((row,ri)=>{
+          const rEl=document.createElement('div'); rEl.style.cssText='display:flex;gap:4px;margin-bottom:4px;align-items:center';
+          blk.headers.forEach((_,ci)=>{
+            const inp=textInput(row[ci]||'',blk.headers[ci]||'',v=>{row[ci]=v;scheduleUpdate();});
+            inp.style.cssText='flex:1;padding:5px 8px;border:1.5px solid #ddd;border-radius:6px;font-size:0.82rem';
+            rEl.appendChild(inp);
+          });
+          const del=el('button','del-btn','✕');
+          del.addEventListener('click',()=>{blk.rows.splice(ri,1);renderGrRows();scheduleUpdate();});
+          rEl.appendChild(del); rWrap.appendChild(rEl);
+        });
+        const addR=el('button','add-btn','+ Wiersz'); addR.style.cssText='padding:4px 10px;font-size:0.78rem';
+        addR.addEventListener('click',()=>{blk.rows.push((blk.headers||[]).map(()=>''));renderGrRows();scheduleUpdate();});
+        rWrap.appendChild(addR);
+      }
+      renderGrRows(); wrap.appendChild(rWrap);
+      wrap.appendChild(field('Tip',textInput(blk.tip||'','np. Remember: ...',v=>{blk.tip=v;scheduleUpdate();})));
+    }
+
+    if (blk.type==='examples') {
+      if (!blk.items) blk.items=[];
+      wrap.appendChild(el('span','sec-label','Przykłady'));
+      const iWrap=document.createElement('div');
+      function renderGrEx() {
+        iWrap.textContent='';
+        blk.items.forEach((item,ii)=>{
+          const iw=el('div'); iw.style.cssText='background:#f0f4ff;border-radius:8px;padding:0.7rem;margin-bottom:0.5rem;position:relative';
+          const g=el('div','two-field');
+          g.appendChild(field('PL',textInput(item.pl||'','Polskie zdanie',v=>{item.pl=v;scheduleUpdate();})));
+          g.appendChild(field('EN',textInput(item.en||'','English sentence',v=>{item.en=v;scheduleUpdate();})));
+          iw.appendChild(g);
+          const imgRow=el('div','img-upload-row');
+          if (item.image) {
+            const thumb=document.createElement('img'); thumb.src=item.image; thumb.className='img-thumb'; thumb.alt='';
+            imgRow.appendChild(thumb);
+            const rem=el('button','del-btn','✕ Obraz');
+            rem.addEventListener('click',()=>{delete item.image;renderGrEx();scheduleUpdate();});
+            imgRow.appendChild(rem);
+          }
+          const addImg=el('button','add-btn',item.image?'🔄 Zmień':'🖼️ Obraz'); addImg.style.cssText='padding:4px 8px;font-size:0.75rem';
+          addImg.addEventListener('click',()=>pickImage(b64=>{item.image=b64;renderGrEx();scheduleUpdate();}));
+          imgRow.appendChild(addImg); iw.appendChild(imgRow);
+          const del=el('button','del-btn abs','✕');
+          del.addEventListener('click',()=>{blk.items.splice(ii,1);renderGrEx();scheduleUpdate();});
+          iw.appendChild(del); iWrap.appendChild(iw);
+        });
+        const addI=el('button','add-btn','+ Przykład');
+        addI.addEventListener('click',()=>{blk.items.push({pl:'',en:''});renderGrEx();scheduleUpdate();});
+        iWrap.appendChild(addI);
+      }
+      renderGrEx(); wrap.appendChild(iWrap);
+    }
+
+    if (blk.type==='qa-table') {
+      if (!blk.rows) blk.rows=[]; if (!blk.headers) blk.headers=['Polish','Answer'];
+      const hrow=el('div','two-field');
+      hrow.appendChild(field('Nagłówek 1',textInput(blk.headers[0]||'','Polish',v=>{blk.headers[0]=v;scheduleUpdate();})));
+      hrow.appendChild(field('Nagłówek 2',textInput(blk.headers[1]||'','Answer',v=>{blk.headers[1]=v;scheduleUpdate();})));
+      wrap.appendChild(hrow);
+      wrap.appendChild(el('span','sec-label','Wiersze'));
+      const rWrap2=document.createElement('div');
+      function renderQARows() {
+        rWrap2.textContent='';
+        blk.rows.forEach((row,ri)=>{
+          const rEl=document.createElement('div'); rEl.style.cssText='display:flex;gap:6px;margin-bottom:4px;align-items:center';
+          const a=textInput(row[0]||'','Pytanie',v=>{row[0]=v;scheduleUpdate();}); a.style.flex='1';
+          const b=textInput(row[1]||'','Odpowiedź',v=>{row[1]=v;scheduleUpdate();}); b.style.flex='1';
+          const del=el('button','del-btn','✕');
+          del.addEventListener('click',()=>{blk.rows.splice(ri,1);renderQARows();scheduleUpdate();});
+          rEl.appendChild(a); rEl.appendChild(b); rEl.appendChild(del); rWrap2.appendChild(rEl);
+        });
+        const addR=el('button','add-btn','+ Wiersz'); addR.style.cssText='padding:4px 10px;font-size:0.78rem';
+        addR.addEventListener('click',()=>{blk.rows.push(['','']);renderQARows();scheduleUpdate();});
+        rWrap2.appendChild(addR);
+      }
+      renderQARows(); wrap.appendChild(rWrap2);
+    }
+
+    if (blk.type==='two-col') {
+      if (!blk.columns) blk.columns=[{header:'',color:'',items:[]},{header:'',color:'',items:[]}];
+      wrap.appendChild(field('Tip',textInput(blk.tip||'','np. Remember...',v=>{blk.tip=v;scheduleUpdate();})));
+      wrap.appendChild(el('span','sec-label','Kolumny (po 2 słówka PL/EN)'));
+      const colsWrap=el('div'); colsWrap.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:1rem';
+      function renderTwoCols() {
+        colsWrap.textContent='';
+        blk.columns.forEach((col,ci)=>{
+          const colDiv=el('div'); colDiv.style.cssText='background:#f0f4ff;border-radius:8px;padding:0.7rem';
+          colDiv.appendChild(field('Nagłówek',textInput(col.header||'','',v=>{col.header=v;scheduleUpdate();})));
+          if (!col.items) col.items=[];
+          const iWrap2=document.createElement('div');
+          function renderColItems() {
+            iWrap2.textContent='';
+            col.items.forEach((item,ii)=>{
+              const rEl=document.createElement('div'); rEl.style.cssText='display:flex;gap:4px;margin-bottom:4px;align-items:center';
+              const a=textInput(item.pl||'','PL',v=>{item.pl=v;scheduleUpdate();}); a.style.cssText='flex:1;padding:5px 8px;border:1.5px solid #ddd;border-radius:6px;font-size:0.82rem';
+              const b=textInput(item.en||'','EN',v=>{item.en=v;scheduleUpdate();}); b.style.cssText='flex:1;padding:5px 8px;border:1.5px solid #ddd;border-radius:6px;font-size:0.82rem';
+              const del=el('button','del-btn','✕');
+              del.addEventListener('click',()=>{col.items.splice(ii,1);renderColItems();scheduleUpdate();});
+              rEl.appendChild(a); rEl.appendChild(b); rEl.appendChild(del); iWrap2.appendChild(rEl);
+            });
+            const addI=el('button','add-btn','+ Słówko'); addI.style.cssText='padding:4px 8px;font-size:0.75rem';
+            addI.addEventListener('click',()=>{col.items.push({pl:'',en:''});renderColItems();scheduleUpdate();});
+            iWrap2.appendChild(addI);
+          }
+          renderColItems(); colDiv.appendChild(iWrap2); colsWrap.appendChild(colDiv);
+        });
+      }
+      renderTwoCols(); wrap.appendChild(colsWrap);
+    }
+
+    // Move / delete
+    const actRow=document.createElement('div'); actRow.style.cssText='display:flex;gap:6px;margin-top:0.8rem';
+    const upBtn=el('button','del-btn','↑'); upBtn.title='Przesuń wyżej'; upBtn.disabled=bi===0;
+    upBtn.addEventListener('click',()=>{[grammarBlocks[bi-1],grammarBlocks[bi]]=[grammarBlocks[bi],grammarBlocks[bi-1]];renderGrammarBlocks();scheduleUpdate();});
+    const dnBtn=el('button','del-btn','↓'); dnBtn.title='Przesuń niżej'; dnBtn.disabled=bi===grammarBlocks.length-1;
+    dnBtn.addEventListener('click',()=>{[grammarBlocks[bi],grammarBlocks[bi+1]]=[grammarBlocks[bi+1],grammarBlocks[bi]];renderGrammarBlocks();scheduleUpdate();});
+    const delBlk=el('button','del-btn','✕ Usuń blok'); delBlk.style.marginLeft='auto';
+    delBlk.addEventListener('click',()=>{grammarBlocks.splice(bi,1);renderGrammarBlocks();scheduleUpdate();});
+    actRow.appendChild(upBtn); actRow.appendChild(dnBtn); actRow.appendChild(delBlk);
+    wrap.appendChild(actRow);
+    list.appendChild(wrap);
+  });
+}
 
 // ── READING ──
 document.getElementById('addRdVocabBtn').addEventListener('click', () => { readingObj.vocab.push({pl:'', en:''}); renderRdVocab(); scheduleUpdate(); });
 document.getElementById('addRdCompBtn').addEventListener('click',  () => { readingObj.comprehension.push({question:'', placeholder:''}); renderRdComp(); scheduleUpdate(); });
+document.getElementById('rdImgBtn').addEventListener('click', () => pickImage(b64 => { readingObj.image = b64; renderRdImage(); scheduleUpdate(); }));
+function renderRdImage() {
+  const row = document.getElementById('rdImgRow'); row.textContent = '';
+  if (readingObj.image) {
+    const thumb = document.createElement('img'); thumb.src = readingObj.image; thumb.className = 'img-thumb'; thumb.alt = '';
+    thumb.style.cssText = 'width:80px;height:50px;object-fit:cover;border-radius:6px;border:1px solid #ddd';
+    row.appendChild(thumb);
+    const rem = el('button','del-btn','✕ Usuń obraz');
+    rem.addEventListener('click', () => { readingObj.image = ''; renderRdImage(); scheduleUpdate(); });
+    row.appendChild(rem);
+  }
+  const addBtn = el('button','add-btn', readingObj.image ? '🔄 Zmień obraz' : '🖼️ Dodaj obraz');
+  addBtn.style.cssText = 'margin:0;padding:7px 14px';
+  addBtn.addEventListener('click', () => pickImage(b64 => { readingObj.image = b64; renderRdImage(); scheduleUpdate(); }));
+  row.appendChild(addBtn);
+  if (!readingObj.image) {
+    const hint = el('span', null, 'opcjonalnie — pokazywana nad tekstem');
+    hint.style.cssText = 'font-size:0.75rem;color:#aaa';
+    row.appendChild(hint);
+  }
+}
 function renderRdVocab() {
   const list = document.getElementById('rdVocabList'); list.textContent = '';
   readingObj.vocab.forEach((item, i) => {
@@ -905,17 +1132,43 @@ function renderRdComp() {
 }
 
 // ── SPEAKING ──
-document.getElementById('addSpWarmupBtn').addEventListener('click', () => { speakingObj.warmup.push(''); renderSpWarmup(); scheduleUpdate(); });
+document.getElementById('addSpWarmupBtn').addEventListener('click', () => { speakingObj.warmup.push({text:'',image:'',audio:''}); renderSpWarmup(); scheduleUpdate(); });
 document.getElementById('addSpConvBtn').addEventListener('click',  () => { speakingObj.conversations.push({title:'', prompts:[{q:'', qEn:'', answer:''}]}); renderSpConv(); scheduleUpdate(); });
 function renderSpWarmup() {
   const list = document.getElementById('spWarmupList'); list.textContent = '';
-  speakingObj.warmup.forEach((phrase, i) => {
-    const row = el('div', 'item-row'); row.style.cssText = 'display:flex;gap:8px;align-items:center';
-    const inp = textInput(phrase, 'np. I have a big family.', v => { speakingObj.warmup[i]=v; scheduleUpdate(); });
-    inp.style.flex = '1';
-    const del = el('button', 'del-btn', '✕'); del.style.flexShrink = '0';
-    del.addEventListener('click', () => { speakingObj.warmup.splice(i,1); renderSpWarmup(); scheduleUpdate(); });
-    row.appendChild(inp); row.appendChild(del); list.appendChild(row);
+  speakingObj.warmup.forEach((item, i) => {
+    const row = el('div', 'item-row');
+    const inp = textInput(item.text||'', 'np. I have a big family.', v => { item.text=v; scheduleUpdate(); });
+    inp.style.cssText = 'width:100%;margin-bottom:6px';
+    row.appendChild(inp);
+    // Image row
+    const imgRow = el('div','img-upload-row'); imgRow.style.marginBottom='6px';
+    if (item.image) {
+      const thumb=document.createElement('img'); thumb.src=item.image; thumb.className='img-thumb'; thumb.alt='';
+      imgRow.appendChild(thumb);
+      const rem=el('button','del-btn','✕ Obraz');
+      rem.addEventListener('click',()=>{item.image='';renderSpWarmup();scheduleUpdate();});
+      imgRow.appendChild(rem);
+    }
+    const addImgBtn=el('button','add-btn',item.image?'🔄 Zmień':'🖼️ Obraz'); addImgBtn.style.cssText='padding:4px 8px;font-size:0.75rem;margin:0';
+    addImgBtn.addEventListener('click',()=>pickImage(b64=>{item.image=b64;renderSpWarmup();scheduleUpdate();}));
+    imgRow.appendChild(addImgBtn);
+    // Audio row
+    const audioRow = el('div','img-upload-row');
+    if (item.audio) {
+      const au=document.createElement('audio'); au.src=item.audio; au.controls=true; au.style.cssText='height:28px;flex:1;min-width:0';
+      audioRow.appendChild(au);
+      const rem=el('button','del-btn','✕ Audio');
+      rem.addEventListener('click',()=>{item.audio='';renderSpWarmup();scheduleUpdate();});
+      audioRow.appendChild(rem);
+    }
+    const addAudioBtn=el('button','add-btn',item.audio?'🔄 Zmień':'🎵 Audio'); addAudioBtn.style.cssText='padding:4px 8px;font-size:0.75rem;margin:0';
+    addAudioBtn.addEventListener('click',()=>pickAudio(b64=>{item.audio=b64;renderSpWarmup();scheduleUpdate();}));
+    audioRow.appendChild(addAudioBtn);
+    row.appendChild(imgRow); row.appendChild(audioRow);
+    const del=el('button','del-btn','✕ Usuń'); del.style.cssText='margin-top:6px;display:block';
+    del.addEventListener('click',()=>{speakingObj.warmup.splice(i,1);renderSpWarmup();scheduleUpdate();});
+    row.appendChild(del); list.appendChild(row);
   });
 }
 function renderSpConv() {
@@ -964,10 +1217,16 @@ function buildJSON() {
     if (!obj.vocabulary.phrases.length) delete obj.vocabulary.phrases;
     if (!obj.vocabulary.sections.length) delete obj.vocabulary.sections;
   }
-  // Grammar: JSON editor
+  // Grammar: block editor
   if (selectedTabs.includes('grammar')) {
-    const raw = document.getElementById('adv_grammar').value.trim();
-    if (raw) { try { obj.grammar = JSON.parse(raw); } catch { obj.grammar = {_parseError:'Invalid JSON'}; } }
+    const grTitle = document.getElementById('gr_title').value.trim();
+    const grSub   = document.getElementById('gr_sub').value.trim();
+    if (grTitle || grSub || grammarBlocks.length) {
+      obj.grammar = {};
+      if (grTitle) obj.grammar.title    = grTitle;
+      if (grSub)   obj.grammar.subtitle = grSub;
+      if (grammarBlocks.length) obj.grammar.blocks = grammarBlocks;
+    }
   }
   // Reading: form fields
   if (selectedTabs.includes('reading')) {
@@ -977,11 +1236,12 @@ function buildJSON() {
     const rdText  = document.getElementById('rd_text').value.trim();
     const vocab   = readingObj.vocab.filter(v => v.pl||v.en);
     const comp    = readingObj.comprehension.filter(c => c.question);
-    if (rdTitle||rdSub||rdNote||rdText||vocab.length||comp.length) {
+    if (rdTitle||rdSub||rdNote||rdText||readingObj.image||vocab.length||comp.length) {
       obj.reading = {};
       if (rdTitle) obj.reading.title    = rdTitle;
       if (rdSub)   obj.reading.subtitle = rdSub;
       if (rdNote)  obj.reading.note     = rdNote;
+      if (readingObj.image) obj.reading.image = readingObj.image;
       if (rdText)  obj.reading.text     = rdText;
       if (vocab.length) obj.reading.vocab         = vocab;
       if (comp.length)  obj.reading.comprehension = comp;
@@ -990,15 +1250,16 @@ function buildJSON() {
   // Speaking: form fields
   if (selectedTabs.includes('speaking')) {
     const spSub  = document.getElementById('sp_sub').value.trim();
-    const warmup = speakingObj.warmup.filter(w => w.trim());
+    const warmup = speakingObj.warmup.filter(w => w.text && w.text.trim());
+    const warmupOut = warmup.map(w => (w.image||w.audio) ? w : w.text);
     const convs  = speakingObj.conversations
       .map(c => ({title:c.title||'', prompts:(c.prompts||[]).filter(p=>p.q||p.answer)}))
       .filter(c => c.title||c.prompts.length);
-    if (spSub||warmup.length||convs.length) {
+    if (spSub||warmupOut.length||convs.length) {
       obj.speaking = {};
-      if (spSub)          obj.speaking.subtitle      = spSub;
-      if (warmup.length)  obj.speaking.warmup        = warmup;
-      if (convs.length)   obj.speaking.conversations = convs;
+      if (spSub)               obj.speaking.subtitle      = spSub;
+      if (warmupOut.length)    obj.speaking.warmup        = warmupOut;
+      if (convs.length)        obj.speaking.conversations = convs;
     }
   }
   if (selectedTabs.includes('exercises') && exercises.length) obj.exercises = exercises;

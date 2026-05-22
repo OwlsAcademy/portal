@@ -149,6 +149,7 @@ h1,h2,h3,h4{font-family:'Nunito',sans-serif}
   <div class="form-panel">
     <div class="form-tabs" id="formTabs">
       <button class="ftab active" data-tab="basic">&#9997; Podstawowe</button>
+      <button class="ftab" data-tab="intro">&#128214; Introduction</button>
       <button class="ftab" data-tab="vocab">&#128218; Vocabulary</button>
       <button class="ftab" data-tab="grammar">&#128214; Grammar</button>
       <button class="ftab" data-tab="reading">&#128196; Reading</button>
@@ -186,6 +187,26 @@ h1,h2,h3,h4{font-family:'Nunito',sans-serif}
       <h3 style="margin-top:1.5rem">Zak&#322;adki lekcji</h3>
       <p class="hint" style="margin-bottom:0.7rem">Wybierz jakie sekcje ma zawiera&#263; ta lekcja:</p>
       <div class="tabs-grid" id="tabsGrid"></div>
+    </div>
+
+    <!-- INTRODUCTION -->
+    <div class="form-section" id="tab-intro">
+      <h3>Introduction &mdash; wst&#281;p do lekcji</h3>
+      <div class="field"><label>Podtytu&#322; zak&#322;adki</label><input id="intro_sub" placeholder="np. Warm-up &middot; Rozgrzewka"></div>
+      <span class="sec-label">Sekcje (kolejno&#347;&#263; zgodna z wy&#347;wietlaniem)</span>
+      <div id="introSectionList"></div>
+      <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.3rem">
+        <button class="add-btn" data-introtype="quote">&#43; Cytat</button>
+        <button class="add-btn" data-introtype="discussion">&#43; Dyskusja</button>
+        <button class="add-btn" data-introtype="article">&#43; Artyku&#322;</button>
+        <button class="add-btn" data-introtype="glossary">&#43; S&#322;owniczek</button>
+        <button class="add-btn" data-introtype="comprehension">&#43; Rozumienie</button>
+        <button class="add-btn" data-introtype="speaking">&#43; M&oacute;wienie</button>
+        <button class="add-btn" data-introtype="cta">&#43; Przycisk CTA</button>
+        <button class="add-btn" data-introtype="image">&#43; Obraz</button>
+        <button class="add-btn" data-introtype="html">&#43; HTML</button>
+        <button class="add-btn" data-introtype="info">&#43; Info</button>
+      </div>
     </div>
 
     <!-- VOCAB -->
@@ -424,6 +445,7 @@ h1,h2,h3,h4{font-family:'Nunito',sans-serif}
 // ── DATA ──
 let vocabSections = [], phrases = [], exercises = [], flashcards = [], homework = [];
 let grammarBlocks = [];
+let introductionSections = [];
 let readingObj  = {title:'', subtitle:'', note:'', text:'', image:'', vocab:[], comprehension:[]};
 let speakingObj = {subtitle:'', warmup:[], conversations:[]};
 let currentLessonId = null;
@@ -528,6 +550,7 @@ sb.auth.onAuthStateChange((_event, session) => {
 
 // ── TABS ──
 const ALL_TABS = [
+  {id:'introduction',lbl:'📖 Introduction'},
   {id:'vocabulary',lbl:'📚 Vocabulary'},{id:'grammar',lbl:'📖 Grammar'},
   {id:'reading',lbl:'📄 Reading'},{id:'exercises',lbl:'✏️ Exercises'},
   {id:'speaking',lbl:'🗣️ Speaking'},{id:'flashcards',lbl:'🃏 Flashcards'},
@@ -552,7 +575,7 @@ document.querySelectorAll('.ftab').forEach(btn => {
   });
 });
 ['f_title','f_sub','f_level','f_emoji',
- 'v_sub','gr_title','gr_sub','rd_title','rd_sub','rd_note','rd_text','sp_sub']
+ 'intro_sub','v_sub','gr_title','gr_sub','rd_title','rd_sub','rd_note','rd_text','sp_sub']
   .forEach(id => document.getElementById(id)?.addEventListener('input', scheduleUpdate));
 
 document.getElementById('newLessonBtn').addEventListener('click', () => {
@@ -578,6 +601,11 @@ function loadFromJSON(obj) {
     cb.checked = tabs.includes(cb.value);
     cb.closest('label').classList.toggle('checked', cb.checked);
   });
+  // Introduction
+  document.getElementById('intro_sub').value = obj.introduction?.subtitle || '';
+  introductionSections = (obj.introduction?.sections || []).map(s => JSON.parse(JSON.stringify(s)));
+  renderIntroductionSections();
+
   if (obj.vocabulary) {
     document.getElementById('v_sub').value = obj.vocabulary.subtitle || '';
     vocabSections = (obj.vocabulary.sections || []).map(s => ({
@@ -1233,6 +1261,183 @@ function renderSpConv() {
   });
 }
 
+// ── INTRODUCTION EDITOR ──
+document.querySelectorAll('[data-introtype]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const t = btn.dataset.introtype;
+    const defaults = {
+      quote:         {type:'quote', text:'', author:''},
+      discussion:    {type:'discussion', num:'1', title:'', label:'', description:'', questions:[]},
+      article:       {type:'article', num:'2', title:'', label:'', articleTitle:'', articleNote:'', image:'', text:'', footnote:''},
+      glossary:      {type:'glossary', num:'3', title:'', items:[]},
+      comprehension: {type:'comprehension', num:'4', title:'', instruction:'', questions:[]},
+      speaking:      {type:'speaking', num:'5', title:'', instruction:'', questions:[]},
+      cta:           {type:'cta', label:'', text:'', buttonText:'', targetTab:'vocabulary'},
+      image:         {type:'image', num:'', title:'', image:'', caption:''},
+      html:          {type:'html', html:''},
+      info:          {type:'info', color:'default', title:'', text:''}
+    };
+    if (defaults[t]) { introductionSections.push({...defaults[t]}); renderIntroductionSections(); scheduleUpdate(); }
+  });
+});
+
+function renderIntroductionSections() {
+  const list = document.getElementById('introSectionList'); list.textContent = '';
+  const typeNames = {quote:'💬 Cytat', discussion:'🗣️ Dyskusja', article:'📄 Artykuł', glossary:'📚 Słowniczek', comprehension:'❓ Rozumienie', speaking:'💬 Mówienie', cta:'→ CTA', image:'🖼️ Obraz', html:'</> HTML', info:'ℹ️ Info'};
+
+  introductionSections.forEach((sec, si) => {
+    const wrap = el('div', 'item-row'); wrap.style.marginBottom = '1.2rem';
+    const typeTag = el('p'); typeTag.style.cssText = 'font-family:Nunito,sans-serif;font-weight:800;font-size:0.8rem;color:var(--blue-mid);text-transform:uppercase;margin-bottom:0.6rem';
+    typeTag.textContent = typeNames[sec.type] || sec.type; wrap.appendChild(typeTag);
+
+    function numTitleRow() {
+      const r = el('div','two-field');
+      r.appendChild(field('Numer', textInput(sec.num||'','np. 1', v=>{sec.num=v;scheduleUpdate();})));
+      r.appendChild(field('Tytuł sekcji', textInput(sec.title||'','np. Before You Read', v=>{sec.title=v;scheduleUpdate();})));
+      wrap.appendChild(r);
+    }
+    function makeTA2(val, ph, cb) {
+      const ta = document.createElement('textarea'); ta.value = val||''; ta.placeholder = ph||''; ta.rows = 4;
+      ta.style.cssText = 'width:100%;padding:9px 12px;border:2px solid #e0e5f0;border-radius:8px;font-family:Lato,sans-serif;font-size:0.82rem;resize:vertical;outline:none;transition:border 0.2s;font-family:"Courier New",monospace';
+      ta.addEventListener('input',()=>cb(ta.value)); return ta;
+    }
+    function addImgSection(imgKey) {
+      wrap.appendChild(el('span','sec-label','Obraz'));
+      const imgRow = el('div','img-upload-row');
+      if (sec[imgKey]) {
+        const th = document.createElement('img'); th.src=sec[imgKey]; th.className='img-thumb'; th.alt=''; imgRow.appendChild(th);
+        const rem = el('button','del-btn','✕ Obraz');
+        rem.addEventListener('click',()=>{delete sec[imgKey];renderIntroductionSections();scheduleUpdate();}); imgRow.appendChild(rem);
+      }
+      const addI = el('button','add-btn',sec[imgKey]?'🔄 Zmień':'🖼️ Dodaj obraz'); addI.style.cssText='padding:4px 8px;font-size:0.75rem';
+      addI.addEventListener('click',()=>pickImage(b64=>{sec[imgKey]=b64;renderIntroductionSections();scheduleUpdate();})); imgRow.appendChild(addI);
+      wrap.appendChild(imgRow);
+    }
+
+    switch(sec.type) {
+      case 'quote':
+        wrap.appendChild(field('Tekst cytatu', makeTA2(sec.text,'np. "Growing up is..."', v=>{sec.text=v;scheduleUpdate();})));
+        wrap.appendChild(field('Autor', textInput(sec.author||'','np. Virginia Woolf', v=>{sec.author=v;scheduleUpdate();})));
+        break;
+      case 'discussion':
+        numTitleRow();
+        wrap.appendChild(field('Etykieta', textInput(sec.label||'','np. Think & Discuss', v=>{sec.label=v;scheduleUpdate();})));
+        wrap.appendChild(field('Opis zadania', textInput(sec.description||'','np. Spend 2 minutes thinking...', v=>{sec.description=v;scheduleUpdate();})));
+        renderIntroStringList(wrap, sec, 'questions', '+ Dodaj pytanie', 'Pytanie dyskusyjne...');
+        break;
+      case 'article':
+        numTitleRow();
+        wrap.appendChild(field('Etykieta', textInput(sec.label||'','np. Read the article · B1', v=>{sec.label=v;scheduleUpdate();})));
+        wrap.appendChild(field('Tytuł artykułu', textInput(sec.articleTitle||'','np. The Magic Birthday', v=>{sec.articleTitle=v;scheduleUpdate();})));
+        wrap.appendChild(field('Podtytuł artykułu', textInput(sec.articleNote||'','np. An opinion piece from...', v=>{sec.articleNote=v;scheduleUpdate();})));
+        addImgSection('image');
+        wrap.appendChild(field('Tekst (HTML dozwolony: <span class="hl">, <span class="hlg">, <strong>...)', makeTA2(sec.text,'Treść artykułu...', v=>{sec.text=v;scheduleUpdate();})));
+        wrap.appendChild(field('Przypis pod tekstem', textInput(sec.footnote||'','np. * emerging adulthood — ...', v=>{sec.footnote=v;scheduleUpdate();})));
+        break;
+      case 'glossary':
+        numTitleRow();
+        wrap.appendChild(el('span','sec-label','Słowa'));
+        const glList = document.createElement('div');
+        (sec.items||[]).forEach((item,i)=>{
+          const iw = el('div'); iw.style.cssText='background:#f0f4ff;border-radius:8px;padding:0.7rem;margin-bottom:0.5rem;position:relative';
+          const r1=el('div','two-field');
+          r1.appendChild(field('Słowo', textInput(item.word||'','np. adulthood', v=>{item.word=v;scheduleUpdate();})));
+          r1.appendChild(field('Fonetyka', textInput(item.phonetic||'','np. /ˈædʌlthʊd/', v=>{item.phonetic=v;scheduleUpdate();})));
+          iw.appendChild(r1);
+          const r2=el('div','two-field');
+          r2.appendChild(field('Tłumaczenie (PL)', textInput(item.translation||'','np. dorosłość', v=>{item.translation=v;scheduleUpdate();})));
+          r2.appendChild(field('Wskazówka EN', textInput(item.hint||'','np. the state of being an adult', v=>{item.hint=v;scheduleUpdate();})));
+          iw.appendChild(r2);
+          const del=el('button','del-btn abs','✕');
+          del.addEventListener('click',()=>{sec.items.splice(i,1);renderIntroductionSections();scheduleUpdate();}); iw.appendChild(del); glList.appendChild(iw);
+        });
+        wrap.appendChild(glList);
+        const addGl=el('button','add-btn','+ Dodaj słowo');
+        addGl.addEventListener('click',()=>{if(!sec.items)sec.items=[];sec.items.push({word:'',phonetic:'',translation:'',hint:''});renderIntroductionSections();scheduleUpdate();}); wrap.appendChild(addGl);
+        break;
+      case 'comprehension':
+        numTitleRow();
+        wrap.appendChild(field('Instrukcja', textInput(sec.instruction||'','np. Click "Show answer" to check.', v=>{sec.instruction=v;scheduleUpdate();})));
+        wrap.appendChild(el('span','sec-label','Pytania'));
+        const cmpList = document.createElement('div');
+        (sec.questions||[]).forEach((q,i)=>{
+          const iw=el('div'); iw.style.cssText='background:#f0f4ff;border-radius:8px;padding:0.7rem;margin-bottom:0.5rem;position:relative';
+          iw.appendChild(field('Pytanie', textInput(q.question||'','np. According to the text...', v=>{q.question=v;scheduleUpdate();})));
+          iw.appendChild(field('Odpowiedź', textInput(q.answer||'','np. The stage between...', v=>{q.answer=v;scheduleUpdate();})));
+          const del=el('button','del-btn abs','✕'); del.addEventListener('click',()=>{sec.questions.splice(i,1);renderIntroductionSections();scheduleUpdate();}); iw.appendChild(del); cmpList.appendChild(iw);
+        });
+        wrap.appendChild(cmpList);
+        const addCmp=el('button','add-btn','+ Dodaj pytanie');
+        addCmp.addEventListener('click',()=>{if(!sec.questions)sec.questions=[];sec.questions.push({question:'',answer:''});renderIntroductionSections();scheduleUpdate();}); wrap.appendChild(addCmp);
+        break;
+      case 'speaking':
+        numTitleRow();
+        wrap.appendChild(field('Instrukcja', textInput(sec.instruction||'','np. Discuss with a partner...', v=>{sec.instruction=v;scheduleUpdate();})));
+        wrap.appendChild(el('span','sec-label','Pytania'));
+        const spkList = document.createElement('div');
+        (sec.questions||[]).forEach((q,i)=>{
+          const iw=el('div'); iw.style.cssText='background:#f0f4ff;border-radius:8px;padding:0.7rem;margin-bottom:0.5rem;position:relative';
+          const r=el('div','two-field');
+          r.appendChild(field('Pytanie', textInput(q.question||'','np. Do you agree that...?', v=>{q.question=v;scheduleUpdate();})));
+          r.appendChild(field('Wskazówka', textInput(q.hint||'','np. Think about...', v=>{q.hint=v;scheduleUpdate();})));
+          iw.appendChild(r);
+          const del=el('button','del-btn abs','✕'); del.addEventListener('click',()=>{sec.questions.splice(i,1);renderIntroductionSections();scheduleUpdate();}); iw.appendChild(del); spkList.appendChild(iw);
+        });
+        wrap.appendChild(spkList);
+        const addSpk=el('button','add-btn','+ Dodaj pytanie');
+        addSpk.addEventListener('click',()=>{if(!sec.questions)sec.questions=[];sec.questions.push({question:'',hint:''});renderIntroductionSections();scheduleUpdate();}); wrap.appendChild(addSpk);
+        break;
+      case 'cta':
+        wrap.appendChild(field('Etykieta', textInput(sec.label||'','np. Ready to continue?', v=>{sec.label=v;scheduleUpdate();})));
+        wrap.appendChild(field('Tekst', textInput(sec.text||'','np. Move on to Vocabulary', v=>{sec.text=v;scheduleUpdate();})));
+        wrap.appendChild(field('Tekst przycisku', textInput(sec.buttonText||'','np. Go to Vocabulary →', v=>{sec.buttonText=v;scheduleUpdate();})));
+        const tSel=document.createElement('select');
+        ['vocabulary','grammar','reading','exercises','speaking','flashcards','homework'].forEach(t=>{
+          const opt=document.createElement('option'); opt.value=t; opt.textContent=t;
+          if(t===(sec.targetTab||'vocabulary'))opt.selected=true; tSel.appendChild(opt);
+        });
+        tSel.addEventListener('change',()=>{sec.targetTab=tSel.value;scheduleUpdate();}); wrap.appendChild(field('Docelowa zakładka',tSel)); break;
+      case 'image':
+        numTitleRow();
+        addImgSection('image');
+        wrap.appendChild(field('Podpis', textInput(sec.caption||'','np. Children playing in the park', v=>{sec.caption=v;scheduleUpdate();})));
+        break;
+      case 'html':
+        wrap.appendChild(field('HTML (dozwolone tagi: p, strong, em, ul, ol, li, br, span)', makeTA2(sec.html||'','<p>Custom HTML...</p>', v=>{sec.html=v;scheduleUpdate();})));
+        break;
+      case 'info': {
+        const colSel=document.createElement('select');
+        ['default','green','red','yellow','purple','orange','pink'].forEach(c=>{
+          const opt=document.createElement('option'); opt.value=c; opt.textContent=c;
+          if(c===(sec.color||'default'))opt.selected=true; colSel.appendChild(opt);
+        });
+        colSel.addEventListener('change',()=>{sec.color=colSel.value;scheduleUpdate();}); wrap.appendChild(field('Kolor karty',colSel));
+        wrap.appendChild(field('Tytuł', textInput(sec.title||'','np. Did you know?', v=>{sec.title=v;scheduleUpdate();})));
+        wrap.appendChild(field('Tekst', makeTA2(sec.text||'','Treść karty...', v=>{sec.text=v;scheduleUpdate();})));
+        break;
+      }
+    }
+
+    const delBtn=el('button','del-btn abs','✕ Usuń');
+    delBtn.addEventListener('click',()=>{introductionSections.splice(si,1);renderIntroductionSections();scheduleUpdate();}); wrap.appendChild(delBtn);
+    list.appendChild(wrap);
+  });
+}
+
+function renderIntroStringList(wrap, sec, key, addLabel, placeholder) {
+  const lbl = {questions:'Pytania'}; wrap.appendChild(el('span','sec-label',lbl[key]||key));
+  const listEl = document.createElement('div');
+  (sec[key]||[]).forEach((item,i)=>{
+    const row=el('div'); row.style.cssText='background:#f0f4ff;border-radius:8px;padding:0.5rem;margin-bottom:4px;display:flex;gap:6px;align-items:center';
+    const inp=textInput(item,placeholder,v=>{sec[key][i]=v;scheduleUpdate();}); inp.style.flex='1';
+    const del=el('button','del-btn','✕'); del.addEventListener('click',()=>{sec[key].splice(i,1);renderIntroductionSections();scheduleUpdate();});
+    row.appendChild(inp); row.appendChild(del); listEl.appendChild(row);
+  });
+  wrap.appendChild(listEl);
+  const addBtn=el('button','add-btn',addLabel);
+  addBtn.addEventListener('click',()=>{if(!sec[key])sec[key]=[];sec[key].push('');renderIntroductionSections();scheduleUpdate();}); wrap.appendChild(addBtn);
+}
+
 // ── BUILD JSON ──
 function buildJSON() {
   const selectedTabs = Array.from(document.querySelectorAll('#tabsGrid input:checked')).map(cb => cb.value);
@@ -1244,6 +1449,14 @@ function buildJSON() {
     headerEmoji: document.getElementById('f_emoji').value.trim() || undefined,
     tabs: selectedTabs
   };
+  // Introduction
+  if (selectedTabs.includes('introduction') && introductionSections.length) {
+    const introSub = document.getElementById('intro_sub').value.trim();
+    obj.introduction = {};
+    if (introSub) obj.introduction.subtitle = introSub;
+    obj.introduction.sections = introductionSections.filter(s => s.type);
+    if (!obj.introduction.sections.length && !introSub) delete obj.introduction;
+  }
   if (selectedTabs.includes('vocabulary') && (vocabSections.length || phrases.length)) {
     obj.vocabulary = {
       subtitle: document.getElementById('v_sub').value.trim() || undefined,
@@ -1321,6 +1534,7 @@ document.getElementById('saveToSupabaseBtn').addEventListener('click', async () 
   const { error } = await sb.from('lessons').upsert({
     id: currentLessonId, title: obj.title||null, subtitle: obj.subtitle||null,
     level: obj.level||null, header_emoji: obj.headerEmoji||null, tabs: obj.tabs||[],
+    introduction: obj.introduction||null,
     vocabulary: obj.vocabulary||null, grammar: obj.grammar||null,
     reading: obj.reading||null, exercises: obj.exercises||null,
     flashcards: obj.flashcards||null, homework: obj.homework||null, speaking: obj.speaking||null
@@ -1350,9 +1564,9 @@ async function loadLessonFromDB(id) {
   if (error || !row) { setStatus('❌ Błąd: ' + (error?.message||'brak'), true); return; }
   loadFromJSON({
     id:row.id, title:row.title, subtitle:row.subtitle, level:row.level,
-    headerEmoji:row.header_emoji, tabs:row.tabs||[], vocabulary:row.vocabulary,
-    grammar:row.grammar, reading:row.reading, exercises:row.exercises,
-    flashcards:row.flashcards, homework:row.homework, speaking:row.speaking
+    headerEmoji:row.header_emoji, tabs:row.tabs||[], introduction:row.introduction,
+    vocabulary:row.vocabulary, grammar:row.grammar, reading:row.reading,
+    exercises:row.exercises, flashcards:row.flashcards, homework:row.homework, speaking:row.speaking
   });
   setStatus('✅ Wczytano: ' + id);
   document.querySelector('.ftab[data-tab="basic"]').click();
@@ -1364,6 +1578,7 @@ async function exportLessonJSON(id) {
   if (error || !row) { alert('Błąd: ' + (error?.message||'brak')); return; }
   const obj = { id:row.id, title:row.title, subtitle:row.subtitle, level:row.level,
     headerEmoji:row.header_emoji, tabs:row.tabs||[],
+    ...(row.introduction?{introduction:row.introduction}:{}),
     ...(row.vocabulary?{vocabulary:row.vocabulary}:{}), ...(row.grammar?{grammar:row.grammar}:{}),
     ...(row.reading?{reading:row.reading}:{}), ...(row.exercises?{exercises:row.exercises}:{}),
     ...(row.flashcards?{flashcards:row.flashcards}:{}), ...(row.homework?{homework:row.homework}:{}),

@@ -185,6 +185,7 @@ let fillChecked  = {};
 let writeTexts   = {};
 let fcStats      = {known:0, unknown:0};
 let fcIdx        = 0;
+let fcReversed   = false;
 let checklistState = {};
 
 // ── INIT ──
@@ -574,6 +575,25 @@ function buildReading(sec) {
 // ── EXERCISES ──
 function buildExercises(sec) {
   if (!lesson.exercises?.length) { sec.appendChild(el('p', null, 'Brak ćwiczeń.')); return; }
+
+  // Clear answers button
+  const clearRow = document.createElement('div');
+  clearRow.style.cssText = 'display:flex;justify-content:flex-end;margin-bottom:1rem';
+  const clearBtn = el('button', 'check-btn', '🗑️ Wyczyść odpowiedzi');
+  clearBtn.style.cssText = 'background:white;color:var(--red);border:2px solid var(--red);padding:8px 18px;font-size:0.85rem;margin-top:0';
+  clearBtn.addEventListener('click', () => {
+    if (!confirm('Czy na pewno chcesz wyczyścić wszystkie odpowiedzi z quizów i uzupełnianek? (pola tekstowe zostaną zachowane)')) return;
+    Object.keys(quizAnswered).forEach(k => delete quizAnswered[k]);
+    Object.keys(fillChecked).forEach(k => delete fillChecked[k]);
+    // Rebuild exercise content, keep the header
+    const hdr = sec.querySelector('.lesson-header');
+    while (sec.lastChild && sec.lastChild !== hdr) sec.removeChild(sec.lastChild);
+    buildExercises(sec);
+    scheduleProgressSave();
+  });
+  clearRow.appendChild(clearBtn);
+  sec.appendChild(clearRow);
+
   lesson.exercises.forEach((ex, xi) => {
     switch(ex.type) {
       case 'quiz':      buildQuiz(sec, ex, xi);  break;
@@ -845,6 +865,22 @@ function buildFC(sec) {
   wrap.appendChild(fc);
   sec.appendChild(wrap);
 
+  // Direction toggle row
+  const dirRow = el('div', 'fc-ctrls');
+  dirRow.style.marginBottom = '0.5rem';
+  const dirBtn = el('button', 'fc-btn sec');
+  dirBtn.id = 'fc_dir_btn';
+  dirBtn.title = 'Zmień kierunek fiszek';
+  dirBtn.textContent = '🔄 Kierunek: PL → EN';
+  dirBtn.addEventListener('click', () => {
+    fcReversed = !fcReversed;
+    dirBtn.textContent = fcReversed ? '🔄 Kierunek: EN → PL' : '🔄 Kierunek: PL → EN';
+    document.getElementById('flashcard')?.classList.remove('flipped');
+    renderFC();
+  });
+  dirRow.appendChild(dirBtn);
+  sec.appendChild(dirRow);
+
   const ctrls = el('div', 'fc-ctrls');
   const nopeBtn = el('button', 'fc-btn nope', '👎 Nie znam');
   const prevBtn = el('button', 'fc-btn sec',  '← Prev');
@@ -877,8 +913,9 @@ function renderFC() {
   const imgEl = el2('fc_img');
   if (imgEl) { if (c.image) { imgEl.src = c.image; imgEl.style.display = 'block'; } else { imgEl.style.display = 'none'; } }
   el2('fc_emoji').textContent = c.emoji || (c.image ? '' : '📚');
-  el2('fc_word').textContent  = c.word;
-  el2('fc_trans').textContent = c.translation;
+  // fcReversed: swap front (word) and back (translation)
+  el2('fc_word').textContent  = fcReversed ? c.translation : c.word;
+  el2('fc_trans').textContent = fcReversed ? c.word : c.translation;
   el2('fc_ex').textContent    = c.example || '';
   el2('fc_ctr').textContent   = 'Card ' + (fcIdx + 1) + ' of ' + cards.length;
   el2('fc_prog').style.width  = ((fcIdx + 1) / cards.length * 100) + '%';

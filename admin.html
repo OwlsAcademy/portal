@@ -260,7 +260,19 @@ h1,h2,h3,h4{font-family:'Playfair Display',serif}
       <h3>Praca domowa</h3>
       <div id="hwList"></div>
       <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
-        <button class="add-btn" data-hwtype="write">&#43; Zadanie pisemne</button>
+        <span class="sec-label" style="display:block;margin-bottom:0.3rem">Słownictwo</span>
+        <button class="add-btn" data-hwtype="hw-fill">&#43; Uzupełnianie luk</button>
+        <button class="add-btn" data-hwtype="hw-translate">&#43; Tłumaczenie</button>
+        <button class="add-btn" data-hwtype="hw-match">&#43; Łączenie</button>
+        <button class="add-btn" data-hwtype="hw-own">&#43; Własne zdania</button>
+        <span class="sec-label" style="display:block;margin:0.5rem 0 0.3rem">Gramatyka</span>
+        <button class="add-btn" data-hwtype="hw-gr-fill">&#43; Uzupełnianie luk (gram.)</button>
+        <button class="add-btn" data-hwtype="hw-gr-transform">&#43; Transformacje</button>
+        <button class="add-btn" data-hwtype="hw-gr-errorcorrect">&#43; Poprawa błędów</button>
+        <button class="add-btn" data-hwtype="hw-gr-sentcomplete">&#43; Dokańczanie zdań</button>
+        <span class="sec-label" style="display:block;margin:0.5rem 0 0.3rem">Pozostałe</span>
+        <button class="add-btn" data-hwtype="hw-reading">&#43; Krótka czytanka</button>
+        <button class="add-btn" data-hwtype="write">&#43; Writing (pisanie)</button>
         <button class="add-btn" data-hwtype="checklist">&#43; Lista do odhaczenia</button>
       </div>
     </div>
@@ -278,6 +290,15 @@ h1,h2,h3,h4{font-family:'Playfair Display',serif}
         <button class="add-btn" data-grtype="examples">&#43; Przyk&#322;ady</button>
         <button class="add-btn" data-grtype="qa-table">&#43; Q&amp;A</button>
         <button class="add-btn" data-grtype="two-col">&#43; Dwie kolumny</button>
+      </div>
+      <span class="sec-label">Ćwiczenia gramatyczne</span>
+      <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.8rem">
+        <button class="add-btn" data-grtype="gr-fill">&#43; Uzupełnianie luk</button>
+        <button class="add-btn" data-grtype="gr-mcq">&#43; MCQ (4 opcje)</button>
+        <button class="add-btn" data-grtype="gr-transform">&#43; Transformacje</button>
+        <button class="add-btn" data-grtype="gr-errorcorrect">&#43; Poprawa błędów</button>
+        <button class="add-btn" data-grtype="gr-ownsentences">&#43; Własne zdania</button>
+        <button class="add-btn" data-grtype="gr-sentcomplete">&#43; Dokańczanie zdań</button>
       </div>
       <div id="grammarBlockList"></div>
     </div>
@@ -301,12 +322,18 @@ h1,h2,h3,h4{font-family:'Playfair Display',serif}
         <label>Tekst &mdash; HTML dozwolony: <code style="font-size:0.78rem">&lt;span class="hl"&gt;</code> = &#380;&oacute;&#322;te, <code style="font-size:0.78rem">&lt;span class="hlg"&gt;</code> = zielone</label>
         <textarea id="rd_text" rows="9" style="font-family:'DM Sans',sans-serif;font-size:0.88rem;line-height:1.6" placeholder="Tre&#347;&#263; tekstu..."></textarea>
       </div>
-      <span class="sec-label">S&#322;ownictwo z tekstu</span>
+      <span class="sec-label">Before You Read (pytania wstępne)</span>
+      <div id="rdBeforeList"></div>
+      <button class="add-btn" id="addRdBeforeBtn">&#43; Dodaj pytanie wstępne</button>
+      <span class="sec-label" style="margin-top:1.5rem">S&#322;ownictwo z tekstu (karty — klik = odkryj definicję)</span>
       <div id="rdVocabList"></div>
       <button class="add-btn" id="addRdVocabBtn">&#43; Dodaj s&#322;&oacute;wko</button>
       <span class="sec-label" style="margin-top:1.5rem">Pytania do tekstu</span>
       <div id="rdCompList"></div>
       <button class="add-btn" id="addRdCompBtn">&#43; Dodaj pytanie</button>
+      <span class="sec-label" style="margin-top:1.5rem">Post-Reading Discussion</span>
+      <div id="rdPostList"></div>
+      <button class="add-btn" id="addRdPostBtn">&#43; Dodaj pytanie dyskusyjne</button>
       <span class="sec-label" style="margin-top:1.5rem">Ćwiczenia interaktywne do tekstu</span>
       <div id="rdExList"></div>
       <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.3rem">
@@ -338,6 +365,10 @@ h1,h2,h3,h4{font-family:'Playfair Display',serif}
         <button class="add-btn" data-sptype="debate">+ Debata</button>
         <button class="add-btn" data-sptype="pairs">+ Aktywności w parach</button>
         <button class="add-btn" data-sptype="monologue">+ Monolog (timer)</button>
+        <button class="add-btn" data-sptype="discussion">+ Deep Discussion</button>
+        <button class="add-btn" data-sptype="boxactivity">+ Box Activity</button>
+        <button class="add-btn" data-sptype="idiomtasks">+ Idiom Tasks</button>
+        <button class="add-btn" data-sptype="idiomstory">+ Idiom Storytelling</button>
       </div>
     </div>
 
@@ -503,7 +534,7 @@ let introductionSections = [];
 let readingExercises = [];
 let speakingBlocks   = [];
 let vocabBlocks      = [];
-let readingObj  = {title:'', subtitle:'', note:'', text:'', image:'', vocab:[], comprehension:[]};
+let readingObj  = {title:'', subtitle:'', note:'', text:'', image:'', beforeYouRead:[], vocab:[], comprehension:[], postDiscussion:[]};
 let speakingObj = {subtitle:'', warmup:[], conversations:[]};
 let currentLessonId = null;
 
@@ -694,7 +725,9 @@ function loadFromJSON(obj) {
   readingObj.vocab         = (r.vocab          || []).map(v => ({pl:v.pl||'', en:v.en||''}));
   readingObj.comprehension = (r.comprehension  || []).map(c => ({question:c.question||'', placeholder:c.placeholder||''}));
   readingExercises = (obj.reading?.exercises || []).map(ex => JSON.parse(JSON.stringify(ex)));
-  renderRdVocab(); renderRdComp(); renderRdImage(); renderRdEx();
+  readingObj.beforeYouRead = (obj.reading?.beforeYouRead || []).map(x=>({...x}));
+  readingObj.postDiscussion = (obj.reading?.postDiscussion || []).map(x=>({...x}));
+  renderRdBefore(); renderRdVocab(); renderRdComp(); renderRdPost(); renderRdImage(); renderRdEx();
   // Speaking: form fields
   const s = obj.speaking || {};
   document.getElementById('sp_sub').value = s.subtitle || '';
@@ -772,6 +805,11 @@ function renderVocabSections() {
       delI.addEventListener('click', ()=>{sec.items.splice(ii,1);renderVocabSections();scheduleUpdate();});
       [emoji,pl,en].forEach(inp=>{inp.style.width='100%';iRow.appendChild(inp);}); iRow.appendChild(delI);
       itemsWrap.appendChild(iRow);
+      // Definition + example (for flip cards)
+      const deRow = el('div','two-field'); deRow.style.cssText='margin-bottom:4px';
+      const def = textInput(item.definition||'','Definicja (ang.)',v=>{item.definition=v;scheduleUpdate();}); def.style.width='100%';
+      const ex  = textInput(item.example||'','Przykładowe zdanie',v=>{item.example=v;scheduleUpdate();}); ex.style.width='100%';
+      deRow.appendChild(def); deRow.appendChild(ex); itemsWrap.appendChild(deRow);
       const imgRow = el('div','img-upload-row');
       if (item.image) {
         const thumb = document.createElement('img'); thumb.src=item.image; thumb.className='img-thumb'; thumb.alt='';
@@ -968,8 +1006,17 @@ function renderFC() {
 document.querySelectorAll('[data-hwtype]').forEach(btn=>{
   btn.addEventListener('click',()=>{
     const t = btn.dataset.hwtype;
-    if (t==='write')     homework.push({type:'write',title:'',prompt:''});
-    if (t==='checklist') homework.push({type:'checklist',title:'',items:['']});
+    if (t==='write')              homework.push({type:'write',title:'',prompt:''});
+    if (t==='checklist')          homework.push({type:'checklist',title:'',items:['']});
+    if (t==='hw-fill')            homework.push({type:'hw-fill',       category:'vocabulary', title:'', wordbank:'', items:[{before:'',after:'',answer:''}]});
+    if (t==='hw-translate')       homework.push({type:'hw-translate',  category:'vocabulary', title:'', items:[{sentence:'',hint:''}]});
+    if (t==='hw-match')           homework.push({type:'hw-match',      category:'vocabulary', title:'', pairs:[{word:'',def:''}]});
+    if (t==='hw-own')             homework.push({type:'hw-own',        category:'vocabulary', title:'', instruction:'', structures:['']});
+    if (t==='hw-gr-fill')         homework.push({type:'hw-gr-fill',    category:'grammar',    title:'', instruction:'', items:[{before:'',after:'',answer:''}]});
+    if (t==='hw-gr-transform')    homework.push({type:'hw-gr-transform',category:'grammar',   title:'', instruction:'', items:[{sentence:'',answer:''}]});
+    if (t==='hw-gr-errorcorrect') homework.push({type:'hw-gr-errorcorrect',category:'grammar',title:'', instruction:'', items:[{sentence:'',error:'',correction:''}]});
+    if (t==='hw-gr-sentcomplete') homework.push({type:'hw-gr-sentcomplete',category:'grammar',title:'', instruction:'', items:[{starter:''}]});
+    if (t==='hw-reading')         homework.push({type:'hw-reading',    category:'reading',    title:'', text:'', questions:[{q:''}]});
     renderHW(); scheduleUpdate();
   });
 });
@@ -977,7 +1024,8 @@ function renderHW() {
   const list = document.getElementById('hwList'); list.textContent='';
   homework.forEach((hw,i)=>{
     const wrap = el('div','item-row'); wrap.style.marginBottom='1rem';
-    const tag = el('p',null,hw.type==='write'?'✍️ Zadanie pisemne':'☑️ Lista do odhaczenia');
+    const hwTypeNames = {write:'Writing','checklist':'Lista','hw-fill':'Uzupełnianie luk (Vocab)','hw-translate':'Tłumaczenie','hw-match':'Łączenie','hw-own':'Własne zdania','hw-gr-fill':'Uzupełnianie luk (Grammar)','hw-gr-transform':'Transformacje','hw-gr-errorcorrect':'Poprawa błędów','hw-gr-sentcomplete':'Dokańczanie zdań','hw-reading':'Krótka czytanka'};
+    const tag = el('p',null,hwTypeNames[hw.type]||hw.type);
     tag.style.cssText='font-family:Nunito,sans-serif;font-weight:800;font-size:0.8rem;color:var(--blue-mid);text-transform:uppercase;margin-bottom:0.5rem';
     wrap.appendChild(tag);
     wrap.appendChild(field('Tytuł',textInput(hw.title||'','Opisz swoją rodzinę',v=>{hw.title=v;scheduleUpdate();})));
@@ -1004,6 +1052,120 @@ function renderHW() {
       addI.addEventListener('click',()=>{hw.items.push('');renderHW();scheduleUpdate();});
       wrap.appendChild(addI);
     }
+
+    // ── NEW HOMEWORK TYPES ──
+    function hwSimpleList(arr, labelBefore, labelAfter, labelAns, emptyItem) {
+      const iL = document.createElement('div');
+      (arr||[]).forEach((item,ii)=>{
+        const iw=el('div'); iw.style.cssText='background:#f7f5f1;border-radius:8px;padding:0.7rem;margin-bottom:0.5rem;position:relative';
+        if (labelBefore) iw.appendChild(field(labelBefore, textInput(item.before||item.sentence||'','',v=>{item.before=item.sentence=v;scheduleUpdate();})));
+        if (labelAfter)  iw.appendChild(field(labelAfter,  textInput(item.after||'','',v=>{item.after=v;scheduleUpdate();})));
+        if (labelAns)    iw.appendChild(field(labelAns,    textInput(item.answer||item.hint||'','',v=>{item.answer=item.hint=v;scheduleUpdate();})));
+        const d=el('button','del-btn abs','✕'); d.addEventListener('click',()=>{arr.splice(ii,1);renderHW();scheduleUpdate();}); iw.appendChild(d);
+        iL.appendChild(iw);
+      });
+      return iL;
+    }
+
+    if (hw.type==='hw-fill'||hw.type==='hw-gr-fill') {
+      if (hw.type==='hw-fill') wrap.appendChild(field('Bank słów (opcjonalnie)', textInput(hw.wordbank||'','np. self-perception · empathy · …',v=>{hw.wordbank=v;scheduleUpdate();})));
+      wrap.appendChild(field('Instrukcja', textInput(hw.instruction||'','',v=>{hw.instruction=v;scheduleUpdate();})));
+      wrap.appendChild(el('span','sec-label','Luki (tekst przed + ___ + tekst po + odpowiedź)'));
+      const iL=hwSimpleList(hw.items,'Przed luką','Po luce','Odpowiedź');
+      wrap.appendChild(iL);
+      const a=el('button','add-btn','+ Dodaj lukę'); a.addEventListener('click',()=>{hw.items.push({before:'',after:'',answer:''});renderHW();scheduleUpdate();}); wrap.appendChild(a);
+    }
+    if (hw.type==='hw-translate') {
+      wrap.appendChild(el('span','sec-label','Zdania do przetłumaczenia (PL → EN)'));
+      const iL=document.createElement('div');
+      (hw.items||[]).forEach((item,ii)=>{
+        const iw=el('div'); iw.style.cssText='background:#f7f5f1;border-radius:8px;padding:0.7rem;margin-bottom:0.5rem;position:relative';
+        iw.appendChild(field('Zdanie polskie', textInput(item.sentence||'','',v=>{item.sentence=v;scheduleUpdate();})));
+        iw.appendChild(field('Hint (opcjonalnie)', textInput(item.hint||'','',v=>{item.hint=v;scheduleUpdate();})));
+        const d=el('button','del-btn abs','✕'); d.addEventListener('click',()=>{hw.items.splice(ii,1);renderHW();scheduleUpdate();}); iw.appendChild(d); iL.appendChild(iw);
+      });
+      wrap.appendChild(iL);
+      const a=el('button','add-btn','+ Dodaj zdanie'); a.addEventListener('click',()=>{hw.items.push({sentence:'',hint:''});renderHW();scheduleUpdate();}); wrap.appendChild(a);
+    }
+    if (hw.type==='hw-match') {
+      wrap.appendChild(el('span','sec-label','Pary (słówko ↔ definicja/znaczenie)'));
+      const iL=document.createElement('div');
+      (hw.pairs||[]).forEach((pair,ii)=>{
+        const row=el('div'); row.style.cssText='display:grid;grid-template-columns:1fr 1fr auto;gap:6px;margin-bottom:6px;align-items:center';
+        const wI=textInput(pair.word||'','Słówko',v=>{pair.word=v;scheduleUpdate();}); wI.style.cssText='padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:0.85rem';
+        const dI=textInput(pair.def||'', 'Definicja',v=>{pair.def=v; scheduleUpdate();}); dI.style.cssText='padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:0.85rem';
+        const del=el('button','del-btn','✕'); del.addEventListener('click',()=>{hw.pairs.splice(ii,1);renderHW();scheduleUpdate();});
+        row.appendChild(wI); row.appendChild(dI); row.appendChild(del); iL.appendChild(row);
+      });
+      wrap.appendChild(iL);
+      const a=el('button','add-btn','+ Dodaj parę'); a.addEventListener('click',()=>{hw.pairs.push({word:'',def:''});renderHW();scheduleUpdate();}); wrap.appendChild(a);
+    }
+    if (hw.type==='hw-own') {
+      wrap.appendChild(field('Instrukcja', textInput(hw.instruction||'','np. Write a sentence for each structure below.',v=>{hw.instruction=v;scheduleUpdate();})));
+      wrap.appendChild(el('span','sec-label','Konstrukcje / słówka'));
+      const iL=document.createElement('div');
+      (hw.structures||[]).forEach((s,si)=>{
+        const row=el('div'); row.style.cssText='display:flex;gap:6px;margin-bottom:4px';
+        const inp=textInput(s,'np. used to + infinitive',v=>{hw.structures[si]=v;scheduleUpdate();}); inp.style.cssText='flex:1;padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:0.85rem';
+        const d=el('button','del-btn','✕'); d.addEventListener('click',()=>{hw.structures.splice(si,1);renderHW();scheduleUpdate();});
+        row.appendChild(inp); row.appendChild(d); iL.appendChild(row);
+      });
+      wrap.appendChild(iL);
+      const a=el('button','add-btn','+ Dodaj'); a.addEventListener('click',()=>{hw.structures.push('');renderHW();scheduleUpdate();}); wrap.appendChild(a);
+    }
+    if (hw.type==='hw-gr-transform') {
+      wrap.appendChild(field('Instrukcja', textInput(hw.instruction||'Rewrite each sentence using the word in brackets.','',v=>{hw.instruction=v;scheduleUpdate();})));
+      const iL=document.createElement('div');
+      (hw.items||[]).forEach((item,ii)=>{
+        const iw=el('div'); iw.style.cssText='background:#f7f5f1;border-radius:8px;padding:0.7rem;margin-bottom:0.5rem;position:relative';
+        iw.appendChild(field('Zdanie (słowo w nawiasie)', textInput(item.sentence||'','np. I was always late. (used to)',v=>{item.sentence=v;scheduleUpdate();})));
+        iw.appendChild(field('Model answer', textInput(item.answer||'','',v=>{item.answer=v;scheduleUpdate();})));
+        const d=el('button','del-btn abs','✕'); d.addEventListener('click',()=>{hw.items.splice(ii,1);renderHW();scheduleUpdate();}); iw.appendChild(d); iL.appendChild(iw);
+      });
+      wrap.appendChild(iL);
+      const a=el('button','add-btn','+ Dodaj'); a.addEventListener('click',()=>{hw.items.push({sentence:'',answer:''});renderHW();scheduleUpdate();}); wrap.appendChild(a);
+    }
+    if (hw.type==='hw-gr-errorcorrect') {
+      wrap.appendChild(field('Instrukcja', textInput(hw.instruction||'Each sentence has ONE error. Find and correct it.','',v=>{hw.instruction=v;scheduleUpdate();})));
+      const iL=document.createElement('div');
+      (hw.items||[]).forEach((item,ii)=>{
+        const iw=el('div'); iw.style.cssText='background:#f7f5f1;border-radius:8px;padding:0.7rem;margin-bottom:0.5rem;position:relative';
+        iw.appendChild(field('Zdanie z błędem', textInput(item.sentence||'','',v=>{item.sentence=v;scheduleUpdate();})));
+        const g=el('div','two-field');
+        g.appendChild(field('Błąd', textInput(item.error||'','',v=>{item.error=v;scheduleUpdate();})));
+        g.appendChild(field('Korekta', textInput(item.correction||'','',v=>{item.correction=v;scheduleUpdate();})));
+        iw.appendChild(g);
+        const d=el('button','del-btn abs','✕'); d.addEventListener('click',()=>{hw.items.splice(ii,1);renderHW();scheduleUpdate();}); iw.appendChild(d); iL.appendChild(iw);
+      });
+      wrap.appendChild(iL);
+      const a=el('button','add-btn','+ Dodaj'); a.addEventListener('click',()=>{hw.items.push({sentence:'',error:'',correction:''});renderHW();scheduleUpdate();}); wrap.appendChild(a);
+    }
+    if (hw.type==='hw-gr-sentcomplete') {
+      wrap.appendChild(field('Instrukcja', textInput(hw.instruction||'Complete the sentences with your own ideas.','',v=>{hw.instruction=v;scheduleUpdate();})));
+      const iL=document.createElement('div');
+      (hw.items||[]).forEach((item,ii)=>{
+        const iw=el('div'); iw.style.cssText='background:#f7f5f1;border-radius:8px;padding:0.7rem;margin-bottom:0.5rem;position:relative';
+        iw.appendChild(field('Początek zdania', textInput(item.starter||'','np. When I was a child, I used to…',v=>{item.starter=v;scheduleUpdate();})));
+        const d=el('button','del-btn abs','✕'); d.addEventListener('click',()=>{hw.items.splice(ii,1);renderHW();scheduleUpdate();}); iw.appendChild(d); iL.appendChild(iw);
+      });
+      wrap.appendChild(iL);
+      const a=el('button','add-btn','+ Dodaj zdanie'); a.addEventListener('click',()=>{hw.items.push({starter:''});renderHW();scheduleUpdate();}); wrap.appendChild(a);
+    }
+    if (hw.type==='hw-reading') {
+      const ta=document.createElement('textarea'); ta.rows=6; ta.value=hw.text||''; ta.style.cssText='width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:8px;font-size:0.85rem;font-family:"DM Sans",sans-serif;resize:vertical';
+      ta.placeholder='Tekst czytanki (150–200 słów)…'; ta.addEventListener('input',()=>{hw.text=ta.value;scheduleUpdate();}); wrap.appendChild(field('Tekst czytanki',ta));
+      wrap.appendChild(el('span','sec-label','Pytania do tekstu'));
+      const iL=document.createElement('div');
+      (hw.questions||[]).forEach((q,qi)=>{
+        const row=el('div'); row.style.cssText='display:flex;gap:6px;margin-bottom:4px';
+        const inp=textInput(q.q||'','Pytanie…',v=>{q.q=v;scheduleUpdate();}); inp.style.cssText='flex:1;padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:0.85rem';
+        const d=el('button','del-btn','✕'); d.addEventListener('click',()=>{hw.questions.splice(qi,1);renderHW();scheduleUpdate();});
+        row.appendChild(inp); row.appendChild(d); iL.appendChild(row);
+      });
+      wrap.appendChild(iL);
+      const a=el('button','add-btn','+ Dodaj pytanie'); a.addEventListener('click',()=>{hw.questions.push({q:''});renderHW();scheduleUpdate();}); wrap.appendChild(a);
+    }
+
     const del = el('button','del-btn','✕ Usuń'); del.style.cssText='margin-top:0.5rem;display:block';
     del.addEventListener('click',()=>{homework.splice(i,1);renderHW();scheduleUpdate();});
     wrap.appendChild(del); list.appendChild(wrap);
@@ -1019,7 +1181,13 @@ document.querySelectorAll('[data-grtype]').forEach(btn => {
     if (t==='table')     grammarBlocks.push({type:'table',color:'purple',title:'',headers:[],rows:[],tip:''});
     if (t==='examples')  grammarBlocks.push({type:'examples',color:'green',title:'',items:[]});
     if (t==='qa-table')  grammarBlocks.push({type:'qa-table',color:'red',title:'',headers:['Polish','Answer'],rows:[]});
-    if (t==='two-col')   grammarBlocks.push({type:'two-col',color:'yellow',title:'',tip:'',columns:[{header:'',color:'',items:[]},{header:'',color:'',items:[]}]});
+    if (t==='two-col')        grammarBlocks.push({type:'two-col',color:'yellow',title:'',tip:'',columns:[{header:'',color:'',items:[]},{header:'',color:'',items:[]}]});
+    if (t==='gr-fill')        grammarBlocks.push({type:'gr-fill',        title:'Gap Fill',          instruction:'', items:[{before:'',after:'',answer:'',hint:''}]});
+    if (t==='gr-mcq')         grammarBlocks.push({type:'gr-mcq',         title:'Choose the Correct Form', instruction:'', questions:[{q:'',options:['','','',''],answer:'',explanation:''}]});
+    if (t==='gr-transform')   grammarBlocks.push({type:'gr-transform',   title:'Transformations',   instruction:'Rewrite each sentence using the word in brackets.', items:[{sentence:'',hint:'',answer:''}]});
+    if (t==='gr-errorcorrect')grammarBlocks.push({type:'gr-errorcorrect',title:'Error Correction',  instruction:'Each sentence has ONE error. Find and correct it.', items:[{sentence:'',error:'',correction:'',explanation:''}]});
+    if (t==='gr-ownsentences')grammarBlocks.push({type:'gr-ownsentences',title:'Create Your Own Sentences', instruction:'', structures:[''], example:''});
+    if (t==='gr-sentcomplete')grammarBlocks.push({type:'gr-sentcomplete',title:'Complete the Sentences', instruction:'', items:[{starter:'',example:''}]});
     renderGrammarBlocks(); scheduleUpdate();
   });
 });
@@ -1184,6 +1352,110 @@ function renderGrammarBlocks() {
       renderTwoCols(); wrap.appendChild(colsWrap);
     }
 
+    // ── Grammar exercise renderers ──
+    if (blk.type==='gr-fill') {
+      wrap.appendChild(field('Instrukcja', textInput(blk.instruction||'','',v=>{blk.instruction=v;scheduleUpdate();})));
+      wrap.appendChild(el('span','sec-label','Luki (___  w miejscu luki)'));
+      const iL=document.createElement('div');
+      (blk.items||[]).forEach((item,ii)=>{
+        const iw=el('div'); iw.style.cssText='background:#f7f5f1;border-radius:8px;padding:0.7rem;margin-bottom:0.5rem;position:relative';
+        const g=el('div','two-field');
+        g.appendChild(field('Przed luką', textInput(item.before||'','',v=>{item.before=v;scheduleUpdate();})));
+        g.appendChild(field('Po luce',    textInput(item.after||'', '',v=>{item.after=v; scheduleUpdate();})));
+        iw.appendChild(g);
+        const g2=el('div','two-field');
+        g2.appendChild(field('Odpowiedź', textInput(item.answer||'','',v=>{item.answer=v;scheduleUpdate();})));
+        g2.appendChild(field('Hint',      textInput(item.hint||'',  '',v=>{item.hint=v;  scheduleUpdate();})));
+        iw.appendChild(g2);
+        const d=el('button','del-btn abs','✕'); d.addEventListener('click',()=>{blk.items.splice(ii,1);renderGrammarBlocks();scheduleUpdate();}); iw.appendChild(d);
+        iL.appendChild(iw);
+      });
+      wrap.appendChild(iL);
+      const a=el('button','add-btn','+ Dodaj lukę'); a.addEventListener('click',()=>{blk.items.push({before:'',after:'',answer:'',hint:''});renderGrammarBlocks();scheduleUpdate();}); wrap.appendChild(a);
+    }
+
+    if (blk.type==='gr-mcq') {
+      wrap.appendChild(field('Instrukcja', textInput(blk.instruction||'','',v=>{blk.instruction=v;scheduleUpdate();})));
+      wrap.appendChild(el('span','sec-label','Pytania MCQ'));
+      const iL=document.createElement('div');
+      (blk.questions||[]).forEach((q,qi)=>{
+        const iw=el('div'); iw.style.cssText='background:#f7f5f1;border-radius:8px;padding:0.7rem;margin-bottom:0.5rem;position:relative';
+        iw.appendChild(field('Zdanie (z ___ w miejscu)', textInput(q.q||'','',v=>{q.q=v;scheduleUpdate();})));
+        const og=el('div'); og.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:6px';
+        (q.options||['','','','']).forEach((opt,oi)=>{const inp=textInput(opt,'Opcja '+(oi+1),v=>{q.options[oi]=v;scheduleUpdate();});inp.style.cssText='padding:6px 8px;border:1px solid #ddd;border-radius:6px;font-size:0.82rem;width:100%';og.appendChild(inp);});
+        iw.appendChild(og);
+        const g2=el('div','two-field');
+        g2.appendChild(field('Poprawna odpowiedź', textInput(q.answer||'','',v=>{q.answer=v;scheduleUpdate();})));
+        g2.appendChild(field('Wyjaśnienie',        textInput(q.explanation||'','',v=>{q.explanation=v;scheduleUpdate();})));
+        iw.appendChild(g2);
+        const d=el('button','del-btn abs','✕'); d.addEventListener('click',()=>{blk.questions.splice(qi,1);renderGrammarBlocks();scheduleUpdate();}); iw.appendChild(d);
+        iL.appendChild(iw);
+      });
+      wrap.appendChild(iL);
+      const a=el('button','add-btn','+ Dodaj pytanie'); a.addEventListener('click',()=>{blk.questions.push({q:'',options:['','','',''],answer:'',explanation:''});renderGrammarBlocks();scheduleUpdate();}); wrap.appendChild(a);
+    }
+
+    if (blk.type==='gr-transform') {
+      wrap.appendChild(field('Instrukcja', textInput(blk.instruction||'','',v=>{blk.instruction=v;scheduleUpdate();})));
+      const iL=document.createElement('div');
+      (blk.items||[]).forEach((item,ii)=>{
+        const iw=el('div'); iw.style.cssText='background:#f7f5f1;border-radius:8px;padding:0.7rem;margin-bottom:0.5rem;position:relative';
+        iw.appendChild(field('Zdanie do przekształcenia + (słowo)', textInput(item.sentence||'','np. I was always late. (used to)',v=>{item.sentence=v;scheduleUpdate();})));
+        iw.appendChild(field('Model answer', textInput(item.answer||'','',v=>{item.answer=v;scheduleUpdate();})));
+        const d=el('button','del-btn abs','✕'); d.addEventListener('click',()=>{blk.items.splice(ii,1);renderGrammarBlocks();scheduleUpdate();}); iw.appendChild(d);
+        iL.appendChild(iw);
+      });
+      wrap.appendChild(iL);
+      const a=el('button','add-btn','+ Dodaj transformację'); a.addEventListener('click',()=>{blk.items.push({sentence:'',answer:''});renderGrammarBlocks();scheduleUpdate();}); wrap.appendChild(a);
+    }
+
+    if (blk.type==='gr-errorcorrect') {
+      wrap.appendChild(field('Instrukcja', textInput(blk.instruction||'','',v=>{blk.instruction=v;scheduleUpdate();})));
+      const iL=document.createElement('div');
+      (blk.items||[]).forEach((item,ii)=>{
+        const iw=el('div'); iw.style.cssText='background:#f7f5f1;border-radius:8px;padding:0.7rem;margin-bottom:0.5rem;position:relative';
+        iw.appendChild(field('Zdanie z błędem', textInput(item.sentence||'','np. I use to play football.',v=>{item.sentence=v;scheduleUpdate();})));
+        const g=el('div','two-field');
+        g.appendChild(field('Błąd (wyróżniony)', textInput(item.error||'','np. use to',v=>{item.error=v;scheduleUpdate();})));
+        g.appendChild(field('Poprawna forma',    textInput(item.correction||'','np. used to',v=>{item.correction=v;scheduleUpdate();})));
+        iw.appendChild(g);
+        iw.appendChild(field('Wyjaśnienie', textInput(item.explanation||'','',v=>{item.explanation=v;scheduleUpdate();})));
+        const d=el('button','del-btn abs','✕'); d.addEventListener('click',()=>{blk.items.splice(ii,1);renderGrammarBlocks();scheduleUpdate();}); iw.appendChild(d);
+        iL.appendChild(iw);
+      });
+      wrap.appendChild(iL);
+      const a=el('button','add-btn','+ Dodaj zdanie'); a.addEventListener('click',()=>{blk.items.push({sentence:'',error:'',correction:'',explanation:''});renderGrammarBlocks();scheduleUpdate();}); wrap.appendChild(a);
+    }
+
+    if (blk.type==='gr-ownsentences') {
+      wrap.appendChild(field('Instrukcja', textInput(blk.instruction||'','np. Write 5 sentences using the structures below.',v=>{blk.instruction=v;scheduleUpdate();})));
+      wrap.appendChild(field('Przykład (opcjonalnie)', textInput(blk.example||'','',v=>{blk.example=v;scheduleUpdate();})));
+      wrap.appendChild(el('span','sec-label','Konstrukcje / struktury'));
+      const iL=document.createElement('div');
+      (blk.structures||[]).forEach((s,si)=>{
+        const row=el('div'); row.style.cssText='display:flex;gap:6px;margin-bottom:4px';
+        const inp=textInput(s,'np. used to + infinitive',v=>{blk.structures[si]=v;scheduleUpdate();}); inp.style.cssText='flex:1;padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:0.85rem';
+        const d=el('button','del-btn','✕'); d.addEventListener('click',()=>{blk.structures.splice(si,1);renderGrammarBlocks();scheduleUpdate();});
+        row.appendChild(inp); row.appendChild(d); iL.appendChild(row);
+      });
+      wrap.appendChild(iL);
+      const a=el('button','add-btn','+ Dodaj konstrukcję'); a.addEventListener('click',()=>{blk.structures.push('');renderGrammarBlocks();scheduleUpdate();}); wrap.appendChild(a);
+    }
+
+    if (blk.type==='gr-sentcomplete') {
+      wrap.appendChild(field('Instrukcja', textInput(blk.instruction||'','np. Complete the sentences with your own ideas.',v=>{blk.instruction=v;scheduleUpdate();})));
+      const iL=document.createElement('div');
+      (blk.items||[]).forEach((item,ii)=>{
+        const iw=el('div'); iw.style.cssText='background:#f7f5f1;border-radius:8px;padding:0.7rem;margin-bottom:0.5rem;position:relative';
+        iw.appendChild(field('Początek zdania', textInput(item.starter||'','np. When I was a child, I used to…',v=>{item.starter=v;scheduleUpdate();})));
+        iw.appendChild(field('Przykładowa odpowiedź (opcjonalnie)', textInput(item.example||'','',v=>{item.example=v;scheduleUpdate();})));
+        const d=el('button','del-btn abs','✕'); d.addEventListener('click',()=>{blk.items.splice(ii,1);renderGrammarBlocks();scheduleUpdate();}); iw.appendChild(d);
+        iL.appendChild(iw);
+      });
+      wrap.appendChild(iL);
+      const a=el('button','add-btn','+ Dodaj zdanie'); a.addEventListener('click',()=>{blk.items.push({starter:'',example:''});renderGrammarBlocks();scheduleUpdate();}); wrap.appendChild(a);
+    }
+
     // Move / delete
     const actRow=document.createElement('div'); actRow.style.cssText='display:flex;gap:6px;margin-top:0.8rem';
     const upBtn=el('button','del-btn','↑'); upBtn.title='Przesuń wyżej'; upBtn.disabled=bi===0;
@@ -1226,13 +1498,17 @@ function renderRdVocab() {
   const list = document.getElementById('rdVocabList'); list.textContent = '';
   readingObj.vocab.forEach((item, i) => {
     const row = el('div', 'item-row');
-    const g = el('div', 'two-field');
+    const g1 = el('div', 'two-field');
     const plI = textInput(item.pl, 'Polski', v => { item.pl=v; scheduleUpdate(); });
     const enI = textInput(item.en, 'English', v => { item.en=v; scheduleUpdate(); });
-    g.appendChild(plI); g.appendChild(enI);
-    const del = el('button', 'del-btn', '✕');
+    g1.appendChild(plI); g1.appendChild(enI); row.appendChild(g1);
+    const g2 = el('div', 'two-field'); g2.style.marginTop='3px';
+    const defI = textInput(item.definition||'', 'Definicja (ang.)', v => { item.definition=v; scheduleUpdate(); });
+    const exI  = textInput(item.example||'',    'Przykładowe zdanie', v => { item.example=v;  scheduleUpdate(); });
+    g2.appendChild(defI); g2.appendChild(exI); row.appendChild(g2);
+    const del = el('button', 'del-btn', '✕'); del.style.cssText='margin-top:3px;display:block';
     del.addEventListener('click', () => { readingObj.vocab.splice(i,1); renderRdVocab(); scheduleUpdate(); });
-    row.appendChild(g); row.appendChild(del); list.appendChild(row);
+    row.appendChild(del); list.appendChild(row);
   });
 }
 function renderRdComp() {
@@ -1243,6 +1519,29 @@ function renderRdComp() {
     row.appendChild(field('Placeholder (podpowiedź)', textInput(item.placeholder||'', 'np. Moja mama...', v => { item.placeholder=v; scheduleUpdate(); })));
     const del = el('button', 'del-btn', '✕ Usuń pytanie'); del.style.cssText = 'margin-top:0.3rem;display:block';
     del.addEventListener('click', () => { readingObj.comprehension.splice(i,1); renderRdComp(); scheduleUpdate(); });
+    row.appendChild(del); list.appendChild(row);
+  });
+}
+
+document.getElementById('addRdBeforeBtn').addEventListener('click', () => { readingObj.beforeYouRead.push({q:''}); renderRdBefore(); scheduleUpdate(); });
+document.getElementById('addRdPostBtn').addEventListener('click',   () => { readingObj.postDiscussion.push({q:''}); renderRdPost();   scheduleUpdate(); });
+function renderRdBefore() {
+  const list = document.getElementById('rdBeforeList'); list.textContent = '';
+  (readingObj.beforeYouRead||[]).forEach((item, i) => {
+    const row = el('div', 'item-row');
+    row.appendChild(field('Pytanie', textInput(item.q||'', 'np. What do you know about...?', v => { item.q=v; scheduleUpdate(); })));
+    const del = el('button', 'del-btn', '✕ Usuń'); del.style.cssText='margin-top:3px;display:block';
+    del.addEventListener('click', () => { readingObj.beforeYouRead.splice(i,1); renderRdBefore(); scheduleUpdate(); });
+    row.appendChild(del); list.appendChild(row);
+  });
+}
+function renderRdPost() {
+  const list = document.getElementById('rdPostList'); list.textContent = '';
+  (readingObj.postDiscussion||[]).forEach((item, i) => {
+    const row = el('div', 'item-row');
+    row.appendChild(field('Pytanie dyskusyjne', textInput(item.q||'', 'np. Do you agree that...?', v => { item.q=v; scheduleUpdate(); })));
+    const del = el('button', 'del-btn', '✕ Usuń'); del.style.cssText='margin-top:3px;display:block';
+    del.addEventListener('click', () => { readingObj.postDiscussion.splice(i,1); renderRdPost(); scheduleUpdate(); });
     row.appendChild(del); list.appendChild(row);
   });
 }
@@ -1559,8 +1858,12 @@ function buildJSON() {
       if (rdNote)  obj.reading.note     = rdNote;
       if (readingObj.image) obj.reading.image = readingObj.image;
       if (rdText)  obj.reading.text     = rdText;
-      if (vocab.length) obj.reading.vocab         = vocab;
-      if (comp.length)  obj.reading.comprehension = comp;
+      const before = (readingObj.beforeYouRead||[]).filter(x=>x.q);
+      const post   = (readingObj.postDiscussion||[]).filter(x=>x.q);
+      if (before.length) obj.reading.beforeYouRead  = before;
+      if (vocab.length)  obj.reading.vocab           = vocab;
+      if (comp.length)   obj.reading.comprehension   = comp;
+      if (post.length)   obj.reading.postDiscussion  = post;
       if (readingExercises.length) obj.reading.exercises = readingExercises;
     }
   }
@@ -2354,7 +2657,11 @@ document.querySelectorAll('[data-sptype]').forEach(btn => {
       wyr:       {type:'wyr',       title:'Would You Rather?',                   questions:[{a:'',b:'',follow:''}]},
       debate:    {type:'debate',    title:'Mini Debate',                          motions:[''], language:''},
       pairs:     {type:'pairs',     title:'Pair & Group Activities',              activities:[{title:'',badge:'pair',instructions:'',items:[''],time:''}]},
-      monologue: {type:'monologue', title:'2-Minute Monologue',        timer:120, prompts:[{text:'',tip:''}]}
+      monologue:    {type:'monologue',    title:'2-Minute Monologue',         timer:120, prompts:[{text:'',tip:''}]},
+      discussion:   {type:'discussion',   title:'Deep Discussion Questions',  questions:[{text:'',tip:'',tag:''}]},
+      boxactivity:  {type:'boxactivity',  title:'The Box Activity',           instruction:'Describe 5 imaginary items that represent who you are.', items:['An item from your childhood','Something that represents your biggest passion','An object connected to a person who shaped you','Something that symbolises a challenge you overcame','One item from your ideal future'], time:'6 min per person'},
+      idiomtasks:   {type:'idiomtasks',   title:'Idiom Speaking Tasks',       tasks:[{idiom:'',task:''}]},
+      idiomstory:   {type:'idiomstory',   title:'Idiom Storytelling',         instruction:'Create a short story using at least 5 idioms.', starters:[''],  idioms:['']}
     };
     speakingBlocks.push(JSON.parse(JSON.stringify(D[t])));
     renderSpBlocks(); scheduleUpdate();
@@ -2467,6 +2774,82 @@ function renderSpBlocks() {
       wrap.appendChild(iL);
       const aa=el('button','add-btn','+ Dodaj aktywność'); aa.addEventListener('click',()=>{blk.activities.push({title:'',badge:'pair',instructions:'',items:[''],time:''});renderSpBlocks();scheduleUpdate();}); wrap.appendChild(aa);
     }
+
+    if (blk.type==='discussion') {
+      wrap.appendChild(el('span','sec-label','Pytania dyskusyjne'));
+      const iL=document.createElement('div');
+      (blk.questions||[]).forEach((item,ii)=>{
+        const iw=el('div'); iw.style.cssText='background:#f7f5f1;border-radius:8px;padding:0.7rem;margin-bottom:0.5rem;position:relative';
+        iw.appendChild(field('Pytanie', textInput(item.text||'','np. How much has your personality been shaped by circumstances you didn\'t choose?',v=>{item.text=v;scheduleUpdate();})));
+        iw.appendChild(field('Wskazówka', textInput(item.tip||'','np. Think about: family, culture, language…',v=>{item.tip=v;scheduleUpdate();})));
+        iw.appendChild(field('Tag (Deep/Debate/Personal/Modern/Creative)', textInput(item.tag||'','',v=>{item.tag=v;scheduleUpdate();})));
+        const d=el('button','del-btn abs','✕'); d.addEventListener('click',()=>{blk.questions.splice(ii,1);renderSpBlocks();scheduleUpdate();}); iw.appendChild(d); iL.appendChild(iw);
+      });
+      wrap.appendChild(iL);
+      const a=el('button','add-btn','+ Dodaj pytanie'); a.addEventListener('click',()=>{blk.questions.push({text:'',tip:'',tag:''});renderSpBlocks();scheduleUpdate();}); wrap.appendChild(a);
+    }
+
+    if (blk.type==='boxactivity') {
+      wrap.appendChild(field('Instrukcja', textInput(blk.instruction||'','',v=>{blk.instruction=v;scheduleUpdate();})));
+      wrap.appendChild(field('Czas', textInput(blk.time||'','np. 6 min per person',v=>{blk.time=v;scheduleUpdate();})));
+      wrap.appendChild(el('span','sec-label','5 elementów (przedmioty do opisania)'));
+      const iL=document.createElement('div');
+      (blk.items||[]).forEach((item,ii)=>{
+        const row=el('div'); row.style.cssText='display:flex;gap:6px;margin-bottom:4px';
+        const inp=textInput(item,'np. An item from your childhood',v=>{blk.items[ii]=v;scheduleUpdate();}); inp.style.cssText='flex:1;padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:0.85rem';
+        const d=el('button','del-btn','✕'); d.addEventListener('click',()=>{blk.items.splice(ii,1);renderSpBlocks();scheduleUpdate();});
+        row.appendChild(inp); row.appendChild(d); iL.appendChild(row);
+      });
+      wrap.appendChild(iL);
+      const a=el('button','add-btn','+ Dodaj element'); a.addEventListener('click',()=>{blk.items.push('');renderSpBlocks();scheduleUpdate();}); wrap.appendChild(a);
+    }
+
+    if (blk.type==='idiomtasks') {
+      wrap.appendChild(el('span','sec-label','Zadania mówienia z idiomami'));
+      const iL=document.createElement('div');
+      (blk.tasks||[]).forEach((item,ii)=>{
+        const iw=el('div'); iw.style.cssText='background:#f7f5f1;border-radius:8px;padding:0.7rem;margin-bottom:0.5rem;position:relative';
+        iw.appendChild(field('Idiom', textInput(item.idiom||'','np. to be a late bloomer',v=>{item.idiom=v;scheduleUpdate();})));
+        iw.appendChild(field('Zadanie', textInput(item.task||'','np. Describe a famous person who was a late bloomer.',v=>{item.task=v;scheduleUpdate();})));
+        const d=el('button','del-btn abs','✕'); d.addEventListener('click',()=>{blk.tasks.splice(ii,1);renderSpBlocks();scheduleUpdate();}); iw.appendChild(d); iL.appendChild(iw);
+      });
+      wrap.appendChild(iL);
+      const a=el('button','add-btn','+ Dodaj zadanie'); a.addEventListener('click',()=>{blk.tasks.push({idiom:'',task:''});renderSpBlocks();scheduleUpdate();}); wrap.appendChild(a);
+    }
+
+    if (blk.type==='idiomstory') {
+      wrap.appendChild(field('Instrukcja', textInput(blk.instruction||'','',v=>{blk.instruction=v;scheduleUpdate();})));
+      // Starters
+      wrap.appendChild(el('span','sec-label','Zdania startowe (do wyboru)'));
+      const sL=document.createElement('div');
+      (blk.starters||[]).forEach((s,si)=>{
+        const row=el('div'); row.style.cssText='display:flex;gap:6px;margin-bottom:4px';
+        const inp=textInput(s,'np. "Maria used to be knee-high to a grasshopper when I first met her…"',v=>{blk.starters[si]=v;scheduleUpdate();}); inp.style.cssText='flex:1;padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:0.85rem';
+        const d=el('button','del-btn','✕'); d.addEventListener('click',()=>{blk.starters.splice(si,1);renderSpBlocks();scheduleUpdate();});
+        row.appendChild(inp); row.appendChild(d); sL.appendChild(row);
+      });
+      wrap.appendChild(sL);
+      const aS=el('button','add-btn','+ Dodaj zdanie startowe'); aS.addEventListener('click',()=>{blk.starters.push('');renderSpBlocks();scheduleUpdate();}); wrap.appendChild(aS);
+      // Idioms to use
+      wrap.appendChild(el('span','sec-label','Idiomy do wykorzystania w historyjce'));
+      const iL=document.createElement('div');
+      (blk.idioms||[]).forEach((item,ii)=>{
+        const row=el('div'); row.style.cssText='display:flex;gap:6px;margin-bottom:4px';
+        const inp=textInput(item,'np. to grow up',v=>{blk.idioms[ii]=v;scheduleUpdate();}); inp.style.cssText='flex:1;padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:0.85rem';
+        const d=el('button','del-btn','✕'); d.addEventListener('click',()=>{blk.idioms.splice(ii,1);renderSpBlocks();scheduleUpdate();});
+        row.appendChild(inp); row.appendChild(d); iL.appendChild(row);
+      });
+      wrap.appendChild(iL);
+      const aI=el('button','add-btn','+ Dodaj idiom'); aI.addEventListener('click',()=>{blk.idioms.push('');renderSpBlocks();scheduleUpdate();}); wrap.appendChild(aI);
+    }
+
+    // Useful language (for every block type)
+    const ulTa = document.createElement('textarea');
+    ulTa.rows = 2; ulTa.value = blk.usefulLanguage || '';
+    ulTa.placeholder = 'Useful language: "In my opinion…" · "I strongly believe…" · "To add to that…"';
+    ulTa.style.cssText = 'width:100%;margin-top:8px;padding:8px;border:1px solid #ddd;border-radius:6px;font-size:0.82rem;resize:vertical;font-family:"DM Sans",sans-serif';
+    ulTa.addEventListener('input', () => { blk.usefulLanguage = ulTa.value; scheduleUpdate(); });
+    wrap.appendChild(field('Useful language (widoczne pod ćwiczeniem)', ulTa));
 
     const del=el('button','del-btn','✕ Usuń blok'); del.style.cssText='margin-top:0.5rem;display:block';
     del.addEventListener('click',()=>{speakingBlocks.splice(bi,1);renderSpBlocks();scheduleUpdate();}); wrap.appendChild(del);

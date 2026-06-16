@@ -5,32 +5,32 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Owl's Academy — Panel nauczyciela</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="supabase-client.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Lato',sans-serif;background:#f0f4ff;color:#1a1a2e}
-h1,h2,h3,h4{font-family:'Nunito',sans-serif}
-:root{--blue:#1d3557;--blue-mid:#457b9d;--yellow:#ffd166;--green:#06d6a0;--red:#e63946;--orange:#f77f00}
+body{font-family:'DM Sans',sans-serif;background:#faf7f2;color:#1a1410}
+h1,h2,h3,h4{font-family:'Playfair Display',serif}
+:root{--blue:#1d3557;--blue-mid:#d4800a;--yellow:#f5c842;--green:#2a7c76;--red:#e85d3a;--orange:#d4800a}
 .top-bar{background:var(--blue);color:white;padding:1rem 1.5rem;display:flex;justify-content:space-between;align-items:center}
 .top-bar h1{font-size:1.3rem}
-.top-bar a{color:rgba(255,255,255,0.7);text-decoration:none;font-size:0.9rem;font-family:'Nunito',sans-serif}
+.top-bar a{color:rgba(255,255,255,0.7);text-decoration:none;font-size:0.9rem;font-family:'DM Sans',sans-serif}
 .top-bar a:hover{color:white}
 .main{width:100%;padding:1.5rem;display:grid;grid-template-columns:1fr 420px;gap:1.5rem}
 @media(max-width:900px){.main{grid-template-columns:1fr}}
 .form-panel{background:white;border-radius:14px;box-shadow:0 3px 12px rgba(0,0,0,0.07)}
-.form-tabs{display:flex;background:#f8f9fe;border-radius:14px 14px 0 0;overflow-x:auto;border-bottom:2px solid #e8ecff;scrollbar-width:none}
+.form-tabs{display:flex;background:#f7f5f1;border-radius:14px 14px 0 0;overflow-x:auto;border-bottom:2px solid #e0d8ce;scrollbar-width:none}
 .form-tabs::-webkit-scrollbar{display:none}
-.ftab{padding:12px 16px;background:transparent;border:none;font-family:'Nunito',sans-serif;font-weight:700;font-size:13px;cursor:pointer;color:#888;border-bottom:3px solid transparent;white-space:nowrap;margin-bottom:-2px;transition:all 0.2s}
+.ftab{padding:12px 16px;background:transparent;border:none;font-family:'DM Sans',sans-serif;font-weight:700;font-size:13px;cursor:pointer;color:#888;border-bottom:3px solid transparent;white-space:nowrap;margin-bottom:-2px;transition:all 0.2s}
 .ftab:hover{color:var(--blue)}
 .ftab.active{color:var(--blue);border-bottom-color:var(--blue)}
 .form-section{display:none;padding:1.5rem}
 .form-section.active{display:block}
-.form-section h3{color:var(--blue);font-size:1rem;margin-bottom:1rem;padding-bottom:0.5rem;border-bottom:2px solid #f0f4ff}
+.form-section h3{color:var(--blue);font-size:1rem;margin-bottom:1rem;padding-bottom:0.5rem;border-bottom:2px solid #f5f2ed}
 .field{margin-bottom:1rem}
-.field label{display:block;font-family:'Nunito',sans-serif;font-weight:700;font-size:0.85rem;color:#555;margin-bottom:4px}
-.field input,.field select,.field textarea{width:100%;padding:9px 12px;border:2px solid #e0e5f0;border-radius:8px;font-family:'Lato',sans-serif;font-size:0.9rem;color:var(--blue);outline:none;transition:border 0.2s}
+.field label{display:block;font-family:'DM Sans',sans-serif;font-weight:700;font-size:0.85rem;color:#555;margin-bottom:4px}
+.field input,.field select,.field textarea{width:100%;padding:9px 12px;border:2px solid #e0e5f0;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:0.9rem;color:var(--blue);outline:none;transition:border 0.2s}
 .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--blue-mid)}
 .field textarea{resize:vertical;min-height:80px;font-size:0.82rem;font-family:'Courier New',monospace}
 .hint{font-size:0.75rem;color:#aaa;margin-top:3px}
@@ -38,33 +38,33 @@ h1,h2,h3,h4{font-family:'Nunito',sans-serif}
 .three-field{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.8rem}
 @media(max-width:600px){.two-field,.three-field{grid-template-columns:1fr}}
 .tabs-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:0.5rem}
-.tab-check{display:flex;align-items:center;gap:6px;background:#f0f4ff;border-radius:8px;padding:6px 12px;cursor:pointer;border:2px solid transparent;transition:all 0.2s}
+.tab-check{display:flex;align-items:center;gap:6px;background:#f5f2ed;border-radius:8px;padding:6px 12px;cursor:pointer;border:2px solid transparent;transition:all 0.2s}
 .tab-check:hover{border-color:var(--blue-mid)}
 .tab-check input{width:16px;height:16px;accent-color:var(--blue)}
-.tab-check span{font-family:'Nunito',sans-serif;font-weight:700;font-size:0.85rem;color:var(--blue)}
-.tab-check.checked{background:#dbeafe;border-color:var(--blue-mid)}
+.tab-check span{font-family:'DM Sans',sans-serif;font-weight:700;font-size:0.85rem;color:var(--blue)}
+.tab-check.checked{background:#e8f5f4;border-color:var(--blue-mid)}
 .item-list{margin-bottom:1rem}
-.item-row{background:#f8f9fe;border-radius:8px;padding:0.8rem;margin-bottom:0.5rem;border:1px solid #e8ecff;position:relative}
-.sec-label{font-family:'Nunito',sans-serif;font-weight:800;font-size:0.82rem;color:#888;text-transform:uppercase;letter-spacing:1px;margin:1rem 0 0.4rem;display:block}
+.item-row{background:#f7f5f1;border-radius:8px;padding:0.8rem;margin-bottom:0.5rem;border:1px solid #e0d8ce;position:relative}
+.sec-label{font-family:'DM Sans',sans-serif;font-weight:800;font-size:0.82rem;color:#888;text-transform:uppercase;letter-spacing:1px;margin:1rem 0 0.4rem;display:block}
 .del-btn{background:none;border:1px solid #ddd;border-radius:6px;padding:2px 7px;font-size:0.75rem;cursor:pointer;color:#aaa}
 .del-btn:hover{background:#ffebee;border-color:var(--red);color:var(--red)}
 .del-btn.abs{position:absolute;top:8px;right:8px}
-.add-btn{background:white;border:2px dashed #c5cae9;border-radius:8px;padding:8px 14px;font-family:'Nunito',sans-serif;font-weight:700;font-size:0.82rem;color:var(--blue-mid);cursor:pointer;transition:all 0.2s;margin-top:0.3rem}
-.add-btn:hover{border-color:var(--blue);color:var(--blue);background:#f0f4ff}
+.add-btn{background:white;border:2px dashed #c5cae9;border-radius:8px;padding:8px 14px;font-family:'DM Sans',sans-serif;font-weight:700;font-size:0.82rem;color:var(--blue-mid);cursor:pointer;transition:all 0.2s;margin-top:0.3rem}
+.add-btn:hover{border-color:var(--blue);color:var(--blue);background:#f5f2ed}
 .side-panel{display:flex;flex-direction:column;gap:1rem}
 .action-card{background:white;border-radius:14px;padding:1.5rem;box-shadow:0 3px 12px rgba(0,0,0,0.07)}
 .action-card h3{color:var(--blue);font-size:1rem;margin-bottom:1rem}
-.action-btn{display:block;width:100%;padding:12px;border:none;border-radius:10px;font-family:'Nunito',sans-serif;font-weight:900;font-size:0.95rem;cursor:pointer;transition:all 0.2s;margin-bottom:0.7rem;text-align:center}
+.action-btn{display:block;width:100%;padding:12px;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-weight:900;font-size:0.95rem;cursor:pointer;transition:all 0.2s;margin-bottom:0.7rem;text-align:center}
 .action-btn:last-child{margin-bottom:0}
 .action-btn.primary{background:var(--blue);color:white}.action-btn.primary:hover{background:var(--blue-mid)}
 .action-btn.success{background:var(--green);color:white}.action-btn.success:hover{background:#05b889}
 .action-btn.copy{background:var(--orange);color:white}.action-btn.copy:hover{background:#e67300}
 .action-btn.secondary{background:var(--blue-mid);color:white}.action-btn.secondary:hover{background:#356a8a}
 .json-preview{background:#1e293b;border-radius:10px;padding:1rem;overflow:auto;max-height:340px;font-family:'Courier New',monospace;font-size:0.72rem;color:#94a3b8;white-space:pre;line-height:1.6}
-.info-box{background:#f0f4ff;border-radius:10px;padding:1rem;font-size:0.82rem;color:#555;line-height:1.7}
+.info-box{background:#f5f2ed;border-radius:10px;padding:1rem;font-size:0.82rem;color:#555;line-height:1.7}
 .info-box strong{color:var(--blue)}
 .info-box code{background:#e0e7ff;padding:1px 5px;border-radius:4px;font-family:'Courier New',monospace;color:var(--blue)}
-.status{font-size:0.82rem;color:var(--green);font-family:'Nunito',sans-serif;text-align:center;margin-top:0.5rem;min-height:1.2em;font-weight:700}
+.status{font-size:0.82rem;color:var(--green);font-family:'DM Sans',sans-serif;text-align:center;margin-top:0.5rem;min-height:1.2em;font-weight:700}
 .img-thumb{width:36px;height:36px;object-fit:cover;border-radius:4px;flex-shrink:0;border:1px solid #ddd;cursor:zoom-in}
 .lb-ov{position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:zoom-out;animation:lbIn 0.15s ease}
 @keyframes lbIn{from{opacity:0}to{opacity:1}}
@@ -73,13 +73,13 @@ h1,h2,h3,h4{font-family:'Nunito',sans-serif}
 .db-search-row{display:flex;gap:0.5rem;margin-bottom:0.7rem}
 .db-search-row input,.db-search-row select{padding:7px 10px;border:1.5px solid #ddd;border-radius:6px;font-size:0.85rem;outline:none;color:#555}
 .db-search-row input{flex:1}
-.logout-topbar{background:none;border:1.5px solid rgba(255,255,255,0.4);border-radius:8px;padding:5px 14px;color:rgba(255,255,255,0.85);font-family:'Nunito',sans-serif;font-weight:700;font-size:0.85rem;cursor:pointer}
+.logout-topbar{background:none;border:1.5px solid rgba(255,255,255,0.4);border-radius:8px;padding:5px 14px;color:rgba(255,255,255,0.85);font-family:'DM Sans',sans-serif;font-weight:700;font-size:0.85rem;cursor:pointer}
 .logout-topbar:hover{background:rgba(255,255,255,0.15);color:white}
 .progress-table{width:100%;border-collapse:collapse;font-size:0.82rem}
-.progress-table th{background:#f0f4ff;color:var(--blue);font-family:'Nunito',sans-serif;font-weight:800;padding:7px 10px;text-align:left;border-bottom:2px solid #e0e7ff}
+.progress-table th{background:#f5f2ed;color:var(--blue);font-family:'DM Sans',sans-serif;font-weight:800;padding:7px 10px;text-align:left;border-bottom:2px solid #e0e7ff}
 .progress-table td{padding:7px 10px;border-bottom:1px solid #f0f0f0;vertical-align:top}
 .progress-table tr:last-child td{border-bottom:none}
-.score-chip{display:inline-block;border-radius:20px;padding:2px 10px;font-family:'Nunito',sans-serif;font-weight:800;font-size:0.78rem}
+.score-chip{display:inline-block;border-radius:20px;padding:2px 10px;font-family:'DM Sans',sans-serif;font-weight:800;font-size:0.78rem}
 .score-chip.good{background:#d4f5ec;color:#065f46}
 .score-chip.ok{background:#fef3c7;color:#92400e}
 .score-chip.bad{background:#fee2e2;color:#991b1b}
@@ -114,20 +114,20 @@ h1,h2,h3,h4{font-family:'Nunito',sans-serif}
 <!-- ── LOGIN ──────────────────────────────────────────────────── -->
 <div id="adminLogin" style="min-height:100vh;background:linear-gradient(135deg,#1d3557,#2d6a8f);display:flex;align-items:center;justify-content:center">
   <div style="background:rgba(255,255,255,0.12);border:2px solid rgba(255,255,255,0.3);border-radius:16px;padding:2.5rem;max-width:380px;width:90%;backdrop-filter:blur(4px)">
-    <h2 style="color:white;font-family:'Nunito',sans-serif;margin-bottom:0.4rem;text-align:center;font-size:1.5rem">&#129417; Panel nauczyciela</h2>
+    <h2 style="color:white;font-family:'DM Sans',sans-serif;margin-bottom:0.4rem;text-align:center;font-size:1.5rem">Panel nauczyciela</h2>
     <p style="color:rgba(255,255,255,0.65);text-align:center;font-size:0.88rem;margin-bottom:1.8rem">Owl's Academy &mdash; logowanie</p>
     <div style="margin-bottom:1rem">
-      <label style="color:rgba(255,255,255,0.9);display:block;margin-bottom:5px;font-family:'Nunito',sans-serif;font-weight:700;font-size:0.9rem">Email</label>
+      <label style="color:rgba(255,255,255,0.9);display:block;margin-bottom:5px;font-family:'DM Sans',sans-serif;font-weight:700;font-size:0.9rem">Email</label>
       <input id="adminEmail" type="email" autocomplete="email" placeholder="twoj@email.com"
-        style="width:100%;padding:11px 14px;border-radius:10px;border:2px solid rgba(255,255,255,0.35);background:rgba(255,255,255,0.15);color:white;font-size:0.95rem;outline:none;font-family:'Lato',sans-serif">
+        style="width:100%;padding:11px 14px;border-radius:10px;border:2px solid rgba(255,255,255,0.35);background:rgba(255,255,255,0.15);color:white;font-size:0.95rem;outline:none;font-family:'DM Sans',sans-serif">
     </div>
     <div style="margin-bottom:1.4rem">
-      <label style="color:rgba(255,255,255,0.9);display:block;margin-bottom:5px;font-family:'Nunito',sans-serif;font-weight:700;font-size:0.9rem">Has&#322;o</label>
+      <label style="color:rgba(255,255,255,0.9);display:block;margin-bottom:5px;font-family:'DM Sans',sans-serif;font-weight:700;font-size:0.9rem">Has&#322;o</label>
       <input id="adminPass" type="password" autocomplete="current-password" placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;"
-        style="width:100%;padding:11px 14px;border-radius:10px;border:2px solid rgba(255,255,255,0.35);background:rgba(255,255,255,0.15);color:white;font-size:0.95rem;outline:none;font-family:'Lato',sans-serif">
+        style="width:100%;padding:11px 14px;border-radius:10px;border:2px solid rgba(255,255,255,0.35);background:rgba(255,255,255,0.15);color:white;font-size:0.95rem;outline:none;font-family:'DM Sans',sans-serif">
     </div>
-    <button id="adminLoginBtn" style="width:100%;padding:13px;background:var(--yellow);color:var(--blue);border:none;border-radius:10px;font-family:'Nunito',sans-serif;font-weight:900;font-size:1rem;cursor:pointer">Zaloguj si&#281; &#8594;</button>
-    <div id="adminLoginErr" style="color:#ffb3b3;font-size:0.85rem;margin-top:0.8rem;text-align:center;font-family:'Nunito',sans-serif;font-weight:700;min-height:1.2em"></div>
+    <button id="adminLoginBtn" style="width:100%;padding:13px;background:var(--yellow);color:var(--blue);border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-weight:900;font-size:1rem;cursor:pointer">Zaloguj si&#281; &#8594;</button>
+    <div id="adminLoginErr" style="color:#ffb3b3;font-size:0.85rem;margin-top:0.8rem;text-align:center;font-family:'DM Sans',sans-serif;font-weight:700;min-height:1.2em"></div>
   </div>
 </div>
 
@@ -135,7 +135,7 @@ h1,h2,h3,h4{font-family:'Nunito',sans-serif}
 <div id="adminContent" style="display:none">
 
 <div class="top-bar">
-  <h1>&#129417; Owl's Academy &mdash; Panel nauczyciela</h1>
+  <h1>Owl's Academy &mdash; Panel nauczyciela</h1>
   <div style="display:flex;align-items:center;gap:1rem">
     <span id="adminUserEmail" style="color:rgba(255,255,255,0.55);font-size:0.8rem"></span>
     <a href="index.html">&#8592; Portal ucznia</a>
@@ -148,30 +148,30 @@ h1,h2,h3,h4{font-family:'Nunito',sans-serif}
   <!-- LEFT: FORM -->
   <div class="form-panel">
     <div class="form-tabs" id="formTabs">
-      <button class="ftab active" data-tab="basic">&#9997; Podstawowe</button>
-      <button class="ftab" data-tab="intro">&#128214; Introduction</button>
-      <button class="ftab" data-tab="vocab">&#128218; Vocabulary</button>
-      <button class="ftab" data-tab="grammar">&#128214; Grammar</button>
-      <button class="ftab" data-tab="reading">&#128196; Reading</button>
-      <button class="ftab" data-tab="exercises">&#9998; Exercises</button>
-      <button class="ftab" data-tab="speaking">&#128483; Speaking</button>
-      <button class="ftab" data-tab="flashcards">&#127183; Flashcards</button>
-      <button class="ftab" data-tab="homework">&#127968; Homework</button>
-      <button class="ftab" data-tab="students">&#128101; Uczniowie</button>
-      <button class="ftab" data-tab="progress">&#128200; Post&#281;py</button>
-      <button class="ftab" data-tab="settings">&#9881; Ustawienia</button>
+      <button class="ftab active" data-tab="basic">Podstawowe</button>
+      <button class="ftab" data-tab="intro">Introduction</button>
+      <button class="ftab" data-tab="vocab">Vocabulary</button>
+      <button class="ftab" data-tab="grammar">Grammar</button>
+      <button class="ftab" data-tab="reading">Reading</button>
+      <button class="ftab" data-tab="exercises">Exercises</button>
+      <button class="ftab" data-tab="speaking">Speaking</button>
+      <button class="ftab" data-tab="flashcards">Flashcards</button>
+      <button class="ftab" data-tab="homework">Homework</button>
+      <button class="ftab" data-tab="students">Uczniowie</button>
+      <button class="ftab" data-tab="progress">Post&#281;py</button>
+      <button class="ftab" data-tab="settings">Ustawienia</button>
     </div>
 
     <!-- BASIC -->
     <div class="form-section active" id="tab-basic">
       <h3>Dane lekcji</h3>
-      <div class="hint" style="background:#f0f4ff;border-radius:8px;padding:0.7rem 1rem;margin-bottom:1rem">
-        &#128161; Lekcja jest oddzielna od uczni&oacute;w. Przypisz j&#261; do uczni&oacute;w po zapisaniu w bazie (przycisk <strong>Przypisz do uczni&oacute;w</strong> w panelu bocznym).
+      <div class="hint" style="background:#f5f2ed;border-radius:8px;padding:0.7rem 1rem;margin-bottom:1rem">
+        Lekcja jest oddzielna od uczni&oacute;w. Przypisz j&#261; do uczni&oacute;w po zapisaniu w bazie (przycisk <strong>Przypisz do uczni&oacute;w</strong> w panelu bocznym).
       </div>
       <div class="field">
         <label>ID lekcji (UUID)</label>
         <div style="display:flex;gap:8px;align-items:center">
-          <code id="f_id_display" style="flex:1;background:#f0f4ff;border:2px solid #e0e5f0;border-radius:8px;padding:9px 12px;font-size:0.8rem;color:var(--blue);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:'Courier New',monospace">— (zostanie wygenerowane)</code>
+          <code id="f_id_display" style="flex:1;background:#f5f2ed;border:2px solid #e0e5f0;border-radius:8px;padding:9px 12px;font-size:0.8rem;color:var(--blue);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:'Courier New',monospace">— (zostanie wygenerowane)</code>
           <button id="newLessonBtn" class="add-btn" style="margin:0;padding:8px 14px;white-space:nowrap;flex-shrink:0">&#43; Nowa lekcja</button>
         </div>
         <div class="hint">UUID generowany automatycznie — niezmienialny po zapisaniu.</div>
@@ -235,12 +235,12 @@ h1,h2,h3,h4{font-family:'Nunito',sans-serif}
     <!-- FLASHCARDS -->
     <div class="form-section" id="tab-flashcards">
       <h3>Fiszki</h3>
-      <div style="display:flex;align-items:center;gap:0.7rem;flex-wrap:wrap;margin-bottom:1rem;padding:0.8rem 1rem;background:#f8f9fe;border-radius:8px;border:1px solid #e8ecff">
-        <span style="font-family:'Nunito',sans-serif;font-weight:700;font-size:0.85rem;color:var(--blue)">&#128196; Import CSV:</span>
+      <div style="display:flex;align-items:center;gap:0.7rem;flex-wrap:wrap;margin-bottom:1rem;padding:0.8rem 1rem;background:#f7f5f1;border-radius:8px;border:1px solid #e0d8ce">
+        <span style="font-family:'DM Sans',sans-serif;font-weight:700;font-size:0.85rem;color:var(--blue)">Import CSV:</span>
         <input type="file" id="fcCsvFile" accept=".csv,.txt" style="display:none">
-        <button class="add-btn" id="fcCsvBtn" style="margin:0;padding:7px 14px">&#11014; Wczytaj CSV</button>
+        <button class="add-btn" id="fcCsvBtn" style="margin:0;padding:7px 14px">Wczytaj CSV</button>
         <span style="font-size:0.75rem;color:#888">Format kolumn: S&#322;&oacute;wko;T&#322;umaczenie;Przyk&#322;ad;Emoji &mdash; jeden wiersz = jedna fiszka</span>
-        <div id="fcCsvStatus" style="font-size:0.8rem;font-family:'Nunito',sans-serif;font-weight:700;min-height:1em"></div>
+        <div id="fcCsvStatus" style="font-size:0.8rem;font-family:'DM Sans',sans-serif;font-weight:700;min-height:1em"></div>
       </div>
       <div id="fcList"></div>
       <button class="add-btn" id="addFCBtn">&#43; Dodaj fiszk&#281;</button>
@@ -284,13 +284,13 @@ h1,h2,h3,h4{font-family:'Nunito',sans-serif}
       <div class="field">
         <label>Ilustracja do tekstu</label>
         <div class="img-upload-row" id="rdImgRow">
-          <button class="add-btn" id="rdImgBtn" style="margin:0;padding:7px 14px">&#128444; Dodaj obraz</button>
+          <button class="add-btn" id="rdImgBtn" style="margin:0;padding:7px 14px">Dodaj obraz</button>
           <span style="font-size:0.75rem;color:#aaa">opcjonalnie — pokazywana nad tekstem</span>
         </div>
       </div>
       <div class="field">
         <label>Tekst &mdash; HTML dozwolony: <code style="font-size:0.78rem">&lt;span class="hl"&gt;</code> = &#380;&oacute;&#322;te, <code style="font-size:0.78rem">&lt;span class="hlg"&gt;</code> = zielone</label>
-        <textarea id="rd_text" rows="9" style="font-family:'Lato',sans-serif;font-size:0.88rem;line-height:1.6" placeholder="Tre&#347;&#263; tekstu..."></textarea>
+        <textarea id="rd_text" rows="9" style="font-family:'DM Sans',sans-serif;font-size:0.88rem;line-height:1.6" placeholder="Tre&#347;&#263; tekstu..."></textarea>
       </div>
       <span class="sec-label">S&#322;ownictwo z tekstu</span>
       <div id="rdVocabList"></div>
@@ -316,7 +316,7 @@ h1,h2,h3,h4{font-family:'Nunito',sans-serif}
     <!-- STUDENTS -->
     <div class="form-section" id="tab-students">
       <h3>Uczniowie</h3>
-      <div style="background:#f0f4ff;border-radius:10px;padding:1.2rem;margin-bottom:1.5rem">
+      <div style="background:#f5f2ed;border-radius:10px;padding:1.2rem;margin-bottom:1.5rem">
         <h4 style="color:var(--blue);margin-bottom:0.8rem">Dodaj nowego ucznia</h4>
         <div class="three-field">
           <div class="field"><label>Imi&#281; *</label><input id="ns_name" placeholder="np. Anna"></div>
@@ -326,14 +326,14 @@ h1,h2,h3,h4{font-family:'Nunito',sans-serif}
         <button class="action-btn success" id="addStudentBtn" style="width:auto;display:inline-block;padding:10px 28px">&#43; Dodaj ucznia</button>
         <div class="status" id="studentStatus" style="text-align:left;margin-top:0.5rem"></div>
       </div>
-      <h4 style="color:var(--blue);margin-bottom:0.8rem;font-family:'Nunito',sans-serif;font-size:0.95rem">Zarejestrowani uczniowie</h4>
+      <h4 style="color:var(--blue);margin-bottom:0.8rem;font-family:'DM Sans',sans-serif;font-size:0.95rem">Zarejestrowani uczniowie</h4>
       <div id="studentsList"></div>
       <div style="margin-top:1.2rem;padding-top:1.2rem;border-top:1px solid #eee">
-        <button class="action-btn" id="downloadStudentsBtn" style="background:var(--blue);color:white;width:auto;display:inline-block;padding:10px 24px">&#11015; Kopia zapasowa (JSON)</button>
+        <button class="action-btn" id="downloadStudentsBtn" style="background:var(--blue);color:white;width:auto;display:inline-block;padding:10px 24px">Kopia zapasowa (JSON)</button>
         <div class="status" id="studentsDownloadStatus" style="text-align:left;margin-top:0.4rem"></div>
       </div>
       <div style="margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid #eee">
-        <h4 style="color:var(--blue);margin-bottom:0.8rem;font-family:'Nunito',sans-serif;font-size:0.95rem">&#128260; Kolejno&#347;&#263; lekcji ucznia</h4>
+        <h4 style="color:var(--blue);margin-bottom:0.8rem;font-family:'DM Sans',sans-serif;font-size:0.95rem">Kolejno&#347;&#263; lekcji ucznia</h4>
         <div class="field" style="margin-bottom:0.8rem">
           <label>Wybierz ucznia</label>
           <select id="reorder_student_select" style="width:100%;padding:8px 10px;border:2px solid #e0e5f0;border-radius:8px;font-size:0.9rem;outline:none;color:var(--blue)">
@@ -385,7 +385,7 @@ h1,h2,h3,h4{font-family:'Nunito',sans-serif}
           <input id="cfg_template" placeholder="np. template_xxxxxxx">
         </div>
       </div>
-      <button class="action-btn success" id="saveConfigBtn" style="width:auto;display:inline-block;padding:10px 28px;margin-top:0.5rem">&#128190; Zapisz w bazie</button>
+      <button class="action-btn success" id="saveConfigBtn" style="width:auto;display:inline-block;padding:10px 28px;margin-top:0.5rem">Zapisz w bazie</button>
       <div class="status" id="configStatus" style="text-align:left;margin-top:0.5rem"></div>
       <div class="info-box" style="margin-top:1.5rem">
         <strong>Konfiguracja EmailJS:</strong><br>
@@ -401,30 +401,30 @@ h1,h2,h3,h4{font-family:'Nunito',sans-serif}
   <div class="side-panel">
 
     <div class="action-card">
-      <h3>&#128194; Importuj JSON</h3>
+      <h3>Importuj JSON</h3>
       <input type="file" id="importFile" accept=".json" style="display:none">
-      <button class="action-btn secondary" id="importBtn">&#128194; Wczytaj JSON z pliku</button>
+      <button class="action-btn secondary" id="importBtn">Wczytaj JSON z pliku</button>
       <div class="status" id="importStatus"></div>
     </div>
 
     <div class="action-card">
-      <h3>&#9889; Akcje lekcji</h3>
-      <button class="action-btn primary" id="saveToSupabaseBtn">&#9729; Zapisz lekcj&#281; w Supabase</button>
-      <button class="action-btn success" id="downloadBtn">&#11015; Pobierz JSON (eksport / AI)</button>
-      <button class="action-btn copy" id="copyBtn">&#128203; Kopiuj JSON</button>
+      <h3>Akcje lekcji</h3>
+      <button class="action-btn primary" id="saveToSupabaseBtn">Zapisz lekcj&#281; w Supabase</button>
+      <button class="action-btn success" id="downloadBtn">Pobierz JSON (eksport / AI)</button>
+      <button class="action-btn copy" id="copyBtn">Kopiuj JSON</button>
       <div class="status" id="statusMsg"></div>
     </div>
 
     <div class="action-card" id="assignCard" style="display:none">
-      <h3>&#128101; Przypisz do uczni&oacute;w</h3>
+      <h3>Przypisz do uczni&oacute;w</h3>
       <p style="font-size:0.8rem;color:#777;margin-bottom:0.8rem">Zaznacz kt&oacute;rzy uczniowie maj&#261; mie&#263; dost&#281;p do lekcji <strong id="assignLessonId"></strong>:</p>
       <div id="assignStudentList"></div>
-      <button class="action-btn primary" id="saveAssignmentsBtn" style="margin-top:0.8rem">&#128190; Zapisz przypisania</button>
+      <button class="action-btn primary" id="saveAssignmentsBtn" style="margin-top:0.8rem">Zapisz przypisania</button>
       <div class="status" id="assignStatus"></div>
     </div>
 
     <div class="action-card">
-      <h3>&#128203; Lekcje w bazie</h3>
+      <h3>Lekcje w bazie</h3>
       <div class="db-search-row">
         <input id="dbSearchInput" placeholder="Szukaj lekcji...">
         <button class="add-btn" id="refreshLessonsBtn" style="margin-top:0;padding:7px 12px;white-space:nowrap">&#8635; Od&#347;wie&#380;</button>
@@ -433,7 +433,7 @@ h1,h2,h3,h4{font-family:'Nunito',sans-serif}
     </div>
 
     <div class="action-card">
-      <h3>&#128196; Podgl&#261;d JSON</h3>
+      <h3>Podgl&#261;d JSON</h3>
       <pre class="json-preview" id="jsonPreview">// Wype&#322;nij formularz...</pre>
     </div>
 
@@ -521,7 +521,7 @@ document.getElementById('adminLoginBtn').addEventListener('click', async () => {
   errEl.textContent = ''; btn.textContent = 'Loguję...'; btn.disabled = true;
   const { error } = await sb.auth.signInWithPassword({ email, password: pass });
   if (error) {
-    errEl.textContent = '❌ ' + error.message;
+    errEl.textContent = 'Błąd:' + error.message;
     btn.textContent = 'Zaloguj się →'; btn.disabled = false;
   }
 });
@@ -554,7 +554,7 @@ const ALL_TABS = [
   {id:'vocabulary',lbl:'📚 Vocabulary'},{id:'grammar',lbl:'📖 Grammar'},
   {id:'reading',lbl:'📄 Reading'},{id:'exercises',lbl:'✏️ Exercises'},
   {id:'speaking',lbl:'🗣️ Speaking'},{id:'flashcards',lbl:'🃏 Flashcards'},
-  {id:'homework',lbl:'🏠 Homework'},{id:'mywords',lbl:'📝 My Words'}
+  {id:'homework',lbl:'Homework'},{id:'mywords',lbl:'My Words'}
 ];
 const DEFAULT_TABS = ['vocabulary','grammar','reading','exercises','speaking','flashcards','homework'];
 const grid = document.getElementById('tabsGrid');
@@ -667,11 +667,11 @@ document.getElementById('importFile').addEventListener('change', () => {
       const obj = JSON.parse(ev.target.result);
       loadFromJSON(obj);
       const s = document.getElementById('importStatus');
-      s.textContent = '✅ Załadowano: ' + (obj.id || file.name); s.style.color = 'var(--green)';
+      s.textContent = 'Załadowano: ' + (obj.id || file.name); s.style.color = 'var(--green)';
       setTimeout(() => { s.textContent = ''; }, 4000);
     } catch(e) {
       const s = document.getElementById('importStatus');
-      s.textContent = '❌ Błąd JSON: ' + e.message; s.style.color = 'var(--red)';
+      s.textContent = 'Błąd:Błąd JSON: ' + e.message; s.style.color = 'var(--red)';
     }
   };
   reader.readAsText(file, 'UTF-8');
@@ -720,7 +720,7 @@ function renderVocabSections() {
         remBtn.addEventListener('click',()=>{delete item.image;renderVocabSections();scheduleUpdate();});
         imgRow.appendChild(remBtn);
       }
-      const addImgBtn = el('button','add-btn', item.image?'🔄 Zmień':'🖼️ Obraz');
+      const addImgBtn = el('button','add-btn', item.image?'Zmień':'Obraz');
       addImgBtn.style.cssText='padding:4px 8px;font-size:0.75rem';
       addImgBtn.addEventListener('click',()=>pickImage(b64=>{item.image=b64;renderVocabSections();scheduleUpdate();}));
       imgRow.appendChild(addImgBtn); itemsWrap.appendChild(imgRow);
@@ -772,7 +772,7 @@ function renderExercises() {
       wrap.appendChild(el('span','sec-label','Pytania'));
       const qList = document.createElement('div');
       ex.questions.forEach((q,qi)=>{
-        const qw = el('div'); qw.style.cssText='background:#f0f4ff;border-radius:8px;padding:0.7rem;margin-bottom:0.5rem;position:relative';
+        const qw = el('div'); qw.style.cssText='background:#f5f2ed;border-radius:8px;padding:0.7rem;margin-bottom:0.5rem;position:relative';
         qw.appendChild(field('Pytanie',textInput(q.q,'What is "grandmother"?',v=>{q.q=v;scheduleUpdate();})));
         const imgRowQ = el('div','img-upload-row');
         if (q.image) {
@@ -782,7 +782,7 @@ function renderExercises() {
           remBtn.addEventListener('click',()=>{delete q.image;renderExercises();scheduleUpdate();});
           imgRowQ.appendChild(remBtn);
         }
-        const addImgBtnQ = el('button','add-btn',q.image?'🔄 Zmień':'🖼️ Obraz');
+        const addImgBtnQ = el('button','add-btn',q.image?'Zmień':'Obraz');
         addImgBtnQ.style.cssText='padding:4px 8px;font-size:0.75rem';
         addImgBtnQ.addEventListener('click',()=>pickImage(b64=>{q.image=b64;renderExercises();scheduleUpdate();}));
         imgRowQ.appendChild(addImgBtnQ); qw.appendChild(imgRowQ);
@@ -808,7 +808,7 @@ function renderExercises() {
       wrap.appendChild(el('span','sec-label','Luki'));
       const iList = document.createElement('div');
       ex.items.forEach((item,ii)=>{
-        const iw = el('div'); iw.style.cssText='background:#f0f4ff;border-radius:8px;padding:0.7rem;margin-bottom:0.5rem;position:relative';
+        const iw = el('div'); iw.style.cssText='background:#f5f2ed;border-radius:8px;padding:0.7rem;margin-bottom:0.5rem;position:relative';
         const r1 = el('div','two-field');
         r1.appendChild(field('Tekst PRZED luką',textInput(item.before||'','To jest',v=>{item.before=v;scheduleUpdate();})));
         r1.appendChild(field('Tekst PO luce',textInput(item.after||'','brat.',v=>{item.after=v;scheduleUpdate();})));
@@ -868,7 +868,7 @@ document.getElementById('fcCsvFile').addEventListener('change', () => {
       added++;
     });
     renderFC(); scheduleUpdate();
-    statusEl.textContent = '✅ Dodano ' + added + (skipped ? ' (' + skipped + ' puste)' : '');
+    statusEl.textContent = 'Dodano ' + added + (skipped ? ' (' + skipped + ' puste)' : '');
     statusEl.style.color = 'var(--green)';
     setTimeout(() => { statusEl.textContent = ''; }, 5000);
     document.getElementById('fcCsvFile').value = '';
@@ -894,7 +894,7 @@ function renderFC() {
       remBtn.addEventListener('click',()=>{delete fc.image;renderFC();scheduleUpdate();});
       imgRowFC.appendChild(remBtn);
     }
-    const addImgBtnFC = el('button','add-btn',fc.image?'🔄 Zmień':'🖼️ Obraz');
+    const addImgBtnFC = el('button','add-btn',fc.image?'Zmień':'Obraz');
     addImgBtnFC.style.cssText='padding:4px 8px;font-size:0.75rem';
     addImgBtnFC.addEventListener('click',()=>pickImage(b64=>{fc.image=b64;renderFC();scheduleUpdate();}));
     imgRowFC.appendChild(addImgBtnFC); row.appendChild(imgRowFC);
@@ -968,7 +968,7 @@ function renderGrammarBlocks() {
   const list = document.getElementById('grammarBlockList'); list.textContent = '';
   grammarBlocks.forEach((blk, bi) => {
     const wrap = el('div','item-row'); wrap.style.marginBottom='1.5rem';
-    const typeNames = {info:'ℹ️ Info',table:'📊 Tabela',examples:'✅ Przykłady','qa-table':'❓ Q&A','two-col':'⬛ Dwie kolumny'};
+    const typeNames = {info:'Info',table:'Tabela',examples:'Przykłady','qa-table':'Q&A','two-col':'Dwie kolumny'};
     const typeTag = el('p',null,typeNames[blk.type]||blk.type);
     typeTag.style.cssText='font-family:Nunito,sans-serif;font-weight:800;font-size:0.8rem;color:var(--blue-mid);text-transform:uppercase;margin-bottom:0.6rem';
     wrap.appendChild(typeTag);
@@ -1040,7 +1040,7 @@ function renderGrammarBlocks() {
       function renderGrEx() {
         iWrap.textContent='';
         blk.items.forEach((item,ii)=>{
-          const iw=el('div'); iw.style.cssText='background:#f0f4ff;border-radius:8px;padding:0.7rem;margin-bottom:0.5rem;position:relative';
+          const iw=el('div'); iw.style.cssText='background:#f5f2ed;border-radius:8px;padding:0.7rem;margin-bottom:0.5rem;position:relative';
           const g=el('div','two-field');
           g.appendChild(field('PL',textInput(item.pl||'','Polskie zdanie',v=>{item.pl=v;scheduleUpdate();})));
           g.appendChild(field('EN',textInput(item.en||'','English sentence',v=>{item.en=v;scheduleUpdate();})));
@@ -1053,7 +1053,7 @@ function renderGrammarBlocks() {
             rem.addEventListener('click',()=>{delete item.image;renderGrEx();scheduleUpdate();});
             imgRow.appendChild(rem);
           }
-          const addImg=el('button','add-btn',item.image?'🔄 Zmień':'🖼️ Obraz'); addImg.style.cssText='padding:4px 8px;font-size:0.75rem';
+          const addImg=el('button','add-btn',item.image?'Zmień':'Obraz'); addImg.style.cssText='padding:4px 8px;font-size:0.75rem';
           addImg.addEventListener('click',()=>pickImage(b64=>{item.image=b64;renderGrEx();scheduleUpdate();}));
           imgRow.appendChild(addImg); iw.appendChild(imgRow);
           const del=el('button','del-btn abs','✕');
@@ -1100,7 +1100,7 @@ function renderGrammarBlocks() {
       function renderTwoCols() {
         colsWrap.textContent='';
         blk.columns.forEach((col,ci)=>{
-          const colDiv=el('div'); colDiv.style.cssText='background:#f0f4ff;border-radius:8px;padding:0.7rem';
+          const colDiv=el('div'); colDiv.style.cssText='background:#f5f2ed;border-radius:8px;padding:0.7rem';
           colDiv.appendChild(field('Nagłówek',textInput(col.header||'','',v=>{col.header=v;scheduleUpdate();})));
           if (!col.items) col.items=[];
           const iWrap2=document.createElement('div');
@@ -1206,7 +1206,7 @@ function renderSpWarmup() {
       rem.addEventListener('click',()=>{item.image='';renderSpWarmup();scheduleUpdate();});
       imgRow.appendChild(rem);
     }
-    const addImgBtn=el('button','add-btn',item.image?'🔄 Zmień':'🖼️ Obraz'); addImgBtn.style.cssText='padding:4px 8px;font-size:0.75rem;margin:0';
+    const addImgBtn=el('button','add-btn',item.image?'Zmień':'Obraz'); addImgBtn.style.cssText='padding:4px 8px;font-size:0.75rem;margin:0';
     addImgBtn.addEventListener('click',()=>pickImage(b64=>{item.image=b64;renderSpWarmup();scheduleUpdate();}));
     imgRow.appendChild(addImgBtn);
     // Audio row
@@ -1235,7 +1235,7 @@ function renderSpConv() {
     wrap.appendChild(el('span', 'sec-label', 'Pytania i odpowiedzi'));
     const pList = document.createElement('div');
     (conv.prompts||[]).forEach((p, pi) => {
-      const pw = el('div'); pw.style.cssText = 'background:#f0f4ff;border-radius:8px;padding:0.7rem;margin-bottom:0.5rem;position:relative';
+      const pw = el('div'); pw.style.cssText = 'background:#f5f2ed;border-radius:8px;padding:0.7rem;margin-bottom:0.5rem;position:relative';
       pw.appendChild(field('Pytanie PL *', textInput(p.q||'', 'Co robisz w weekend?', v => { p.q=v; scheduleUpdate(); })));
       pw.appendChild(field('Pytanie EN (opcjonalnie)', textInput(p.qEn||'', 'What do you do on weekends?', v => { p.qEn=v; scheduleUpdate(); })));
       pw.appendChild(field('Przykładowa odpowiedź', textInput(p.answer||'', 'W weekendy gram w piłkę...', v => { p.answer=v; scheduleUpdate(); })));
@@ -1289,7 +1289,7 @@ document.querySelectorAll('[data-introtype]').forEach(btn => {
 
 function renderIntroductionSections() {
   const list = document.getElementById('introSectionList'); list.textContent = '';
-  const typeNames = {quote:'💬 Cytat', discussion:'🗣️ Dyskusja', article:'📄 Artykuł', glossary:'📚 Słowniczek', comprehension:'❓ Rozumienie', speaking:'💬 Mówienie', cta:'→ CTA', image:'🖼️ Obraz', html:'</> HTML', info:'ℹ️ Info'};
+  const typeNames = {quote:'Cytat', discussion:'Dyskusja', article:'Artykuł', glossary:'Słowniczek', comprehension:'Rozumienie', speaking:'Mówienie', cta:'CTA', image:'Obraz', html:'HTML', info:'Info'};
 
   introductionSections.forEach((sec, si) => {
     const wrap = el('div', 'item-row'); wrap.style.marginBottom = '1.2rem';
@@ -1345,7 +1345,7 @@ function renderIntroductionSections() {
         wrap.appendChild(el('span','sec-label','Słowa'));
         const glList = document.createElement('div');
         (sec.items||[]).forEach((item,i)=>{
-          const iw = el('div'); iw.style.cssText='background:#f0f4ff;border-radius:8px;padding:0.7rem;margin-bottom:0.5rem;position:relative';
+          const iw = el('div'); iw.style.cssText='background:#f5f2ed;border-radius:8px;padding:0.7rem;margin-bottom:0.5rem;position:relative';
           const r1=el('div','two-field');
           r1.appendChild(field('Słowo', textInput(item.word||'','np. adulthood', v=>{item.word=v;scheduleUpdate();})));
           r1.appendChild(field('Fonetyka', textInput(item.phonetic||'','np. /ˈædʌlthʊd/', v=>{item.phonetic=v;scheduleUpdate();})));
@@ -1367,7 +1367,7 @@ function renderIntroductionSections() {
         wrap.appendChild(el('span','sec-label','Pytania'));
         const cmpList = document.createElement('div');
         (sec.questions||[]).forEach((q,i)=>{
-          const iw=el('div'); iw.style.cssText='background:#f0f4ff;border-radius:8px;padding:0.7rem;margin-bottom:0.5rem;position:relative';
+          const iw=el('div'); iw.style.cssText='background:#f5f2ed;border-radius:8px;padding:0.7rem;margin-bottom:0.5rem;position:relative';
           iw.appendChild(field('Pytanie', textInput(q.question||'','np. According to the text...', v=>{q.question=v;scheduleUpdate();})));
           iw.appendChild(field('Odpowiedź', textInput(q.answer||'','np. The stage between...', v=>{q.answer=v;scheduleUpdate();})));
           const del=el('button','del-btn abs','✕'); del.addEventListener('click',()=>{sec.questions.splice(i,1);renderIntroductionSections();scheduleUpdate();}); iw.appendChild(del); cmpList.appendChild(iw);
@@ -1382,7 +1382,7 @@ function renderIntroductionSections() {
         wrap.appendChild(el('span','sec-label','Pytania'));
         const spkList = document.createElement('div');
         (sec.questions||[]).forEach((q,i)=>{
-          const iw=el('div'); iw.style.cssText='background:#f0f4ff;border-radius:8px;padding:0.7rem;margin-bottom:0.5rem;position:relative';
+          const iw=el('div'); iw.style.cssText='background:#f5f2ed;border-radius:8px;padding:0.7rem;margin-bottom:0.5rem;position:relative';
           const r=el('div','two-field');
           r.appendChild(field('Pytanie', textInput(q.question||'','np. Do you agree that...?', v=>{q.question=v;scheduleUpdate();})));
           r.appendChild(field('Wskazówka', textInput(q.hint||'','np. Think about...', v=>{q.hint=v;scheduleUpdate();})));
@@ -1434,7 +1434,7 @@ function renderIntroStringList(wrap, sec, key, addLabel, placeholder) {
   const lbl = {questions:'Pytania'}; wrap.appendChild(el('span','sec-label',lbl[key]||key));
   const listEl = document.createElement('div');
   (sec[key]||[]).forEach((item,i)=>{
-    const row=el('div'); row.style.cssText='background:#f0f4ff;border-radius:8px;padding:0.5rem;margin-bottom:4px;display:flex;gap:6px;align-items:center';
+    const row=el('div'); row.style.cssText='background:#f5f2ed;border-radius:8px;padding:0.5rem;margin-bottom:4px;display:flex;gap:6px;align-items:center';
     const inp=textInput(item,placeholder,v=>{sec[key][i]=v;scheduleUpdate();}); inp.style.flex='1';
     const del=el('button','del-btn','✕'); del.addEventListener('click',()=>{sec[key].splice(i,1);renderIntroductionSections();scheduleUpdate();});
     row.appendChild(inp); row.appendChild(del); listEl.appendChild(row);
@@ -1546,8 +1546,8 @@ document.getElementById('saveToSupabaseBtn').addEventListener('click', async () 
     flashcards: obj.flashcards||null, homework: obj.homework||null, speaking: obj.speaking||null
   });
   btn.textContent = '☁️ Zapisz lekcję w Supabase'; btn.disabled = false;
-  if (error) { setStatus('❌ Błąd: ' + error.message, true); return; }
-  setStatus('✅ Zapisano: ' + currentLessonId);
+  if (error) { setStatus('Błąd:Błąd: ' + error.message, true); return; }
+  setStatus('Zapisano: ' + currentLessonId);
   renderLessonIndex();
   showAssignCard(obj.id);
 });
@@ -1555,26 +1555,26 @@ document.getElementById('saveToSupabaseBtn').addEventListener('click', async () 
 document.getElementById('downloadBtn').addEventListener('click', () => {
   const obj = buildJSON();
   triggerDownload(JSON.stringify(obj, null, 2), (obj.id||'lesson') + '.json');
-  setStatus('✅ Pobrano ' + (obj.id||'lesson') + '.json');
+  setStatus('Pobrano ' + (obj.id||'lesson') + '.json');
 });
 document.getElementById('copyBtn').addEventListener('click', async () => {
   try {
     await navigator.clipboard.writeText(JSON.stringify(buildJSON(), null, 2));
-    setStatus('✅ JSON skopiowany!');
+    setStatus('JSON skopiowany!');
   } catch { setStatus('⚠️ Skopiuj ręcznie z podglądu (Ctrl+A, Ctrl+C)', true); }
 });
 
 // ── SUPABASE: LOAD LESSON ──
 async function loadLessonFromDB(id) {
   const { data: row, error } = await sb.from('lessons').select('*').eq('id', id).single();
-  if (error || !row) { setStatus('❌ Błąd: ' + (error?.message||'brak'), true); return; }
+  if (error || !row) { setStatus('Błąd:Błąd: ' + (error?.message||'brak'), true); return; }
   loadFromJSON({
     id:row.id, title:row.title, subtitle:row.subtitle, level:row.level,
     headerEmoji:row.header_emoji, tabs:row.tabs||[], introduction:row.introduction,
     vocabulary:row.vocabulary, grammar:row.grammar, reading:row.reading,
     exercises:row.exercises, flashcards:row.flashcards, homework:row.homework, speaking:row.speaking
   });
-  setStatus('✅ Wczytano: ' + id);
+  setStatus('Wczytano: ' + id);
   document.querySelector('.ftab[data-tab="basic"]').click();
   showAssignCard(id);
 }
@@ -1597,7 +1597,7 @@ async function deleteLessonFromDB(id) {
   if (!confirm('Usunąć lekcję "' + id + '" z bazy? Tej operacji nie można cofnąć.')) return;
   const { error } = await sb.from('lessons').delete().eq('id', id);
   if (error) { alert('Błąd: ' + error.message); return; }
-  renderLessonIndex(); setStatus('✅ Usunięto: ' + id);
+  renderLessonIndex(); setStatus('Usunięto: ' + id);
   if (currentLessonId === id) { currentLessonId = null; hideAssignCard(); }
 }
 
@@ -1611,7 +1611,7 @@ async function renderLessonIndex() {
   const { data, error } = await query;
   if (error) {
     const p = el('p'); p.style.cssText='color:var(--red);font-size:0.8rem';
-    p.textContent='❌ ' + error.message; list.appendChild(p); return;
+    p.textContent='Błąd:' + error.message; list.appendChild(p); return;
   }
   let rows = data || [];
   if (search) rows = rows.filter(r =>
@@ -1711,9 +1711,9 @@ document.getElementById('saveAssignmentsBtn').addEventListener('click', async ()
   const results = await Promise.all(ops);
   const err = results.find(r => r.error);
   if (err) {
-    statusEl.textContent = '❌ Błąd: ' + err.error.message; statusEl.style.color = 'var(--red)';
+    statusEl.textContent = 'Błąd:Błąd: ' + err.error.message; statusEl.style.color = 'var(--red)';
   } else {
-    statusEl.textContent = '✅ Zapisano przypisania'; statusEl.style.color = 'var(--green)';
+    statusEl.textContent = 'Zapisano przypisania'; statusEl.style.color = 'var(--green)';
     setTimeout(() => { statusEl.textContent = ''; }, 3000);
   }
 });
@@ -1723,7 +1723,7 @@ async function renderStudents() {
   const { data: students, error } = await sb.from('students').select('id,name,code,prefix').order('name');
   const list = document.getElementById('studentsList'); list.textContent = '';
   if (error) {
-    list.appendChild(Object.assign(el('p'), {textContent:'❌ Błąd: '+error.message, style:'color:var(--red)'})); return;
+    list.appendChild(Object.assign(el('p'), {textContent:'Błąd:Błąd: '+error.message, style:'color:var(--red)'})); return;
   }
   if (!students || !students.length) {
     list.appendChild(Object.assign(el('p'), {textContent:'Brak uczniów.', style:'color:#aaa;font-size:0.9rem;padding:0.5rem 0'})); return;
@@ -1786,7 +1786,7 @@ async function renderReorderList(studentId) {
   function renderItems() {
     wrap.textContent = '';
     items.forEach((item, idx) => {
-      const row = el('div'); row.style.cssText='display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;background:#f8f9fe;margin-bottom:4px;border:1px solid #e8ecff';
+      const row = el('div'); row.style.cssText='display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;background:#f7f5f1;margin-bottom:4px;border:1px solid #e0d8ce';
       const numBadge = el('span', null, String(idx+1)+'.'); numBadge.style.cssText='font-family:Nunito,sans-serif;font-weight:800;color:var(--blue);min-width:22px;font-size:0.85rem';
       const emoji = el('span', null, item.lesson?.header_emoji || '📚'); emoji.style.fontSize='1.1rem';
       const title = el('span', null, item.lesson?.title || item.lesson?.id || '—'); title.style.cssText='flex:1;font-size:0.85rem;font-family:Nunito,sans-serif;font-weight:700;color:var(--blue)';
@@ -1809,9 +1809,9 @@ async function renderReorderList(studentId) {
       const results = await Promise.all(ops);
       const err = results.find(r => r.error);
       if (err) {
-        statusEl.textContent = '❌ Błąd: ' + err.error.message; statusEl.style.color = 'var(--red)';
+        statusEl.textContent = 'Błąd:Błąd: ' + err.error.message; statusEl.style.color = 'var(--red)';
       } else {
-        statusEl.textContent = '✅ Kolejność zapisana'; statusEl.style.color = 'var(--green)';
+        statusEl.textContent = 'Kolejność zapisana'; statusEl.style.color = 'var(--green)';
         setTimeout(() => { statusEl.textContent = ''; }, 3000);
       }
     });
@@ -1832,12 +1832,12 @@ document.getElementById('addStudentBtn').addEventListener('click', async ()=>{
   const code   = document.getElementById('ns_code').value.trim();
   const prefix = document.getElementById('ns_prefix').value.trim() || toPrefix(name);
   const status = document.getElementById('studentStatus');
-  if (!name || !code) { status.textContent='❌ Imię i kod są wymagane'; status.style.color='var(--red)'; return; }
+  if (!name || !code) { status.textContent='Błąd:Imię i kod są wymagane'; status.style.color='var(--red)'; return; }
   const {error} = await sb.from('students').insert({name, code, prefix});
   if (error) {
     const msg = (error.message.includes('duplicate')||error.message.includes('unique'))
       ? 'Uczeń z tym kodem już istnieje' : error.message;
-    status.textContent='❌ Błąd: '+msg; status.style.color='var(--red)'; return;
+    status.textContent='Błąd:Błąd: '+msg; status.style.color='var(--red)'; return;
   }
   document.getElementById('ns_name').value='';
   document.getElementById('ns_code').value='';
@@ -1845,15 +1845,15 @@ document.getElementById('addStudentBtn').addEventListener('click', async ()=>{
   delete document.getElementById('ns_prefix').dataset.touched;
   await renderStudents();
   await loadReorderSelect();
-  status.textContent='✅ Dodano: '+name; status.style.color='var(--green)';
+  status.textContent='Dodano: '+name; status.style.color='var(--green)';
   setTimeout(()=>{ status.textContent=''; },3000);
 });
 document.getElementById('downloadStudentsBtn').addEventListener('click', async ()=>{
   const {data:students, error} = await sb.from('students').select('*').order('name');
   const s = document.getElementById('studentsDownloadStatus');
-  if (error) { s.textContent='❌ '+error.message; s.style.color='var(--red)'; return; }
+  if (error) { s.textContent='Błąd:'+error.message; s.style.color='var(--red)'; return; }
   triggerDownload(JSON.stringify({students},null,2),'students_backup.json');
-  s.textContent='✅ Pobrano kopię ('+students.length+' uczniów)'; s.style.color='var(--green)';
+  s.textContent='Pobrano kopię ('+students.length+' uczniów)'; s.style.color='var(--green)';
   setTimeout(()=>{ s.textContent=''; },4000);
 });
 
@@ -1873,7 +1873,7 @@ async function loadProgressView() {
   const {data, error} = await query;
   wrap.textContent = '';
   if (error) {
-    const err = el('p'); err.textContent='❌ Błąd: '+error.message; err.style.color='var(--red)';
+    const err = el('p'); err.textContent='Błąd:Błąd: '+error.message; err.style.color='var(--red)';
     wrap.appendChild(err); return;
   }
   if (!data || !data.length) {
@@ -1929,7 +1929,7 @@ async function loadProgressView() {
     detailTr.style.display = 'none';
     const detailTd = document.createElement('td');
     detailTd.colSpan = 5;
-    detailTd.style.cssText = 'background:#f8f9fe;padding:1rem 1.2rem;border-bottom:2px solid #e8ecff';
+    detailTd.style.cssText = 'background:#f7f5f1;padding:1rem 1.2rem;border-bottom:2px solid #e0d8ce';
     detailTd.appendChild(buildDetailPanel(r));
     detailTr.appendChild(detailTd);
     tbody.appendChild(detailTr);
@@ -1951,7 +1951,7 @@ function buildDetailPanel(r) {
   wrap.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem';
 
   // ── Exercises ──
-  const exBox = el('div'); exBox.style.cssText='background:white;border-radius:10px;padding:1rem;border:1px solid #e8ecff';
+  const exBox = el('div'); exBox.style.cssText='background:white;border-radius:10px;padding:1rem;border:1px solid #e0d8ce';
   exBox.appendChild(el('strong', null, '✏️ Ćwiczenia'));
   const ex = r.exercises;
   if (ex && (ex.quiz?.length || ex.fill?.length)) {
@@ -1977,7 +1977,7 @@ function buildDetailPanel(r) {
   wrap.appendChild(exBox);
 
   // ── Flashcards ──
-  const fcBox = el('div'); fcBox.style.cssText='background:white;border-radius:10px;padding:1rem;border:1px solid #e8ecff';
+  const fcBox = el('div'); fcBox.style.cssText='background:white;border-radius:10px;padding:1rem;border:1px solid #e0d8ce';
   fcBox.appendChild(el('strong', null, '🃏 Fiszki'));
   const fc = r.flashcards;
   if (fc && (fc.known != null || fc.unknown != null)) {
@@ -1988,35 +1988,42 @@ function buildDetailPanel(r) {
     const fcChip  = el('span', 'score-chip ' + (fcPct>=80?'good':fcPct>=50?'ok':'bad'), fcPct+'%');
     fcChip.style.cssText += ';display:block;margin:0.5rem 0;width:fit-content';
     fcBox.appendChild(fcChip);
-    fcBox.appendChild(el('p', null, '✅ Zna: '+known+' · ❌ Nie zna: '+unknown)).style.cssText='font-size:0.82rem;color:#555';
+    fcBox.appendChild(el('p', null, 'Zna: '+known+' · Błąd:Nie zna: '+unknown)).style.cssText='font-size:0.82rem;color:#555';
   } else {
     fcBox.appendChild(el('p', null, 'Brak danych')).style.cssText='color:#aaa;font-size:0.82rem;margin-top:0.3rem';
   }
   wrap.appendChild(fcBox);
 
   // ── My Words ──
-  const mwBox = el('div'); mwBox.style.cssText='background:white;border-radius:10px;padding:1rem;border:1px solid #e8ecff';
-  mwBox.appendChild(el('strong', null, '📝 My Words'));
+  const mwBox = el('div'); mwBox.style.cssText='background:white;border-radius:10px;padding:1rem;border:1px solid #e0d8ce;grid-column:1/-1';
+  mwBox.appendChild(el('strong', null, 'My Words'));
   const mw = r.mywords;
-  if (Array.isArray(mw) && mw.length) {
-    const wordList = el('div'); wordList.style.cssText='margin-top:0.5rem;max-height:160px;overflow-y:auto';
-    mw.forEach(w => {
-      const row = el('div');
-      row.style.cssText='display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid #f0f0f0;font-size:0.82rem';
-      const plSpan = el('span', null, w.pl||'—'); plSpan.style.cssText='font-weight:700;color:var(--blue)';
-      const enSpan = el('span', null, w.en||'—'); enSpan.style.color='#555';
-      row.appendChild(plSpan); row.appendChild(enSpan);
-      wordList.appendChild(row);
-    });
-    mwBox.appendChild(el('p', null, mw.length + ' słówek')).style.cssText='font-size:0.82rem;color:#888;margin:0.3rem 0 0';
-    mwBox.appendChild(wordList);
-  } else {
-    mwBox.appendChild(el('p', null, 'Brak słówek')).style.cssText='color:#aaa;font-size:0.82rem;margin-top:0.3rem';
-  }
+  let mwInitial = '';
+  if (typeof mw === 'string') mwInitial = mw;
+  else if (Array.isArray(mw) && mw.length) mwInitial = mw.map(w => (w.pl||'') + (w.en ? ' — ' + w.en : '')).join('\n');
+  const mwTa = document.createElement('textarea');
+  mwTa.value = mwInitial;
+  mwTa.rows = 6;
+  mwTa.style.cssText = 'width:100%;margin-top:0.6rem;padding:8px 10px;border:1.5px solid #ddd;border-radius:8px;font-family:"DM Sans",sans-serif;font-size:0.85rem;resize:vertical;outline:none;color:#1a1410;line-height:1.7';
+  mwTa.placeholder = 'Wpisz słówka ucznia (każde w nowej linii)...';
+  mwBox.appendChild(mwTa);
+  const mwSaveBtn = el('button', 'action-btn primary', 'Zapisz');
+  mwSaveBtn.style.cssText = 'margin-top:0.5rem;width:auto;display:inline-block;padding:7px 20px;font-size:0.85rem';
+  const mwStatus = el('span'); mwStatus.style.cssText = 'font-size:0.8rem;margin-left:0.7rem;font-family:"DM Sans",sans-serif;font-weight:700';
+  mwSaveBtn.addEventListener('click', async () => {
+    mwSaveBtn.disabled = true; mwStatus.textContent = ''; mwStatus.style.color = '';
+    const {error} = await sb.from('lesson_progress').upsert({
+      student_id: r.student_id, lesson_id: r.lesson_id, mywords: mwTa.value
+    }, {onConflict: 'student_id,lesson_id'});
+    mwSaveBtn.disabled = false;
+    if (error) { mwStatus.textContent = 'Błąd: ' + error.message; mwStatus.style.color = 'var(--red)'; }
+    else        { mwStatus.textContent = 'Zapisano'; mwStatus.style.color = 'var(--green)'; setTimeout(()=>{mwStatus.textContent='';},3000); }
+  });
+  mwBox.appendChild(mwSaveBtn); mwBox.appendChild(mwStatus);
   wrap.appendChild(mwBox);
 
   // ── Homework ──
-  const hwBox = el('div'); hwBox.style.cssText='background:white;border-radius:10px;padding:1rem;border:1px solid #e8ecff';
+  const hwBox = el('div'); hwBox.style.cssText='background:white;border-radius:10px;padding:1rem;border:1px solid #e0d8ce';
   hwBox.appendChild(el('strong', null, '🏠 Praca domowa'));
   const hw = r.homework;
   if (hw && Object.keys(hw).length) {
@@ -2073,8 +2080,8 @@ document.getElementById('saveConfigBtn').addEventListener('click', async ()=>{
     emailjs_template_id: document.getElementById('cfg_template').value.trim()
   });
   const s = document.getElementById('configStatus');
-  if (error) { s.textContent='❌ '+error.message; s.style.color='var(--red)'; }
-  else { s.textContent='✅ Zapisano konfigurację'; s.style.color='var(--green)'; setTimeout(()=>{s.textContent='';},3000); }
+  if (error) { s.textContent='Błąd:'+error.message; s.style.color='var(--red)'; }
+  else { s.textContent='Zapisano konfigurację'; s.style.color='var(--green)'; setTimeout(()=>{s.textContent='';},3000); }
 });
 
 // ── LIGHTBOX ──

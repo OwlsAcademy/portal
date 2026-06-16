@@ -5,146 +5,214 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title id="pageTitle">Lekcja</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="supabase-client.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Lato',sans-serif;background:#f0f4ff;color:#1a1a2e;min-height:100vh}
-h1,h2,h3,h4{font-family:'Nunito',sans-serif}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);line-height:1.6;min-height:100vh}
+h1,h2,h3,h4{font-family:'Playfair Display',serif}
 :root{
-  --red:#e63946;--blue:#1d3557;--blue-mid:#457b9d;
-  --blue-light:#a8dadc;--cream:#f1faee;--yellow:#ffd166;
-  --green:#06d6a0;--orange:#f77f00;--purple:#7b2d8b;--pink:#f72585
+  --cream:#faf7f2;--ink:#1a1410;
+  --amber:#d4800a;--amber-light:#f5c842;
+  --teal:#2a7c76;--teal-light:#e8f5f4;
+  --coral:#e85d3a;--coral-light:#fdf0ec;
+  --purple:#5b3fa6;--purple-light:#f0ecfb;
+  --border:#ddd8ce;
+  --card-shadow:0 4px 24px rgba(26,20,16,0.08);
+  --radius:14px;
+  --blue:#1a1410;--blue-mid:#d4800a;--blue-light:#e8f5f4;
+  --yellow:#f5c842;--green:#2a7c76;--red:#e85d3a;
+  --orange:#d4800a;--purple-p:#5b3fa6;--pink:#5b3fa6
 }
-.nav-bar{display:flex;background:var(--blue);align-items:center;padding:0 0.5rem;position:sticky;top:0;z-index:200;box-shadow:0 2px 8px rgba(0,0,0,0.2)}
-.back-btn{color:rgba(255,255,255,0.7);text-decoration:none;padding:12px 10px;font-family:'Nunito',sans-serif;font-weight:700;white-space:nowrap;transition:color 0.2s}
-.back-btn:hover{color:white}
-.nav-tabs{display:flex;flex:1;padding:0 0.5rem;gap:4px;overflow-x:auto;scrollbar-width:none}
+
+/* NAV */
+.nav-bar{position:sticky;top:0;z-index:200;background:var(--ink);display:flex;align-items:center;gap:4px;padding:10px 16px;overflow-x:auto;scrollbar-width:none}
+.nav-bar::-webkit-scrollbar{display:none}
+.back-btn{color:rgba(255,255,255,0.55);text-decoration:none;background:transparent;border:none;border-radius:8px;padding:7px 14px;font-family:'DM Sans',sans-serif;font-weight:500;font-size:13px;white-space:nowrap;transition:all .2s;cursor:pointer}
+.back-btn:hover{background:var(--amber);color:var(--ink)}
+.nav-tabs{display:flex;flex:1;gap:4px;overflow-x:auto;scrollbar-width:none;flex-wrap:nowrap}
 .nav-tabs::-webkit-scrollbar{display:none}
-.nav-tab{padding:14px 14px;background:transparent;border:none;color:rgba(255,255,255,0.6);font-family:'Nunito',sans-serif;font-weight:700;font-size:13px;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;transition:all 0.2s}
-.nav-tab:hover{color:white}
-.nav-tab.active{color:var(--yellow);border-bottom-color:var(--yellow)}
-.section{display:none;padding:1.5rem;max-width:920px;margin:0 auto}
+.nav-tab{background:transparent;color:rgba(255,255,255,0.55);border:none;border-radius:8px;padding:7px 14px;font-size:13px;font-family:'DM Sans',sans-serif;font-weight:500;cursor:pointer;white-space:nowrap;transition:all .2s}
+.nav-tab.active,.nav-tab:hover{background:var(--amber);color:var(--ink)}
+.save-indicator{color:rgba(255,255,255,0.55);font-size:.75rem;padding:0 10px;white-space:nowrap;font-family:'DM Sans',sans-serif;font-weight:500;transition:opacity .6s;opacity:0;flex-shrink:0}
+
+/* SECTIONS */
+.section{display:none;max-width:860px;margin:0 auto;padding:40px 24px 80px}
 .section.active{display:block}
-.lesson-header{background:linear-gradient(135deg,var(--blue) 0%,var(--blue-mid) 100%);color:white;border-radius:16px;padding:2rem;margin-bottom:1.5rem;position:relative;overflow:hidden}
-.lesson-header .hdr-emoji{position:absolute;right:1.5rem;top:1.5rem;font-size:3rem;opacity:0.3}
-.lesson-header h1{font-size:1.8rem;margin-bottom:0.5rem}
-.lesson-header p{opacity:0.85;font-size:0.95rem}
-.badge{display:inline-block;background:var(--yellow);color:var(--blue);border-radius:20px;padding:3px 12px;font-size:12px;font-weight:700;margin-bottom:0.8rem;font-family:'Nunito',sans-serif}
-.card{background:white;border-radius:12px;padding:1.5rem;margin-bottom:1.2rem;box-shadow:0 2px 8px rgba(0,0,0,0.06);border-left:5px solid var(--blue-mid)}
-.card.green{border-left-color:var(--green)}.card.red{border-left-color:var(--red)}
-.card.yellow{border-left-color:var(--yellow)}.card.purple{border-left-color:var(--purple)}
-.card.orange{border-left-color:var(--orange)}.card.pink{border-left-color:var(--pink)}
-.card h3{font-size:1rem;color:var(--blue);margin-bottom:1rem}
-.vocab-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:0.5rem}
-.vocab-item{background:#f0f4ff;border-radius:10px;padding:12px;text-align:center;border:2px solid transparent;transition:all 0.2s;position:relative}
-.vocab-item:hover{border-color:var(--blue-mid);transform:translateY(-2px)}
+
+/* LESSON HEADER */
+.lesson-header{text-align:center;margin-bottom:48px}
+.hdr-emoji{display:none}
+.badge{display:inline-block;background:var(--amber);color:var(--ink);font-weight:600;font-size:11px;letter-spacing:.12em;text-transform:uppercase;padding:4px 12px;border-radius:20px;margin-bottom:16px;font-family:'DM Sans',sans-serif}
+.lesson-header h1{font-family:'Playfair Display',serif;font-size:clamp(2rem,5vw,3rem);line-height:1.1;margin-bottom:12px}
+.lesson-header p{font-size:1.05rem;color:#5a5248;max-width:520px;margin:0 auto}
+
+/* CARDS */
+.card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:26px;margin-bottom:20px;box-shadow:var(--card-shadow)}
+.card h3{font-size:1rem;font-weight:600;margin-bottom:14px;color:var(--ink);font-family:'Playfair Display',serif}
+.card.green{border-top:3px solid var(--teal)}
+.card.red{border-top:3px solid var(--coral)}
+.card.yellow{border-top:3px solid var(--amber)}
+.card.purple{border-top:3px solid var(--purple)}
+.card.orange{border-top:3px solid var(--amber)}
+.card.pink{border-top:3px solid var(--purple)}
+
+/* VOCAB */
+.vocab-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-top:.5rem}
+.vocab-item{background:var(--cream);border:1.5px solid var(--border);border-radius:10px;padding:14px;text-align:center;transition:all .2s;position:relative}
+.vocab-item:hover{border-color:var(--amber);background:#fffdf7;transform:translateY(-2px)}
 .vocab-item .vi-emoji{font-size:1.8rem;margin-bottom:4px}
-.vocab-item .vi-pl{font-weight:700;font-size:0.95rem;color:var(--blue);font-family:'Nunito',sans-serif}
-.vocab-item .vi-en{font-size:0.75rem;color:#666;margin-top:2px}
-.save-btn{position:absolute;top:6px;right:6px;background:none;border:1px solid #ddd;border-radius:5px;padding:2px 5px;font-size:0.7rem;cursor:pointer;color:#888;display:none}
+.vocab-item .vi-pl{font-weight:600;font-size:.95rem;color:var(--ink);font-family:'DM Sans',sans-serif}
+.vocab-item .vi-en{font-size:.75rem;color:#5a5248;margin-top:2px}
+.save-btn{position:absolute;top:6px;right:6px;background:none;border:1px solid var(--border);border-radius:5px;padding:2px 5px;font-size:.7rem;cursor:pointer;color:#aaa;display:none}
 .vocab-item:hover .save-btn{display:block}
-.save-btn:hover,.save-btn.saved{background:var(--green);color:white;border-color:var(--green);display:block}
-table{width:100%;border-collapse:collapse;margin-top:0.5rem;font-size:0.9rem}
-th{background:var(--blue);color:white;padding:10px 12px;text-align:left;font-family:'Nunito',sans-serif}
-td{padding:9px 12px;border-bottom:1px solid #eee}
-tr:nth-child(even) td{background:#f7f9ff}
-.pl-word{font-weight:700;color:var(--blue);font-size:1rem}
-.en-word{color:#555}
-.grammar-box{background:#fff8e1;border:2px solid var(--yellow);border-radius:10px;padding:1rem 1.2rem;margin:0.8rem 0}
-.grammar-box h4{color:#8B6914;margin-bottom:0.5rem;font-size:0.95rem}
-.grammar-box p{font-size:0.88rem;color:#555;line-height:1.6}
-.tip-box{background:#fff3e0;border:2px solid var(--orange);border-radius:10px;padding:0.8rem 1rem;margin:0.8rem 0;font-size:0.88rem;color:#5d3a00}
-.tip-box strong{color:var(--orange)}
-.ex-box{background:#e8f5e9;border-left:4px solid var(--green);border-radius:0 8px 8px 0;padding:0.8rem 1rem;margin:0.5rem 0}
-.ex-box .ex-pl{font-weight:700;color:#1b5e20;font-size:1rem}
-.ex-box .ex-en{color:#555;font-size:0.88rem}
-.reading-box{background:white;border-radius:12px;padding:1.5rem;margin-bottom:1.2rem;box-shadow:0 2px 8px rgba(0,0,0,0.06);border:2px solid var(--blue-light)}
-.reading-box h3{color:var(--blue);margin-bottom:1rem;font-size:1.1rem}
-.reading-text{font-size:0.97rem;line-height:2;color:#333}
-/* These classes are used in teacher-authored reading texts stored in lesson JSON */
-.hl{background:var(--yellow);border-radius:3px;padding:1px 3px;font-weight:700;color:var(--blue)}
-.hlg{background:#c8f7dc;border-radius:3px;padding:1px 3px;font-weight:700;color:#1b5e20}
-.exercise-card{background:white;border-radius:12px;padding:1.5rem;margin-bottom:1.2rem;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
-.exercise-card h4{color:var(--blue);font-size:1rem;margin-bottom:0.4rem;padding-bottom:0.5rem;border-bottom:2px solid #f0f4ff}
-.ex-desc{font-size:0.84rem;color:#777;margin-bottom:1rem}
+.save-btn:hover,.save-btn.saved{background:var(--teal);color:white;border-color:var(--teal);display:block}
+
+/* TABLES */
+table{width:100%;border-collapse:collapse;margin-top:.5rem;font-size:.9rem}
+th{background:var(--ink);color:var(--cream);padding:10px 12px;text-align:left;font-family:'DM Sans',sans-serif;font-weight:600;letter-spacing:.04em;font-size:.85rem}
+td{padding:9px 12px;border-bottom:1px solid var(--border)}
+tr:nth-child(even) td{background:#f5f2ed}
+.pl-word{font-weight:600;color:var(--ink);font-size:1rem}
+.en-word{color:#5a5248}
+
+/* GRAMMAR */
+.grammar-box{background:#fff9ee;border:1.5px solid var(--amber);border-radius:var(--radius);padding:20px;margin-bottom:20px}
+.grammar-box h4{color:var(--amber);font-family:'Playfair Display',serif;font-size:1rem;margin-bottom:12px}
+.grammar-box p{font-size:.88rem;color:#5a5248;line-height:1.7}
+.tip-box{background:var(--teal-light);border-left:3px solid var(--teal);border-radius:0 8px 8px 0;padding:10px 14px;margin:.8rem 0;font-size:.9rem;color:#1a5a55}
+.tip-box strong{color:var(--teal)}
+.ex-box{background:var(--teal-light);border-left:4px solid var(--teal);border-radius:0 8px 8px 0;padding:.8rem 1rem;margin:.5rem 0}
+.ex-box .ex-pl{font-weight:700;color:#1a5a55;font-size:1rem}
+.ex-box .ex-en{color:#5a5248;font-size:.88rem}
+
+/* READING */
+.reading-box{background:white;border:1px solid var(--border);border-radius:var(--radius);padding:32px 36px;margin-bottom:20px;box-shadow:var(--card-shadow)}
+.reading-box h3{color:var(--ink);margin-bottom:1rem;font-family:'Playfair Display',serif;font-size:1.3rem}
+.reading-text{font-size:.95rem;line-height:1.9;color:var(--ink)}
+/* highlight classes for teacher-authored reading texts */
+.hl{background:rgba(212,128,10,.15);border-radius:3px;padding:0 3px;font-weight:600;color:var(--ink)}
+.hlg{background:var(--teal-light);border-radius:3px;padding:0 3px;font-weight:600;color:#1a5a55}
+
+/* EXERCISES */
+.exercise-card{background:white;border:1px solid var(--border);border-radius:var(--radius);padding:26px;margin-bottom:20px;box-shadow:var(--card-shadow)}
+.exercise-card h4{color:var(--ink);font-size:1.1rem;font-family:'Playfair Display',serif;margin-bottom:.4rem;padding-bottom:.5rem;border-bottom:1px solid var(--border)}
+.ex-desc{font-size:.84rem;color:#7a6a50;margin-bottom:1rem}
 .quiz-q{margin-bottom:1.2rem}
-.quiz-q p{font-weight:600;margin-bottom:0.6rem;color:#333;font-size:0.95rem}
+.quiz-q p{font-weight:500;margin-bottom:.6rem;color:var(--ink);font-size:.95rem}
 .quiz-opts{display:flex;flex-wrap:wrap;gap:8px}
-.qopt{background:#f0f4ff;border:2px solid #d0d8ff;border-radius:8px;padding:8px 16px;cursor:pointer;font-size:0.9rem;font-weight:600;color:var(--blue);transition:all 0.2s;font-family:'Nunito',sans-serif}
-.qopt:hover:not(:disabled){background:var(--blue);color:white}
-.qopt.correct{background:#e8f5e9!important;border-color:var(--green)!important;color:#1b5e20!important}
-.qopt.wrong{background:#ffebee!important;border-color:var(--red)!important;color:#b71c1c!important}
+.qopt{background:#fff;border:1.5px solid var(--border);border-radius:8px;padding:7px 16px;font-family:'DM Sans',sans-serif;font-size:.9rem;cursor:pointer;transition:all .2s;color:var(--ink);font-weight:500}
+.qopt:hover:not(:disabled){border-color:var(--amber);background:#fffdf7}
+.qopt.correct{background:var(--teal-light)!important;border-color:var(--teal)!important;color:var(--teal)!important}
+.qopt.wrong{background:var(--coral-light)!important;border-color:var(--coral)!important;color:var(--coral)!important}
 .qopt:disabled{cursor:default}
-.feedback{margin-top:0.5rem;font-size:0.85rem;font-weight:700;min-height:20px}
-.feedback.ok{color:#1b5e20}.feedback.bad{color:#b71c1c}
-.fill-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;font-size:0.93rem}
-.fill-input{border:2px solid #c5cae9;border-radius:6px;padding:4px 10px;font-size:1rem;width:160px;text-align:center;font-family:'Nunito',sans-serif;font-weight:700;color:var(--blue);outline:none;transition:border 0.2s}
-.fill-input:focus{border-color:var(--blue-mid)}
-.fill-input.correct{border-color:var(--green);background:#e8f5e9;color:#1b5e20}
-.fill-input.wrong{border-color:var(--red);background:#ffebee;color:#b71c1c}
-.fill-hint{font-size:0.8rem;color:#888;font-style:italic}
-.check-btn{background:var(--blue);color:white;border:none;border-radius:8px;padding:10px 24px;font-family:'Nunito',sans-serif;font-weight:700;font-size:0.9rem;cursor:pointer;margin-top:0.8rem}
-.check-btn:hover{background:var(--blue-mid)}
-.write-box{width:100%;min-height:80px;margin-top:0.5rem;border:2px dashed #c5cae9;border-radius:8px;padding:0.7rem;font-size:0.9rem;font-family:'Lato',sans-serif;color:var(--blue);resize:vertical;outline:none;transition:border 0.2s}
-.write-box:focus{border-color:var(--blue-mid);border-style:solid}
+.feedback{margin-top:14px;padding:10px 16px;border-radius:10px;font-size:.88rem;display:none}
+.feedback.ok,.feedback.good{display:block;background:var(--teal-light);color:#1a5a55}
+.feedback.bad{display:block;background:var(--coral-light);color:#a02515}
+
+/* FILL */
+.fill-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;font-size:.93rem}
+.fill-input{border:1.5px solid var(--border);border-radius:8px;padding:6px 12px;font-size:1rem;width:160px;text-align:center;font-family:'DM Sans',sans-serif;font-weight:600;color:var(--ink);outline:none;transition:border .2s}
+.fill-input:focus{border-color:var(--amber)}
+.fill-input.correct{border-color:var(--teal);background:var(--teal-light);color:#1a5a55}
+.fill-input.wrong{border-color:var(--coral);background:var(--coral-light);color:var(--coral)}
+.fill-hint{font-size:.8rem;color:#aaa;font-style:italic}
+.check-btn{display:inline-flex;align-items:center;gap:8px;padding:10px 22px;border-radius:10px;border:none;font-family:'DM Sans',sans-serif;font-weight:600;font-size:.9rem;cursor:pointer;transition:all .2s;background:var(--ink);color:var(--cream);margin-top:.8rem}
+.check-btn:hover{background:var(--amber);color:var(--ink)}
+.write-box{width:100%;min-height:80px;margin-top:.5rem;border:1.5px dashed var(--border);border-radius:10px;padding:.8rem 1rem;font-size:.9rem;font-family:'DM Sans',sans-serif;color:var(--ink);resize:vertical;outline:none;transition:border .2s}
+.write-box:focus{border-color:var(--amber);border-style:solid}
 .write-box::placeholder{color:#aaa;font-style:italic}
-.speak-card{background:linear-gradient(135deg,#e8f4fd,#e1f0e8);border:2px solid var(--blue-light);border-radius:12px;padding:1.2rem;margin-bottom:1rem}
-.speak-card h4{color:var(--blue);margin-bottom:0.8rem}
-.speak-prompt{background:white;border-radius:8px;padding:0.8rem 1rem;margin:6px 0;font-size:0.92rem;color:#333;border-left:3px solid var(--blue-mid)}
-.speak-answer{font-size:0.85rem;color:#555;background:#f0f7f0;border-radius:6px;padding:6px 10px;margin-top:4px;border-left:3px solid var(--green);display:none}
-.ans-btn{background:none;border:1px solid #ccc;border-radius:6px;padding:3px 10px;font-size:0.78rem;cursor:pointer;color:#666;margin-top:4px}
-.ans-btn:hover{background:#eee}
+
+/* SPEAKING */
+.speak-card{background:linear-gradient(135deg,var(--purple-light) 0%,#fff 100%);border:1.5px solid #c8bff0;border-radius:var(--radius);padding:22px;margin-bottom:14px}
+.speak-card h4{color:var(--ink);margin-bottom:.8rem}
+.speak-prompt{background:white;border-radius:8px;padding:.8rem 1rem;margin:6px 0;font-size:.92rem;color:var(--ink);border-left:3px solid var(--amber)}
+.speak-answer{font-size:.85rem;color:#5a5248;background:var(--teal-light);border-radius:6px;padding:6px 10px;margin-top:4px;border-left:3px solid var(--teal);display:none}
+.ans-btn{background:none;border:1px solid var(--border);border-radius:6px;padding:3px 10px;font-size:.78rem;cursor:pointer;color:#666;margin-top:4px}
+.ans-btn:hover{background:#f5f2ed}
+
+/* MATCHING */
+.match-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.match-col{display:flex;flex-direction:column;gap:8px}
+.match-item{background:#fff;border:1.5px solid var(--border);border-radius:10px;padding:11px 14px;cursor:pointer;transition:all .2s;font-size:.9rem}
+.match-item:hover{border-color:var(--amber)}
+.match-item.selected{border-color:var(--purple);background:var(--purple-light)}
+.match-item.matched{border-color:var(--teal);background:var(--teal-light);pointer-events:none}
+.match-item.wrong-match{border-color:var(--coral);background:var(--coral-light)}
+
+/* FLASHCARDS */
 .fc-wrap{perspective:1000px;margin:1rem auto;max-width:400px}
-.flashcard{width:100%;height:200px;position:relative;transform-style:preserve-3d;transition:transform 0.5s;cursor:pointer}
+.flashcard{width:100%;height:200px;position:relative;transform-style:preserve-3d;transition:transform .5s;cursor:pointer}
 .flashcard.flipped{transform:rotateY(180deg)}
-.fc-front,.fc-back{position:absolute;inset:0;backface-visibility:hidden;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1.5rem;text-align:center}
-.fc-front{background:var(--blue);color:white}
-.fc-back{background:var(--cream);color:var(--blue);transform:rotateY(180deg);border:3px solid var(--blue-light)}
-.fc-emoji{font-size:2.5rem;margin-bottom:0.3rem}
-.fc-word{font-size:1.6rem;font-weight:900;font-family:'Nunito',sans-serif;margin-bottom:0.2rem}
-.fc-hint{font-size:0.85rem;opacity:0.7}
-.fc-trans{font-size:1.4rem;font-weight:900;font-family:'Nunito',sans-serif;color:var(--red);margin-bottom:0.2rem}
-.fc-ex{font-size:0.85rem;color:#555}
+.fc-front,.fc-back{position:absolute;inset:0;backface-visibility:hidden;border-radius:var(--radius);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1.5rem;text-align:center}
+.fc-front{background:var(--ink);color:white}
+.fc-back{background:var(--cream);color:var(--ink);transform:rotateY(180deg);border:2px solid var(--border)}
+.fc-emoji{font-size:2.5rem;margin-bottom:.3rem}
+.fc-word{font-size:1.6rem;font-weight:700;font-family:'Playfair Display',serif;margin-bottom:.2rem;color:var(--amber-light)}
+.fc-hint{font-size:.85rem;opacity:.7}
+.fc-trans{font-size:1.4rem;font-weight:700;font-family:'Playfair Display',serif;color:var(--coral);margin-bottom:.2rem}
+.fc-ex{font-size:.85rem;color:#5a5248}
 .fc-ctrls{display:flex;justify-content:center;gap:12px;margin-top:1rem;flex-wrap:wrap}
-.fc-btn{background:var(--blue);color:white;border:none;border-radius:8px;padding:9px 20px;cursor:pointer;font-family:'Nunito',sans-serif;font-weight:700;font-size:0.9rem}
-.fc-btn:hover{background:var(--blue-mid)}
-.fc-btn.sec{background:white;color:var(--blue);border:2px solid var(--blue)}
-.fc-btn.sec:hover{background:#f0f4ff}
-.fc-btn.know{background:var(--green)}.fc-btn.know:hover{background:#05b889}
-.fc-btn.nope{background:var(--red)}.fc-btn.nope:hover{background:#c0273a}
-.prog-bar{background:#e0e0e0;border-radius:10px;height:8px;margin-bottom:0.3rem}
-.prog-fill{height:100%;border-radius:10px;background:linear-gradient(90deg,var(--green),var(--blue-mid));transition:width 0.4s}
-.hw-task{background:white;border-radius:12px;padding:1.3rem;margin-bottom:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.06);display:flex;gap:1rem;align-items:flex-start}
-.hw-num{background:var(--red);color:white;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:1rem;font-family:'Nunito',sans-serif;flex-shrink:0;margin-top:2px}
+.fc-btn{display:inline-flex;align-items:center;gap:8px;padding:9px 20px;border-radius:10px;border:none;font-family:'DM Sans',sans-serif;font-weight:600;font-size:.9rem;cursor:pointer;transition:all .2s;background:var(--ink);color:var(--cream)}
+.fc-btn:hover{background:var(--amber);color:var(--ink)}
+.fc-btn.sec{background:var(--cream);color:var(--ink);border:1.5px solid var(--border)}
+.fc-btn.sec:hover{border-color:var(--ink)}
+.fc-btn.know{background:var(--teal);color:white}.fc-btn.know:hover{background:#1f5f5a}
+.fc-btn.nope{background:var(--coral);color:white}.fc-btn.nope:hover{background:#c44020}
+
+/* PROGRESS */
+.prog-bar{background:var(--border);border-radius:2px;height:4px;margin-bottom:.3rem;overflow:hidden}
+.prog-fill{height:100%;border-radius:2px;background:var(--amber);transition:width .4s ease}
+
+/* HOMEWORK */
+.hw-task{background:white;border:1px solid var(--border);border-radius:var(--radius);padding:1.3rem;margin-bottom:1rem;box-shadow:var(--card-shadow);display:flex;gap:1rem;align-items:flex-start}
+.hw-num{background:var(--coral);color:white;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1rem;font-family:'DM Sans',sans-serif;flex-shrink:0;margin-top:2px}
 .hw-body{flex:1}
-.hw-task h4{color:var(--blue);font-size:0.95rem;margin-bottom:0.4rem}
-.hw-task p{font-size:0.88rem;color:#555;line-height:1.7}
-.cl-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #eee;cursor:pointer;user-select:none}
-.cl-item input[type=checkbox]{width:18px;height:18px;accent-color:var(--green);cursor:pointer}
-.cl-item label{font-size:0.9rem;color:#333;cursor:pointer}
+.hw-task h4{color:var(--ink);font-size:.95rem;margin-bottom:.4rem}
+.hw-task p{font-size:.88rem;color:#5a5248;line-height:1.7}
+.cl-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer;user-select:none}
+.cl-item input[type=checkbox]{width:18px;height:18px;accent-color:var(--teal);cursor:pointer}
+.cl-item label{font-size:.9rem;color:var(--ink);cursor:pointer}
 .cl-item.done label{text-decoration:line-through;color:#aaa}
-.mw-item{background:#f0f4ff;border-radius:10px;padding:10px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
-.mw-pl{font-weight:700;color:var(--blue)}
-.mw-en{color:#555;font-size:0.9rem}
-.mw-del{background:none;border:1px solid #ddd;border-radius:6px;padding:3px 8px;font-size:0.75rem;cursor:pointer;color:#888}
-.mw-del:hover{background:#ffebee;border-color:var(--red);color:var(--red)}
-.save-indicator{color:rgba(255,255,255,0.55);font-size:0.75rem;padding:0 10px;white-space:nowrap;font-family:'Nunito',sans-serif;font-weight:700;transition:opacity 0.6s;opacity:0;flex-shrink:0}
-.loading{text-align:center;padding:3rem;font-size:1.5rem;color:var(--blue-mid)}
-.err-box{background:#ffebee;border:2px solid var(--red);border-radius:12px;padding:2rem;margin:2rem auto;max-width:500px;text-align:center;color:var(--red)}
-.poss-m{color:var(--blue);font-weight:700}
-.poss-f{color:var(--pink);font-weight:700}
-.poss-n{color:var(--orange);font-weight:700}
+
+/* MY WORDS */
+.mw-item{background:var(--cream);border:1.5px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.mw-pl{font-weight:600;color:var(--ink)}
+.mw-en{color:#5a5248;font-size:.9rem}
+.mw-del{background:none;border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:.75rem;cursor:pointer;color:#aaa}
+.mw-del:hover{background:var(--coral-light);border-color:var(--coral);color:var(--coral)}
+
+/* MISC */
+.loading{text-align:center;padding:3rem;font-size:1.5rem;color:#5a5248}
+.err-box{background:var(--coral-light);border:2px solid var(--coral);border-radius:var(--radius);padding:2rem;margin:2rem auto;max-width:500px;text-align:center;color:var(--coral)}
+.poss-m{color:var(--ink);font-weight:700}
+.poss-f{color:var(--purple);font-weight:700}
+.poss-n{color:var(--amber);font-weight:700}
 .two-col{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
-@media(max-width:620px){.two-col{grid-template-columns:1fr}.vocab-grid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr))}.lesson-header h1{font-size:1.4rem}.section{padding:1rem}.fc-btn{padding:9px 12px;font-size:0.82rem}}
-.lesson-img{max-width:100%;max-height:200px;object-fit:contain;border-radius:8px;margin:0.6rem auto;display:block;cursor:zoom-in}
+
+/* IMAGES */
+.lesson-img{max-width:100%;max-height:200px;object-fit:contain;border-radius:10px;margin:.6rem auto;display:block;cursor:zoom-in}
 .vi-img{width:100%;max-height:80px;object-fit:contain;border-radius:6px;margin-bottom:4px;display:block;cursor:zoom-in}
-.fc-img{max-width:160px;max-height:90px;object-fit:contain;border-radius:8px;margin:0 auto 0.4rem;display:block;cursor:zoom-in}
+.fc-img{max-width:160px;max-height:90px;object-fit:contain;border-radius:8px;margin:0 auto .4rem;display:block;cursor:zoom-in}
 .zi{cursor:zoom-in}
-.lb-ov{position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:zoom-out;animation:lbIn 0.15s ease}
+.lb-ov{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:zoom-out;animation:lbIn .15s ease}
 @keyframes lbIn{from{opacity:0}to{opacity:1}}
-.lb-ov img{max-width:92vw;max-height:92vh;object-fit:contain;border-radius:10px;box-shadow:0 12px 60px rgba(0,0,0,0.7);cursor:zoom-out}
+.lb-ov img{max-width:92vw;max-height:92vh;object-fit:contain;border-radius:10px;box-shadow:0 12px 60px rgba(0,0,0,.7);cursor:zoom-out}
+
+/* ANIMATIONS */
+@keyframes pop{0%{transform:scale(.92);opacity:0}100%{transform:scale(1);opacity:1}}
+.card,.speak-card,.reading-box,.hw-task,.exercise-card{animation:pop .3s ease both}
+
+/* RESPONSIVE */
+@media(max-width:620px){
+  .match-grid{grid-template-columns:1fr}
+  .vocab-grid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr))}
+  .lesson-header h1{font-size:1.6rem}
+  .section{padding:24px 16px 60px}
+  .fc-btn{padding:9px 12px;font-size:.82rem}
+  .two-col{grid-template-columns:1fr}
+}
 </style>
 </head>
 <body>
@@ -153,7 +221,7 @@ tr:nth-child(even) td{background:#f7f9ff}
   <nav class="nav-tabs" id="navTabs"></nav>
   <div class="save-indicator" id="saveStatus"></div>
 </div>
-<div id="mainContent"><div class="loading">&#128218; Ładowanie lekcji...</div></div>
+<div id="mainContent"><div class="loading">Ładowanie lekcji...</div></div>
 
 <script>
 // ── SECURITY: sanitize teacher-authored HTML (strips scripts/event handlers) ──
@@ -232,7 +300,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Restore saved progress from DB
     if (progressResult.data) {
       const prog = progressResult.data;
-      if (prog.mywords) localStorage.setItem('mw_' + id, JSON.stringify(prog.mywords));
+      if (prog.mywords) {
+        let mwText;
+        if (typeof prog.mywords === 'string') mwText = prog.mywords;
+        else if (Array.isArray(prog.mywords)) mwText = prog.mywords.map(w => (w.pl||'') + (w.en ? ' — ' + w.en : '')).join('\n');
+        else mwText = '';
+        if (mwText) localStorage.setItem('mw_' + id, mwText);
+      }
       if (prog.exercises) {
         (prog.exercises.quiz || []).forEach(q => {
           quizAnswered[q.question] = {correct:q.correct, chosen:q.chosen, answer:q.answer};
@@ -257,15 +331,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 function showErr(msg) {
-  document.getElementById('mainContent').innerHTML = '<div class="err-box">&#9888; ' + msg + '</div>';
+  document.getElementById('mainContent').innerHTML = '<div class="err-box">' + msg + '</div>';
 }
 
 // ── BUILD PAGE ──
 const TAB_LABELS = {
-  introduction:'&#128214; Introduction',
-  vocabulary:'&#128218; Vocabulary', grammar:'&#128214; Grammar', reading:'&#128214; Reading',
-  exercises:'&#9999; Exercises', speaking:'&#128483; Speaking', flashcards:'&#127183; Flashcards',
-  homework:'&#127968; Homework', mywords:'&#128221; My Words'
+  introduction:'Introduction',
+  vocabulary:'Vocabulary', grammar:'Grammar', reading:'Reading',
+  exercises:'Exercises', speaking:'Speaking', flashcards:'Flashcards',
+  homework:'Homework', mywords:'My Words'
 };
 const BADGE = {
   introduction:'INTRODUCTION',
@@ -315,11 +389,11 @@ function buildHeader(sec, tab) {
   else if (tab === 'vocabulary') { title = lesson.title || ''; sub = lesson.vocabulary?.subtitle || lesson.subtitle || ''; }
   else if (tab === 'grammar')   { title = lesson.grammar?.title   || 'Grammar';   sub = lesson.grammar?.subtitle  || ''; }
   else if (tab === 'reading')   { title = lesson.reading?.title   || 'Reading';   sub = lesson.reading?.subtitle  || 'Read carefully'; }
-  else if (tab === 'exercises') { title = 'Practice Time! ✏️';    sub = 'Test your knowledge'; }
-  else if (tab === 'speaking')  { title = 'Time to Talk! 🗣️';     sub = lesson.speaking?.subtitle || ''; }
-  else if (tab === 'flashcards'){ title = 'Flashcards 🃏';         sub = 'Review vocabulary'; }
-  else if (tab === 'homework')  { title = 'Homework 🏠';           sub = 'Complete before next lesson'; }
-  else if (tab === 'mywords')   { title = 'My Vocabulary 📝';      sub = 'Words you saved'; }
+  else if (tab === 'exercises') { title = 'Exercises';     sub = 'Test your knowledge'; }
+  else if (tab === 'speaking')  { title = 'Speaking Practice'; sub = lesson.speaking?.subtitle || ''; }
+  else if (tab === 'flashcards'){ title = 'Flashcards';     sub = 'Review vocabulary'; }
+  else if (tab === 'homework')  { title = 'Homework';       sub = 'Complete before next lesson'; }
+  else if (tab === 'mywords')   { title = 'My Vocabulary';  sub = 'Words you saved'; }
 
   const hdr = document.createElement('div');
   hdr.className = 'lesson-header';
@@ -330,19 +404,12 @@ function buildHeader(sec, tab) {
   hdr.appendChild(badge);
 
   const h1 = document.createElement('h1');
-  h1.textContent = title + (tab === 'vocabulary' && lesson.headerEmoji ? ' ' + lesson.headerEmoji : '');
+  h1.textContent = title;
   hdr.appendChild(h1);
 
   const p = document.createElement('p');
   p.textContent = sub;
   hdr.appendChild(p);
-
-  if (lesson.headerEmoji) {
-    const em = document.createElement('span');
-    em.className = 'hdr-emoji';
-    em.textContent = lesson.headerEmoji;
-    hdr.appendChild(em);
-  }
 
   sec.appendChild(hdr);
 }
@@ -397,7 +464,6 @@ function makeTable(headers, rows, plCol, enCol) {
 }
 function tipBox(text) {
   const d = el('div', 'tip-box');
-  const s = el('strong', null, '💡 '); d.appendChild(s);
   d.appendChild(document.createTextNode(text));
   return d;
 }
@@ -450,7 +516,7 @@ function buildVocab(sec) {
   });
   if (v.phrases?.length) {
     const c = card('purple');
-    c.appendChild(el('h3', null, '💬 Useful Phrases'));
+    c.appendChild(el('h3', null, 'Useful Phrases'));
     c.appendChild(makeTable(['Polish','English'], v.phrases.map(p=>[p.pl,p.en]), 0, 1));
     sec.appendChild(c);
   }
@@ -477,7 +543,7 @@ function buildGrammar(sec) {
       }
       case 'examples': {
         const c = card(b.color || 'green');
-        c.appendChild(el('h3', null, b.title || '✅ Examples'));
+        c.appendChild(el('h3', null, b.title || 'Examples'));
         (b.items || []).forEach(ex => {
           const d = el('div', 'ex-box');
           if (ex.image) { const img = document.createElement('img'); img.className = 'lesson-img'; img.alt = ex.pl||''; img.src = ex.image; d.appendChild(img); }
@@ -968,100 +1034,42 @@ function buildHomework(sec) {
 // ── MY WORDS ──
 function buildMyWords(sec) {
   const c = card('default');
-  c.id = 'mywords-container';
-
-  // Header
-  const hdr = el('h3', null, '📝 Twoje słówka');
-  hdr.id = 'mw-hdr';
-  c.appendChild(hdr);
-
-  // Manual entry form
-  const addRow = document.createElement('div');
-  addRow.style.cssText = 'display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap';
-  const plInput = document.createElement('input');
-  plInput.placeholder = 'Słówko po polsku...';
-  plInput.style.cssText = 'flex:1;min-width:120px;padding:8px 10px;border:2px solid #e0e5f0;border-radius:8px;font-size:0.9rem;outline:none;font-family:Lato,sans-serif';
-  const enInput = document.createElement('input');
-  enInput.placeholder = 'English word...';
-  enInput.style.cssText = 'flex:1;min-width:120px;padding:8px 10px;border:2px solid #e0e5f0;border-radius:8px;font-size:0.9rem;outline:none;font-family:Lato,sans-serif';
-  const addBtn = document.createElement('button');
-  addBtn.textContent = '+ Dodaj';
-  addBtn.style.cssText = 'padding:8px 16px;background:var(--green);color:white;border:none;border-radius:8px;font-family:Nunito,sans-serif;font-weight:800;font-size:0.9rem;cursor:pointer;white-space:nowrap';
-  const doAdd = () => {
-    const pl = plInput.value.trim();
-    const en = enInput.value.trim();
-    if (!pl && !en) return;
-    const words = getSaved();
-    if (!words.some(w => w.pl === pl && w.en === en)) {
-      words.push({pl: pl||'—', en: en||'—', manual: true});
-      localStorage.setItem('mw_' + lesson.id, JSON.stringify(words));
-    }
-    plInput.value = ''; enInput.value = '';
-    refreshMyWordsView();
-    scheduleProgressSave();
-  };
-  addBtn.addEventListener('click', doAdd);
-  [plInput, enInput].forEach(inp => inp.addEventListener('keydown', e => { if (e.key === 'Enter') doAdd(); }));
-  addRow.appendChild(plInput); addRow.appendChild(enInput); addRow.appendChild(addBtn);
-  c.appendChild(addRow);
-
-  // Word list
-  const list = el('div'); list.id = 'mw-list';
-  c.appendChild(list);
+  c.appendChild(el('h3', null, 'My Vocabulary'));
+  const hint = el('p');
+  hint.style.cssText = 'font-size:.88rem;color:#5a5248;margin-bottom:14px';
+  hint.textContent = 'Twoje notatki ze słówkami. Kliknij gwiazdkę przy słówku, aby dodać je w nowej linii.';
+  c.appendChild(hint);
+  const ta = document.createElement('textarea');
+  ta.id = 'mw-textarea';
+  ta.className = 'write-box';
+  ta.style.minHeight = '220px';
+  ta.placeholder = 'Twoje słówka pojawią się tutaj po kliknięciu gwiazdki przy słówku...';
+  ta.value = getMWText();
+  ta.addEventListener('input', () => { saveMWText(ta.value); scheduleProgressSave(); });
+  c.appendChild(ta);
   sec.appendChild(c);
-  refreshMyWordsView();
 }
 
-function refreshMyWordsView() {
-  const words = getSaved();
-  const list = document.getElementById('mw-list');
-  if (!list) return;
-  list.textContent = '';
-  const hdr = document.getElementById('mw-hdr');
-  if (hdr) hdr.textContent = '📝 Twoje słówka (' + words.length + ')';
-  if (!words.length) {
-    const p = el('p');
-    p.style.cssText = 'color:#888;font-size:0.9rem;padding:0.5rem 0';
-    p.textContent = 'Brak słówek. Dodaj ręcznie powyżej lub kliknij ☆ w zakładce Vocabulary.';
-    list.appendChild(p);
-  } else {
-    words.forEach((w, i) => list.appendChild(makeWordRow(w, i)));
-  }
+function getMWText() { return localStorage.getItem('mw_' + (lesson?.id||'')) || ''; }
+function saveMWText(text) { localStorage.setItem('mw_' + (lesson?.id||''), text); }
+function isSaved(pl, en) {
+  const t = getMWText();
+  return t.includes(pl) && (!en || t.includes(en));
 }
-
-function makeWordRow(w, i) {
-  const row = el('div', 'mw-item');
-  if (w.manual) row.style.borderLeft = '3px solid var(--green)';
-  const info = document.createElement('div');
-  info.appendChild(el('span', 'mw-pl', w.pl));
-  info.appendChild(document.createTextNode(' — '));
-  info.appendChild(el('span', 'mw-en', w.en));
-  if (w.manual) {
-    const tag = el('span', null, ' ✏️');
-    tag.title = 'Dodano ręcznie'; tag.style.opacity = '0.5';
-    info.appendChild(tag);
-  }
-  const delBtn = el('button', 'mw-del', '✕');
-  delBtn.addEventListener('click', () => removeWord(i));
-  row.appendChild(info); row.appendChild(delBtn);
-  return row;
-}
-
-function getSaved() { return JSON.parse(localStorage.getItem('mw_' + (lesson?.id||'')) || '[]'); }
-function isSaved(pl, en) { return getSaved().some(w => w.pl === pl && w.en === en); }
 function toggleSave(btn, pl, en) {
-  const words = getSaved();
-  const idx = words.findIndex(w => w.pl === pl && w.en === en);
-  if (idx >= 0) { words.splice(idx, 1); btn.textContent = '☆'; btn.classList.remove('saved'); }
-  else          { words.push({pl, en}); btn.textContent = '★'; btn.classList.add('saved'); }
-  localStorage.setItem('mw_' + lesson.id, JSON.stringify(words));
-  refreshMyWordsView();
-  scheduleProgressSave();
-}
-function removeWord(i) {
-  const words = getSaved(); words.splice(i, 1);
-  localStorage.setItem('mw_' + lesson.id, JSON.stringify(words));
-  refreshMyWordsView();
+  const text = getMWText();
+  const line = pl + (en ? ' — ' + en : '');
+  let newText;
+  if (isSaved(pl, en)) {
+    newText = text.split('\n').filter(l => !(l.includes(pl) && (!en || l.includes(en)))).join('\n');
+    btn.textContent = '☆'; btn.classList.remove('saved');
+  } else {
+    newText = text ? text.trimEnd() + '\n' + line : line;
+    btn.textContent = '★'; btn.classList.add('saved');
+  }
+  saveMWText(newText);
+  const ta = document.getElementById('mw-textarea');
+  if (ta) ta.value = newText;
   scheduleProgressSave();
 }
 
@@ -1112,13 +1120,13 @@ async function flushProgressSave() {
     exercises:  exercisesData,
     flashcards: {known: fcStats.known, unknown: fcStats.unknown},
     homework:   Object.keys(homeworkData).length ? homeworkData : null,
-    mywords:    getSaved()
+    mywords:    getMWText() || null
   }, {onConflict: 'student_id,lesson_id'});
-  if (!error) showSaveStatus('✓ Zapisano', 2500);
-  else showSaveStatus('⚠ Błąd zapisu', 4000);
+  if (!error) showSaveStatus('Zapisano', 2500);
+  else showSaveStatus('Błąd zapisu', 4000);
 }
 function scheduleProgressSave() {
-  showSaveStatus('💾 Zapisuję...');
+  showSaveStatus('Zapisuję...');
   clearTimeout(progressSaveTimer);
   progressSaveTimer = setTimeout(flushProgressSave, 2000);
 }

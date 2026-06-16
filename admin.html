@@ -225,6 +225,10 @@ h1,h2,h3,h4{font-family:'Playfair Display',serif}
         <button class="add-btn" data-vbtype="flashcards">+ Flashcardy</button>
         <button class="add-btn" data-vbtype="matching">+ Dopasowanie</button>
         <button class="add-btn" data-vbtype="gapfill">+ Uzupełnianie luk</button>
+        <button class="add-btn" data-vbtype="vocab-mcq">+ MCQ (4 opcje)</button>
+        <button class="add-btn" data-vbtype="vocab-sentcomp">+ Dokańczanie zdań</button>
+        <button class="add-btn" data-vbtype="vocab-scramble">+ Sentence Scramble</button>
+        <button class="add-btn" data-vbtype="vocab-discussion">+ Discussion</button>
         <button class="add-btn" data-vbtype="collocations">+ Kolokacje</button>
         <button class="add-btn" data-vbtype="wordform">+ Tworzenie wyrazów</button>
       </div>
@@ -267,9 +271,11 @@ h1,h2,h3,h4{font-family:'Playfair Display',serif}
         <button class="add-btn" data-hwtype="hw-own">&#43; Własne zdania</button>
         <span class="sec-label" style="display:block;margin:0.5rem 0 0.3rem">Gramatyka</span>
         <button class="add-btn" data-hwtype="hw-gr-fill">&#43; Uzupełnianie luk (gram.)</button>
+        <button class="add-btn" data-hwtype="hw-gr-mcq">&#43; MCQ (4 opcje)</button>
         <button class="add-btn" data-hwtype="hw-gr-transform">&#43; Transformacje</button>
         <button class="add-btn" data-hwtype="hw-gr-errorcorrect">&#43; Poprawa błędów</button>
         <button class="add-btn" data-hwtype="hw-gr-sentcomplete">&#43; Dokańczanie zdań</button>
+        <button class="add-btn" data-hwtype="hw-gr-own">&#43; Własne zdania (gram.)</button>
         <span class="sec-label" style="display:block;margin:0.5rem 0 0.3rem">Pozostałe</span>
         <button class="add-btn" data-hwtype="hw-reading">&#43; Krótka czytanka</button>
         <button class="add-btn" data-hwtype="write">&#43; Writing (pisanie)</button>
@@ -299,6 +305,7 @@ h1,h2,h3,h4{font-family:'Playfair Display',serif}
         <button class="add-btn" data-grtype="gr-errorcorrect">&#43; Poprawa błędów</button>
         <button class="add-btn" data-grtype="gr-ownsentences">&#43; Własne zdania</button>
         <button class="add-btn" data-grtype="gr-sentcomplete">&#43; Dokańczanie zdań</button>
+        <button class="add-btn" data-grtype="gr-translate">&#43; Tłumaczenie (PL→EN)</button>
       </div>
       <div id="grammarBlockList"></div>
     </div>
@@ -1013,7 +1020,9 @@ document.querySelectorAll('[data-hwtype]').forEach(btn=>{
     if (t==='hw-match')           homework.push({type:'hw-match',      category:'vocabulary', title:'', pairs:[{word:'',def:''}]});
     if (t==='hw-own')             homework.push({type:'hw-own',        category:'vocabulary', title:'', instruction:'', structures:['']});
     if (t==='hw-gr-fill')         homework.push({type:'hw-gr-fill',    category:'grammar',    title:'', instruction:'', items:[{before:'',after:'',answer:''}]});
-    if (t==='hw-gr-transform')    homework.push({type:'hw-gr-transform',category:'grammar',   title:'', instruction:'', items:[{sentence:'',answer:''}]});
+    if (t==='hw-gr-mcq')          homework.push({type:'hw-gr-mcq',     category:'grammar',    title:'', instruction:'', questions:[{sentence:'',options:['','','',''],answer:'',explanation:''}]});
+    if (t==='hw-gr-own')          homework.push({type:'hw-gr-own',     category:'grammar',    title:'', instruction:'', structures:['']});
+    if (t==='hw-gr-transform')    homework.push({type:'hw-gr-transform', category:'grammar',  title:'', instruction:'', items:[{sentence:'',answer:''}]});
     if (t==='hw-gr-errorcorrect') homework.push({type:'hw-gr-errorcorrect',category:'grammar',title:'', instruction:'', items:[{sentence:'',error:'',correction:''}]});
     if (t==='hw-gr-sentcomplete') homework.push({type:'hw-gr-sentcomplete',category:'grammar',title:'', instruction:'', items:[{starter:''}]});
     if (t==='hw-reading')         homework.push({type:'hw-reading',    category:'reading',    title:'', text:'', questions:[{q:''}]});
@@ -1151,6 +1160,36 @@ function renderHW() {
       wrap.appendChild(iL);
       const a=el('button','add-btn','+ Dodaj zdanie'); a.addEventListener('click',()=>{hw.items.push({starter:''});renderHW();scheduleUpdate();}); wrap.appendChild(a);
     }
+    if (hw.type==='hw-gr-mcq') {
+      wrap.appendChild(field('Instrukcja', textInput(hw.instruction||'','',v=>{hw.instruction=v;scheduleUpdate();})));
+      wrap.appendChild(el('span','sec-label','Pytania MCQ'));
+      const iL=document.createElement('div');
+      (hw.questions||[]).forEach((q,qi)=>{
+        const iw=el('div'); iw.style.cssText='background:#f7f5f1;border-radius:8px;padding:0.7rem;margin-bottom:0.5rem;position:relative';
+        iw.appendChild(field('Zdanie (z ___ w miejscu)', textInput(q.sentence||'','',v=>{q.sentence=v;scheduleUpdate();})));
+        const og=el('div'); og.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:6px';
+        (q.options||['','','','']).forEach((opt,oi)=>{const inp=textInput(opt,'Opcja '+(oi+1),v=>{q.options[oi]=v;scheduleUpdate();});inp.style.cssText='padding:6px 8px;border:1px solid #ddd;border-radius:6px;font-size:0.82rem;width:100%';og.appendChild(inp);});
+        iw.appendChild(og);
+        iw.appendChild(field('Poprawna odpowiedź', textInput(q.answer||'','',v=>{q.answer=v;scheduleUpdate();})));
+        const d=el('button','del-btn abs','✕'); d.addEventListener('click',()=>{hw.questions.splice(qi,1);renderHW();scheduleUpdate();}); iw.appendChild(d); iL.appendChild(iw);
+      });
+      wrap.appendChild(iL);
+      const a=el('button','add-btn','+ Dodaj pytanie'); a.addEventListener('click',()=>{hw.questions.push({sentence:'',options:['','','',''],answer:''});renderHW();scheduleUpdate();}); wrap.appendChild(a);
+    }
+    if (hw.type==='hw-gr-own') {
+      wrap.appendChild(field('Instrukcja', textInput(hw.instruction||'','np. Write 5 sentences using the structures below.',v=>{hw.instruction=v;scheduleUpdate();})));
+      wrap.appendChild(el('span','sec-label','Konstrukcje gramatyczne'));
+      const iL=document.createElement('div');
+      (hw.structures||[]).forEach((s,si)=>{
+        const row=el('div'); row.style.cssText='display:flex;gap:6px;margin-bottom:4px';
+        const inp=textInput(s,'np. Past Continuous: was/were + -ing',v=>{hw.structures[si]=v;scheduleUpdate();}); inp.style.cssText='flex:1;padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:0.85rem';
+        const d=el('button','del-btn','✕'); d.addEventListener('click',()=>{hw.structures.splice(si,1);renderHW();scheduleUpdate();});
+        row.appendChild(inp); row.appendChild(d); iL.appendChild(row);
+      });
+      wrap.appendChild(iL);
+      const a=el('button','add-btn','+ Dodaj konstrukcję'); a.addEventListener('click',()=>{hw.structures.push('');renderHW();scheduleUpdate();}); wrap.appendChild(a);
+    }
+
     if (hw.type==='hw-reading') {
       const ta=document.createElement('textarea'); ta.rows=6; ta.value=hw.text||''; ta.style.cssText='width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:8px;font-size:0.85rem;font-family:"DM Sans",sans-serif;resize:vertical';
       ta.placeholder='Tekst czytanki (150–200 słów)…'; ta.addEventListener('input',()=>{hw.text=ta.value;scheduleUpdate();}); wrap.appendChild(field('Tekst czytanki',ta));
@@ -1188,6 +1227,7 @@ document.querySelectorAll('[data-grtype]').forEach(btn => {
     if (t==='gr-errorcorrect')grammarBlocks.push({type:'gr-errorcorrect',title:'Error Correction',  instruction:'Each sentence has ONE error. Find and correct it.', items:[{sentence:'',error:'',correction:'',explanation:''}]});
     if (t==='gr-ownsentences')grammarBlocks.push({type:'gr-ownsentences',title:'Create Your Own Sentences', instruction:'', structures:[''], example:''});
     if (t==='gr-sentcomplete')grammarBlocks.push({type:'gr-sentcomplete',title:'Complete the Sentences', instruction:'', items:[{starter:'',example:''}]});
+    if (t==='gr-translate')   grammarBlocks.push({type:'gr-translate',   title:'Translation (PL → EN)', instruction:'Translate the sentences into English using the grammar structure from this lesson.', items:[{sentence:'',hint:'',answer:''}]});
     renderGrammarBlocks(); scheduleUpdate();
   });
 });
@@ -1456,6 +1496,22 @@ function renderGrammarBlocks() {
       const a=el('button','add-btn','+ Dodaj zdanie'); a.addEventListener('click',()=>{blk.items.push({starter:'',example:''});renderGrammarBlocks();scheduleUpdate();}); wrap.appendChild(a);
     }
 
+    if (blk.type==='gr-translate') {
+      wrap.appendChild(field('Instrukcja', textInput(blk.instruction||'','',v=>{blk.instruction=v;scheduleUpdate();})));
+      const iL=document.createElement('div');
+      (blk.items||[]).forEach((item,ii)=>{
+        const iw=el('div'); iw.style.cssText='background:#f7f5f1;border-radius:8px;padding:0.7rem;margin-bottom:0.5rem;position:relative';
+        iw.appendChild(field('Zdanie polskie', textInput(item.sentence||'','np. Kiedyś byłam bardzo nieśmiała.',v=>{item.sentence=v;scheduleUpdate();})));
+        const g=el('div','two-field');
+        g.appendChild(field('Hint (opcjonalnie)', textInput(item.hint||'','np. used to + adjective',v=>{item.hint=v;scheduleUpdate();})));
+        g.appendChild(field('Model answer',       textInput(item.answer||'','np. I used to be very shy.',v=>{item.answer=v;scheduleUpdate();})));
+        iw.appendChild(g);
+        const d=el('button','del-btn abs','✕'); d.addEventListener('click',()=>{blk.items.splice(ii,1);renderGrammarBlocks();scheduleUpdate();}); iw.appendChild(d); iL.appendChild(iw);
+      });
+      wrap.appendChild(iL);
+      const a2=el('button','add-btn','+ Dodaj zdanie'); a2.addEventListener('click',()=>{blk.items.push({sentence:'',hint:'',answer:''});renderGrammarBlocks();scheduleUpdate();}); wrap.appendChild(a2);
+    }
+
     // Move / delete
     const actRow=document.createElement('div'); actRow.style.cssText='display:flex;gap:6px;margin-top:0.8rem';
     const upBtn=el('button','del-btn','↑'); upBtn.title='Przesuń wyżej'; upBtn.disabled=bi===0;
@@ -1711,14 +1767,18 @@ function renderIntroductionSections() {
           iw.appendChild(r1);
           const r2=el('div','two-field');
           r2.appendChild(field('Tłumaczenie (PL)', textInput(item.translation||'','np. dorosłość', v=>{item.translation=v;scheduleUpdate();})));
-          r2.appendChild(field('Wskazówka EN', textInput(item.hint||'','np. the state of being an adult', v=>{item.hint=v;scheduleUpdate();})));
+          r2.appendChild(field('Wskazówka EN / krótka definicja', textInput(item.hint||'','np. the state of being an adult', v=>{item.hint=v;scheduleUpdate();})));
           iw.appendChild(r2);
+          const r3=el('div','two-field');
+          r3.appendChild(field('Pełna definicja (odkrywa się po kliknięciu)', textInput(item.definition||'','np. The period of life after childhood, when a person is considered legally and socially adult.', v=>{item.definition=v;scheduleUpdate();})));
+          r3.appendChild(field('Przykładowe zdanie', textInput(item.example||'','np. She didn\'t feel ready for adulthood at 18.', v=>{item.example=v;scheduleUpdate();})));
+          iw.appendChild(r3);
           const del=el('button','del-btn abs','✕');
           del.addEventListener('click',()=>{sec.items.splice(i,1);renderIntroductionSections();scheduleUpdate();}); iw.appendChild(del); glList.appendChild(iw);
         });
         wrap.appendChild(glList);
         const addGl=el('button','add-btn','+ Dodaj słowo');
-        addGl.addEventListener('click',()=>{if(!sec.items)sec.items=[];sec.items.push({word:'',phonetic:'',translation:'',hint:''});renderIntroductionSections();scheduleUpdate();}); wrap.appendChild(addGl);
+        addGl.addEventListener('click',()=>{if(!sec.items)sec.items=[];sec.items.push({word:'',phonetic:'',translation:'',hint:'',definition:'',example:''});renderIntroductionSections();scheduleUpdate();}); wrap.appendChild(addGl);
         break;
       case 'comprehension':
         numTitleRow();
@@ -2864,6 +2924,10 @@ function renderSpBlocks() {
 document.querySelectorAll('[data-vbtype]').forEach(btn => {
   btn.addEventListener('click', () => {
     const t = btn.dataset.vbtype;
+    if (t==='vocab-mcq')    vocabBlocks.push({type:'vocab-mcq',       title:'Choose the Correct Word', instruction:'Choose the best word or phrase to complete each sentence.', questions:[{sentence:'',options:['','','',''],answer:'',explanation:''}]});
+    if (t==='vocab-sentcomp') vocabBlocks.push({type:'vocab-sentcomp', title:'Sentence Completion',    instruction:'Complete the sentences with your own ideas. Use the vocabulary you have learned.', starters:['']});
+    if (t==='vocab-scramble') vocabBlocks.push({type:'vocab-scramble', title:'Sentence Scramble',      instruction:'Put the words in the correct order.', items:[{sentence:'',context:''}]});
+    if (t==='vocab-discussion') vocabBlocks.push({type:'vocab-discussion',title:'Discussion',           instruction:'Discuss these questions. Try to use the vocabulary from this lesson.', questions:[{q:'',hint:''}]});
     if (t==='flashcards')   vocabBlocks.push({type:'flashcards',   title:'Flashcards',              instruction:'Click the card to reveal the definition and example.',  items:[{word:'',definition:'',example:''}]});
     if (t==='matching')     vocabBlocks.push({type:'matching',     title:'Matching: Word & Definition', instruction:'Click a word, then click its matching definition.', pairs:[{word:'',def:''}]});
     if (t==='gapfill')      vocabBlocks.push({type:'gapfill',      title:'Gap Fill',                 instruction:'Complete each sentence with the correct word from the box.', wordbank:[''], items:[{sentence:'',answer:''}]});
@@ -2880,6 +2944,67 @@ function renderVbBlocks() {
     const tt = el('p',null,blk.type==='collocations'?'Kolokacje':'Tworzenie wyrazów'); tt.style.cssText='font-family:"DM Sans",sans-serif;font-weight:800;font-size:0.8rem;color:var(--blue-mid);text-transform:uppercase;margin-bottom:0.6rem'; wrap.appendChild(tt);
     wrap.appendChild(field('Tytuł',     textInput(blk.title||'','',v=>{blk.title=v;scheduleUpdate();})));
     wrap.appendChild(field('Instrukcja',textInput(blk.instruction||'','',v=>{blk.instruction=v;scheduleUpdate();})));
+
+    if (blk.type==='vocab-mcq') {
+      wrap.appendChild(field('Instrukcja', textInput(blk.instruction||'','',v=>{blk.instruction=v;scheduleUpdate();})));
+      wrap.appendChild(el('span','sec-label','Pytania MCQ'));
+      const iL=document.createElement('div');
+      (blk.questions||[]).forEach((q,qi)=>{
+        const iw=el('div'); iw.style.cssText='background:#f7f5f1;border-radius:8px;padding:0.7rem;margin-bottom:0.5rem;position:relative';
+        iw.appendChild(field('Zdanie (z ___ w miejscu)', textInput(q.sentence||'','np. She ___ to be very shy as a teenager.',v=>{q.sentence=v;scheduleUpdate();})));
+        const og=el('div'); og.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:6px';
+        (q.options||['','','','']).forEach((opt,oi)=>{const inp=textInput(opt,'Opcja '+(oi+1),v=>{q.options[oi]=v;scheduleUpdate();});inp.style.cssText='padding:6px 8px;border:1px solid #ddd;border-radius:6px;font-size:0.82rem;width:100%';og.appendChild(inp);});
+        iw.appendChild(og);
+        const g2=el('div','two-field');
+        g2.appendChild(field('Poprawna odpowiedź', textInput(q.answer||'','',v=>{q.answer=v;scheduleUpdate();})));
+        g2.appendChild(field('Wyjaśnienie',        textInput(q.explanation||'','',v=>{q.explanation=v;scheduleUpdate();})));
+        iw.appendChild(g2);
+        const d=el('button','del-btn abs','✕'); d.addEventListener('click',()=>{blk.questions.splice(qi,1);renderVbBlocks();scheduleUpdate();}); iw.appendChild(d); iL.appendChild(iw);
+      });
+      wrap.appendChild(iL);
+      const a=el('button','add-btn','+ Dodaj pytanie'); a.addEventListener('click',()=>{blk.questions.push({sentence:'',options:['','','',''],answer:'',explanation:''});renderVbBlocks();scheduleUpdate();}); wrap.appendChild(a);
+    }
+
+    if (blk.type==='vocab-sentcomp') {
+      wrap.appendChild(field('Instrukcja', textInput(blk.instruction||'','',v=>{blk.instruction=v;scheduleUpdate();})));
+      wrap.appendChild(el('span','sec-label','Początki zdań'));
+      const iL=document.createElement('div');
+      (blk.starters||[]).forEach((s,si)=>{
+        const row=el('div'); row.style.cssText='display:flex;gap:6px;margin-bottom:4px';
+        const inp=textInput(s,'np. The first time I used this word in conversation…',v=>{blk.starters[si]=v;scheduleUpdate();}); inp.style.cssText='flex:1;padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:0.85rem';
+        const d=el('button','del-btn','✕'); d.addEventListener('click',()=>{blk.starters.splice(si,1);renderVbBlocks();scheduleUpdate();});
+        row.appendChild(inp); row.appendChild(d); iL.appendChild(row);
+      });
+      wrap.appendChild(iL);
+      const a=el('button','add-btn','+ Dodaj zdanie'); a.addEventListener('click',()=>{blk.starters.push('');renderVbBlocks();scheduleUpdate();}); wrap.appendChild(a);
+    }
+
+    if (blk.type==='vocab-scramble') {
+      wrap.appendChild(field('Instrukcja', textInput(blk.instruction||'','',v=>{blk.instruction=v;scheduleUpdate();})));
+      const iL=document.createElement('div');
+      (blk.items||[]).forEach((item,ii)=>{
+        const iw=el('div'); iw.style.cssText='background:#f7f5f1;border-radius:8px;padding:0.7rem;margin-bottom:0.5rem;position:relative';
+        iw.appendChild(field('Poprawne zdanie (zostanie rozsypane)', textInput(item.sentence||'','np. She used to be very confident in social situations.',v=>{item.sentence=v;scheduleUpdate();})));
+        iw.appendChild(field('Wskazówka (opcjonalna)', textInput(item.context||'','',v=>{item.context=v;scheduleUpdate();})));
+        const d=el('button','del-btn abs','✕'); d.addEventListener('click',()=>{blk.items.splice(ii,1);renderVbBlocks();scheduleUpdate();}); iw.appendChild(d); iL.appendChild(iw);
+      });
+      wrap.appendChild(iL);
+      const a=el('button','add-btn','+ Dodaj zdanie'); a.addEventListener('click',()=>{blk.items.push({sentence:'',context:''});renderVbBlocks();scheduleUpdate();}); wrap.appendChild(a);
+    }
+
+    if (blk.type==='vocab-discussion') {
+      wrap.appendChild(field('Instrukcja', textInput(blk.instruction||'','',v=>{blk.instruction=v;scheduleUpdate();})));
+      wrap.appendChild(el('span','sec-label','Pytania dyskusyjne'));
+      const iL=document.createElement('div');
+      (blk.questions||[]).forEach((q,qi)=>{
+        const iw=el('div'); iw.style.cssText='background:#f7f5f1;border-radius:8px;padding:0.7rem;margin-bottom:0.5rem;position:relative';
+        iw.appendChild(field('Pytanie', textInput(q.q||'','np. Describe a time when you experienced a perception gap with someone.',v=>{q.q=v;scheduleUpdate();})));
+        iw.appendChild(field('Wskazówka', textInput(q.hint||'','np. Use: empathy, self-perception, blind spot…',v=>{q.hint=v;scheduleUpdate();})));
+        const d=el('button','del-btn abs','✕'); d.addEventListener('click',()=>{blk.questions.splice(qi,1);renderVbBlocks();scheduleUpdate();}); iw.appendChild(d); iL.appendChild(iw);
+      });
+      wrap.appendChild(iL);
+      const a=el('button','add-btn','+ Dodaj pytanie'); a.addEventListener('click',()=>{blk.questions.push({q:'',hint:''});renderVbBlocks();scheduleUpdate();}); wrap.appendChild(a);
+    }
 
     if (blk.type==='flashcards') {
       wrap.appendChild(el('span','sec-label','Karty (słówko → definicja + przykład)'));

@@ -824,6 +824,7 @@ function buildGrammar(sec) {
       case 'gr-errorcorrect': buildGrErrorCorrect(sec, b); break;
       case 'gr-ownsentences': buildGrOwnSentences(sec, b); break;
       case 'gr-sentcomplete': buildGrSentComplete(sec, b); break;
+      case 'gr-translate':    buildGrTranslate(sec, b);    break;
     }
   });
 }
@@ -925,6 +926,24 @@ function buildGrSentComplete(sec, b) {
     const starter=el('p'); starter.style.cssText='font-size:.95rem;font-weight:500;color:var(--amber);margin-bottom:8px'; starter.textContent=(i+1)+'. '+item.starter; d.appendChild(starter);
     const ta=document.createElement('textarea'); ta.className='write-box'; ta.rows=2; ta.placeholder='Complete the sentence…'; ta.style.minHeight='44px'; d.appendChild(ta);
     if (item.example) { const ex=el('p',null,'Example: '+item.example); ex.style.cssText='font-size:.8rem;color:var(--teal);font-style:italic;margin-top:6px'; d.appendChild(ex); }
+    c.appendChild(d);
+  });
+  sec.appendChild(c);
+}
+
+function buildGrTranslate(sec, b) {
+  const c = grExCard(b);
+  (b.items||[]).forEach((item, i) => {
+    const d = el('div', 'gr-transform-item');
+    const sent = el('div', 'gr-transform-sent'); sent.textContent = (i+1)+'. '+item.sentence; d.appendChild(sent);
+    if (item.hint) { const h=el('p',null,'('+item.hint+')'); h.style.cssText='font-size:.8rem;color:#7a6a50;font-style:italic;margin:4px 0 8px'; d.appendChild(h); }
+    const ta = document.createElement('textarea'); ta.className='write-box'; ta.rows=2; ta.style.minHeight='44px'; ta.placeholder='Tłumaczenie na angielski…'; d.appendChild(ta);
+    if (item.answer) {
+      const btn = el('button','check-btn','Model answer'); btn.style.cssText='font-size:.8rem;margin-top:6px;background:var(--cream);color:var(--ink);border:1.5px solid var(--border)';
+      const ans = el('div'); ans.style.cssText='display:none;margin-top:6px;padding:8px;background:#e8f5f4;border-radius:8px;font-size:.85rem;color:#1a5a55'; ans.textContent=item.answer;
+      btn.addEventListener('click', () => { ans.style.display = ans.style.display==='none' ? 'block' : 'none'; });
+      d.appendChild(btn); d.appendChild(ans);
+    }
     c.appendChild(d);
   });
   sec.appendChild(c);
@@ -1461,6 +1480,21 @@ function buildHomework(sec) {
       if (task.instruction) { const p=el('p',null,task.instruction); p.style.cssText='font-size:.84rem;color:#7a6a50;margin-bottom:10px'; body.appendChild(p); }
       (task.items||[]).forEach((item,ii)=>{ const d=el('div','gr-sentcomp-item'); d.appendChild(el('p',null,(ii+1)+'. '+item.starter)).style.cssText='font-size:.95rem;font-weight:500;color:var(--amber);margin-bottom:6px'; const ta=document.createElement('textarea'); ta.className='write-box'; ta.rows=2; ta.style.minHeight='44px'; ta.placeholder='Dokończ zdanie…'; d.appendChild(ta); body.appendChild(d); });
 
+    } else if (task.type==='hw-gr-mcq') {
+      if (task.instruction) { const p=el('p',null,task.instruction); p.style.cssText='font-size:.84rem;color:#7a6a50;margin-bottom:10px'; body.appendChild(p); }
+      (task.items||[]).forEach((item,ii)=>{
+        const d=el('div','gr-ex-card'); d.style.marginBottom='10px';
+        const q=el('p'); q.style.cssText='font-size:.93rem;font-weight:600;color:var(--ink);margin-bottom:8px'; q.textContent=(ii+1)+'. '+(item.q||item.sentence||''); d.appendChild(q);
+        let chosenMCQ=null;
+        (item.options||[]).forEach(opt=>{ const btn=el('button','mcq-opt',opt); btn.addEventListener('click',()=>{ if(chosenMCQ){chosenMCQ.classList.remove('selected');} btn.classList.add('selected'); chosenMCQ=btn; const isOk=opt===item.answer; btn.classList.add(isOk?'correct':'wrong'); }); d.appendChild(btn); });
+        body.appendChild(d);
+      });
+
+    } else if (task.type==='hw-gr-own') {
+      if (task.instruction) { const p=el('p',null,task.instruction); p.style.cssText='font-size:.84rem;color:#7a6a50;margin-bottom:10px'; body.appendChild(p); }
+      if (task.structures?.filter(Boolean).length) { const tags=el('div','gr-own-structures'); task.structures.filter(Boolean).forEach(s=>tags.appendChild(el('span','gr-own-badge',s))); body.appendChild(tags); }
+      for (let ii=0;ii<5;ii++) { const ta=document.createElement('textarea'); ta.className='write-box'; ta.rows=2; ta.style.cssText='min-height:40px;margin-bottom:6px'; ta.placeholder=(ii+1)+'. Write a sentence…'; body.appendChild(ta); }
+
     } else if (task.type==='hw-reading') {
       if (task.text) { const rt=el('div','hw-reading-text'); rt.innerHTML=san(task.text||''); body.appendChild(rt); }
       (task.questions||[]).forEach((q,ii)=>{ const d=el('div'); d.style.cssText='margin-bottom:12px'; const p=el('p'); p.style.cssText='font-weight:600;font-size:.9rem;color:var(--ink);margin-bottom:5px'; p.textContent=(ii+1)+'. '+(q.q||''); d.appendChild(p); const ta=document.createElement('textarea'); ta.className='write-box'; ta.rows=2; ta.style.minHeight='44px'; ta.placeholder='Twoja odpowiedź…'; d.appendChild(ta); body.appendChild(d); });
@@ -1940,12 +1974,84 @@ function buildVocabBlocks(sec, blocks) {
     const c=el('div','card');
     if (blk.title) c.appendChild(el('h3',null,blk.title));
     if (blk.instruction) { const p=el('p',null,blk.instruction); p.style.cssText='font-size:.84rem;color:#7a6a50;margin-bottom:1rem'; c.appendChild(p); }
+    if (blk.type==='vocab-mcq')      buildVocabMCQ(c, blk);
+    if (blk.type==='vocab-sentcomp') buildVocabSentComp(c, blk);
+    if (blk.type==='vocab-scramble') buildVocabScramble(c, blk);
+    if (blk.type==='vocab-discussion') buildVocabDiscussion(c, blk);
     if (blk.type==='flashcards')   buildVocabFlashcards(c, blk);
     if (blk.type==='matching')     buildVocabMatching(c, blk);
     if (blk.type==='gapfill')      buildVocabGapFill(c, blk);
     if (blk.type==='collocations') buildCollocations(c, blk);
     if (blk.type==='wordform')     buildWordForm(c, blk);
     sec.appendChild(c);
+  });
+}
+
+// ── VOCAB MCQ ──
+function buildVocabMCQ(c, blk) {
+  (blk.questions||[]).forEach((q, i) => {
+    const qd = el('div','quiz-q');
+    const p = el('p'); p.innerHTML = san((i+1)+'. '+q.sentence.replace(/___/g,'<span style="border-bottom:2px solid var(--amber);min-width:80px;display:inline-block">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>')); qd.appendChild(p);
+    const opts = el('div','quiz-opts');
+    (q.options||[]).forEach(opt => {
+      const btn = el('button','qopt',opt);
+      btn.addEventListener('click', () => {
+        opts.querySelectorAll('.qopt').forEach(b => b.disabled = true);
+        if (opt === q.answer) { btn.classList.add('correct'); }
+        else { btn.classList.add('wrong'); opts.querySelectorAll('.qopt').forEach(b => { if(b.textContent===q.answer) b.classList.add('correct'); }); }
+        if (q.explanation) { const fb=el('div','feedback ok'); fb.style.display='block'; fb.textContent=q.explanation; qd.appendChild(fb); }
+      });
+      opts.appendChild(btn);
+    });
+    qd.appendChild(opts); c.appendChild(qd);
+  });
+}
+
+// ── VOCAB SENTENCE COMPLETION ──
+function buildVocabSentComp(c, blk) {
+  (blk.starters||[]).forEach((s, i) => {
+    const d = el('div','gr-sentcomp-item');
+    d.appendChild(el('p',null,(i+1)+'. '+s)).style.cssText='font-size:.95rem;font-weight:500;color:var(--amber);margin-bottom:8px';
+    const ta = document.createElement('textarea'); ta.className='write-box'; ta.rows=2; ta.style.minHeight='44px'; ta.placeholder='Complete the sentence…';
+    d.appendChild(ta); c.appendChild(d);
+  });
+}
+
+// ── VOCAB SCRAMBLE ──
+function buildVocabScramble(c, blk) {
+  const uid = 'vs_'+Math.random().toString(36).slice(2);
+  const _state = blk.items.map(item => {
+    const words = item.sentence.trim().split(/\s+/);
+    return {words, shuffled:[...words].sort(()=>Math.random()-.5), userAnswer:[]};
+  });
+  blk.items.forEach((item, i) => {
+    const d = el('div','jumble-item'); if(item.context)d.appendChild(el('div','jumble-ctx',item.context));
+    const ans = el('div','jumble-answer'); ans.addEventListener('click', e => { const w=e.target.closest('.jumble-answer-word'); if(!w)return; const ai=parseInt(w.dataset.ai); _state[i].userAnswer.splice(ai,1); ans.classList.remove('correct-ans','wrong-ans'); renderVSWords(i); updateVSAns(i); });
+    ans.id = uid+'_ans'+i; d.appendChild(ans);
+    const wb = el('div','jumble-words'); wb.id=uid+'_words'+i; d.appendChild(wb);
+    const fb = el('div','jumble-fb'); fb.id=uid+'_fb'+i; d.appendChild(fb);
+    c.appendChild(d);
+    function renderVSWords(idx) { const st=_state[idx]; const w=document.getElementById(uid+'_words'+idx); if(!w)return; w.innerHTML=''; st.shuffled.forEach((wd,wi)=>{ const btn=el('button','jumble-word'+(st.userAnswer.some(a=>a.wi===wi)?' used':''),wd); btn.addEventListener('click',()=>{ if(st.userAnswer.some(a=>a.wi===wi))return; st.userAnswer.push({wi,word:wd}); w.querySelectorAll('.jumble-word')[wi]?.classList.add('used'); updateVSAns(idx); }); w.appendChild(btn); }); }
+    function updateVSAns(idx) { const st=_state[idx]; const a=document.getElementById(uid+'_ans'+idx); if(!a)return; a.innerHTML=''; st.userAnswer.forEach((aw,ai)=>{ const ww=el('div','jumble-answer-word',aw.word); ww.dataset.ai=ai; a.appendChild(ww); }); }
+    renderVSWords(i);
+  });
+  const sRow = el('div','score-row');
+  const chk = el('button','check-btn','Sprawdź'); chk.style.marginTop='0';
+  chk.addEventListener('click', () => { let ok=0; blk.items.forEach((_,i) => { const st=_state[i]; const correct=st.words.join(' ')===st.userAnswer.map(a=>a.word).join(' '); if(correct)ok++; const ans=document.getElementById(uid+'_ans'+i); const fb=document.getElementById(uid+'_fb'+i); if(ans){ans.classList.remove('correct-ans','wrong-ans');ans.classList.add(correct?'correct-ans':'wrong-ans');} if(fb){fb.textContent=correct?'Dobrze!':'Poprawnie: '+st.words.join(' ');fb.className='jumble-fb show '+(correct?'ok':'bad');} }); const sc=sRow.querySelector('.score-txt');if(sc)sc.textContent='Wynik: '+ok+'/'+blk.items.length; });
+  const rst = el('button','check-btn','Reset'); rst.style.cssText='margin-top:0;background:var(--cream);color:var(--ink);border:1.5px solid var(--border)';
+  rst.addEventListener('click',()=>{ _state.forEach((st,i)=>{st.shuffled=[...st.words].sort(()=>Math.random()-.5);st.userAnswer=[];const ans=document.getElementById(uid+'_ans'+i);if(ans){ans.innerHTML='';ans.classList.remove('correct-ans','wrong-ans');}const fb=document.getElementById(uid+'_fb'+i);if(fb){fb.className='jumble-fb';fb.textContent='';}renderVSWords2(i);});const sc=sRow.querySelector('.score-txt');if(sc)sc.textContent=''; function renderVSWords2(idx){const st=_state[idx];const w=document.getElementById(uid+'_words'+idx);if(!w)return;w.innerHTML='';st.shuffled.forEach((wd,wi)=>{const btn=el('button','jumble-word',wd);btn.addEventListener('click',()=>{if(st.userAnswer.some(a=>a.wi===wi))return;st.userAnswer.push({wi,word:wd});btn.classList.add('used');const a=document.getElementById(uid+'_ans'+idx);if(a){const ww=el('div','jumble-answer-word',wd);ww.dataset.ai=st.userAnswer.length-1;a.appendChild(ww);}});w.appendChild(btn);});} });
+  const sc = el('span','score-txt'); sRow.appendChild(chk); sRow.appendChild(rst); sRow.appendChild(sc); c.appendChild(sRow);
+}
+
+// ── VOCAB DISCUSSION ──
+function buildVocabDiscussion(c, blk) {
+  (blk.questions||[]).forEach((q, i) => {
+    const qc = el('div','q-card');
+    qc.appendChild(el('div','q-num','Question '+(i+1)));
+    qc.appendChild(el('div','q-text',q.q||''));
+    if (q.hint) qc.appendChild(el('div','q-tip',q.hint));
+    qc.addEventListener('click', () => qc.classList.toggle('expanded'));
+    c.appendChild(qc);
   });
 }
 
@@ -2346,33 +2452,20 @@ function buildIntroGlossary(sec, s) {
   const grid = el('div', 'vocab-grid');
   grid.style.marginBottom = '24px';
   (s.items || []).forEach(item => {
-    const vi = document.createElement('div');
-    vi.className = 'vocab-item';
-    const wordEl = el('div', 'vi-pl'); wordEl.style.marginBottom = '2px'; wordEl.textContent = item.word || '';
-    vi.appendChild(wordEl);
+    const vi = el('div', 'vocab-item');
+    vi.appendChild(el('div', 'vi-pl', item.word || ''));
     if (item.phonetic) {
       const ph = el('div');
-      ph.style.cssText = 'font-size:0.78rem;color:var(--blue-mid);font-family:"Courier New",monospace;margin-bottom:4px';
+      ph.style.cssText = 'font-family:"DM Mono",monospace;font-size:.75rem;color:var(--amber);margin-bottom:3px';
       ph.textContent = item.phonetic; vi.appendChild(ph);
     }
-    const hidden = document.createElement('div');
-    hidden.style.display = 'none';
-    if (item.translation) {
-      const tr = el('div', 'vi-en'); tr.style.marginTop = '4px'; tr.textContent = '🇵🇱 ' + item.translation; hidden.appendChild(tr);
-    }
-    if (item.hint) {
-      const h = el('div', 'vi-en'); h.style.fontStyle = 'italic'; h.textContent = item.hint; hidden.appendChild(h);
-    }
-    vi.appendChild(hidden);
-    const hint = el('div'); hint.style.cssText = 'font-size:0.72rem;color:#aaa;margin-top:4px'; hint.textContent = 'Kliknij aby sprawdzić';
-    vi.appendChild(hint);
-    vi.addEventListener('click', () => {
-      const revealed = hidden.style.display === 'block';
-      hidden.style.display = revealed ? 'none' : 'block';
-      hint.style.display = revealed ? 'block' : 'none';
-      vi.style.borderColor = revealed ? 'transparent' : 'var(--blue-mid)';
-      vi.style.background  = revealed ? '' : '#e8f5e9';
-    });
+    // Revealed content
+    if (item.translation) vi.appendChild(el('div', 'vi-en', item.translation));
+    if (item.hint)        vi.appendChild(el('div', 'vi-def', item.hint));
+    if (item.definition)  vi.appendChild(el('div', 'vi-def', item.definition));
+    if (item.example)     vi.appendChild(el('div', 'vi-ex-item', '"' + item.example + '"'));
+    vi.appendChild(el('div', 'vi-flip-hint', 'kliknij, aby odkryć'));
+    vi.addEventListener('click', () => vi.classList.toggle('revealed'));
     grid.appendChild(vi);
   });
   sec.appendChild(grid);

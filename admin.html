@@ -578,6 +578,14 @@ document.querySelectorAll('.ftab').forEach(btn => {
  'intro_sub','v_sub','gr_title','gr_sub','rd_title','rd_sub','rd_note','rd_text','sp_sub']
   .forEach(id => document.getElementById(id)?.addEventListener('input', scheduleUpdate));
 
+function ensureLessonId() {
+  if (!currentLessonId) {
+    currentLessonId = crypto.randomUUID();
+    document.getElementById('f_id_display').textContent = currentLessonId;
+  }
+  return currentLessonId;
+}
+
 document.getElementById('newLessonBtn').addEventListener('click', () => {
   currentLessonId = crypto.randomUUID();
   document.getElementById('f_id_display').textContent = currentLessonId;
@@ -587,10 +595,8 @@ document.getElementById('newLessonBtn').addEventListener('click', () => {
 
 // ── IMPORT JSON ──
 function loadFromJSON(obj) {
-  if (obj.id) {
-    currentLessonId = obj.id;
-    document.getElementById('f_id_display').textContent = obj.id;
-  }
+  currentLessonId = obj.id || crypto.randomUUID();
+  document.getElementById('f_id_display').textContent = currentLessonId;
   document.getElementById('f_title').value = obj.title || '';
   document.getElementById('f_sub').value   = obj.subtitle || '';
   const lvl = document.getElementById('f_level');
@@ -1442,7 +1448,7 @@ function renderIntroStringList(wrap, sec, key, addLabel, placeholder) {
 function buildJSON() {
   const selectedTabs = Array.from(document.querySelectorAll('#tabsGrid input:checked')).map(cb => cb.value);
   const obj = {
-    id:          currentLessonId || '(nowe — kliknij Nowa lekcja)',
+    id:          ensureLessonId(),
     title:       document.getElementById('f_title').value.trim(),
     subtitle:    document.getElementById('f_sub').value.trim() || undefined,
     level:       document.getElementById('f_level').value,
@@ -1527,7 +1533,7 @@ function scheduleUpdate() {
 
 // ── SUPABASE: SAVE LESSON ──
 document.getElementById('saveToSupabaseBtn').addEventListener('click', async () => {
-  if (!currentLessonId) { setStatus('❌ Kliknij "Nowa lekcja" aby wygenerować ID', true); return; }
+  ensureLessonId();
   const obj = buildJSON();
   const btn = document.getElementById('saveToSupabaseBtn');
   btn.textContent = 'Zapisuję...'; btn.disabled = true;
@@ -2099,6 +2105,7 @@ function initAdmin() {
   loadConfigForm();
   populateProgressFilters();
   loadReorderSelect();
+  ensureLessonId();
   scheduleUpdate();
 }
 </script>

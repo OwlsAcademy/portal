@@ -1981,6 +1981,7 @@ function buildVocabBlocks(sec, blocks) {
     if (blk.type==='flashcards')   buildVocabFlashcards(c, blk);
     if (blk.type==='matching')     buildVocabMatching(c, blk);
     if (blk.type==='gapfill')      buildVocabGapFill(c, blk);
+    if (blk.type==='image')        buildVocabImage(c, blk);
     if (blk.type==='collocations') buildCollocations(c, blk);
     if (blk.type==='wordform')     buildWordForm(c, blk);
     sec.appendChild(c);
@@ -2211,6 +2212,21 @@ function buildVocabGapFill(c, blk) {
     const sc = sRow.querySelector('.score-txt'); if (sc) sc.textContent = '';
   });
   const sc = el('span', 'score-txt'); sRow.appendChild(chk); sRow.appendChild(rst); sRow.appendChild(sc); c.appendChild(sRow);
+}
+
+// ── VOCAB IMAGE ──
+function buildVocabImage(c, blk) {
+  if (!blk.image) return;
+  const d = document.createElement('div'); d.style.cssText = 'margin:1rem 0;text-align:center';
+  const img = document.createElement('img');
+  img.src = blk.image; img.alt = blk.caption || blk.title || ''; img.className = 'lesson-img zi';
+  img.style.cssText = 'max-width:100%;max-height:340px;border-radius:10px;margin:0 auto;display:block;object-fit:contain';
+  d.appendChild(img);
+  if (blk.caption) {
+    const cap = el('p'); cap.style.cssText = 'text-align:center;font-size:0.82rem;color:#888;margin-top:8px;font-style:italic';
+    cap.textContent = blk.caption; d.appendChild(cap);
+  }
+  c.appendChild(d);
 }
 
 // Collocations

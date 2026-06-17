@@ -231,6 +231,7 @@ h1,h2,h3,h4{font-family:'Playfair Display',serif}
         <button class="add-btn" data-vbtype="vocab-discussion">+ Discussion</button>
         <button class="add-btn" data-vbtype="collocations">+ Kolokacje</button>
         <button class="add-btn" data-vbtype="wordform">+ Tworzenie wyrazów</button>
+        <button class="add-btn" data-vbtype="image">+ Obraz</button>
       </div>
     </div>
 
@@ -552,6 +553,17 @@ function el(tag, cls, text) {
   if (text != null) e.textContent = text;
   return e;
 }
+function makeActRow(arr, idx, rerender, delLabel) {
+  const row = document.createElement('div'); row.style.cssText = 'display:flex;gap:6px;margin-top:0.8rem';
+  const up = el('button','del-btn','↑'); up.title = 'Przesuń wyżej'; up.disabled = idx === 0;
+  up.addEventListener('click', () => { [arr[idx-1],arr[idx]]=[arr[idx],arr[idx-1]]; rerender(); scheduleUpdate(); });
+  const dn = el('button','del-btn','↓'); dn.title = 'Przesuń niżej'; dn.disabled = idx === arr.length - 1;
+  dn.addEventListener('click', () => { [arr[idx],arr[idx+1]]=[arr[idx+1],arr[idx]]; rerender(); scheduleUpdate(); });
+  const del = el('button','del-btn', delLabel || '✕ Usuń'); del.style.marginLeft = 'auto';
+  del.addEventListener('click', () => { arr.splice(idx, 1); rerender(); scheduleUpdate(); });
+  row.appendChild(up); row.appendChild(dn); row.appendChild(del);
+  return row;
+}
 function field(labelText, inputEl, hint) {
   const f = el('div', 'field');
   f.appendChild(el('label', null, labelText));
@@ -834,9 +846,8 @@ function renderVocabSections() {
     const addItem = el('button','add-btn','+ Dodaj słówko');
     addItem.addEventListener('click',()=>{sec.items.push({emoji:'',pl:'',en:''});renderVocabSections();scheduleUpdate();});
     wrap.appendChild(addItem);
-    const delSec = el('button','del-btn abs','✕ Usuń sekcję');
-    delSec.addEventListener('click',()=>{vocabSections.splice(si,1);renderVocabSections();scheduleUpdate();});
-    wrap.appendChild(delSec); list.appendChild(wrap);
+    wrap.appendChild(makeActRow(vocabSections, si, renderVocabSections, '✕ Usuń sekcję'));
+    list.appendChild(wrap);
   });
 }
 document.getElementById('addPhraseBtn').addEventListener('click', ()=>{phrases.push({pl:'',en:''});renderPhrases();scheduleUpdate();});
@@ -948,9 +959,8 @@ function renderExercises() {
       addI.addEventListener('click',()=>{ex.items.push({en:'',hint:''});renderExercises();scheduleUpdate();});
       wrap.appendChild(addI);
     }
-    const delEx = el('button','del-btn','✕ Usuń ćwiczenie'); delEx.style.cssText='margin-top:0.5rem;display:block';
-    delEx.addEventListener('click',()=>{exercises.splice(xi,1);renderExercises();scheduleUpdate();});
-    wrap.appendChild(delEx); list.appendChild(wrap);
+    wrap.appendChild(makeActRow(exercises, xi, renderExercises, '✕ Usuń ćwiczenie'));
+    list.appendChild(wrap);
   });
 }
 
@@ -1003,9 +1013,8 @@ function renderFC() {
     addImgBtnFC.style.cssText='padding:4px 8px;font-size:0.75rem';
     addImgBtnFC.addEventListener('click',()=>pickImage(b64=>{fc.image=b64;renderFC();scheduleUpdate();}));
     imgRowFC.appendChild(addImgBtnFC); row.appendChild(imgRowFC);
-    const del = el('button','del-btn abs','✕');
-    del.addEventListener('click',()=>{flashcards.splice(i,1);renderFC();scheduleUpdate();});
-    row.appendChild(del); list.appendChild(row);
+    row.appendChild(makeActRow(flashcards, i, renderFC, '✕ Usuń'));
+    list.appendChild(row);
   });
 }
 
@@ -1205,9 +1214,8 @@ function renderHW() {
       const a=el('button','add-btn','+ Dodaj pytanie'); a.addEventListener('click',()=>{hw.questions.push({q:''});renderHW();scheduleUpdate();}); wrap.appendChild(a);
     }
 
-    const del = el('button','del-btn','✕ Usuń'); del.style.cssText='margin-top:0.5rem;display:block';
-    del.addEventListener('click',()=>{homework.splice(i,1);renderHW();scheduleUpdate();});
-    wrap.appendChild(del); list.appendChild(wrap);
+    wrap.appendChild(makeActRow(homework, i, renderHW, '✕ Usuń'));
+    list.appendChild(wrap);
   });
 }
 
@@ -1637,9 +1645,8 @@ function renderSpWarmup() {
     addAudioBtn.addEventListener('click',()=>pickAudio(b64=>{item.audio=b64;renderSpWarmup();scheduleUpdate();}));
     audioRow.appendChild(addAudioBtn);
     row.appendChild(imgRow); row.appendChild(audioRow);
-    const del=el('button','del-btn','✕ Usuń'); del.style.cssText='margin-top:6px;display:block';
-    del.addEventListener('click',()=>{speakingObj.warmup.splice(i,1);renderSpWarmup();scheduleUpdate();});
-    row.appendChild(del); list.appendChild(row);
+    row.appendChild(makeActRow(speakingObj.warmup, i, renderSpWarmup, '✕ Usuń'));
+    list.appendChild(row);
   });
 }
 function renderSpConv() {
@@ -1676,9 +1683,8 @@ function renderSpConv() {
     const addP = el('button', 'add-btn', '+ Dodaj pytanie');
     addP.addEventListener('click', () => { conv.prompts.push({q:'',qEn:'',answer:'',image:''}); renderSpConv(); scheduleUpdate(); });
     wrap.appendChild(addP);
-    const delC = el('button', 'del-btn', '✕ Usuń konwersację'); delC.style.cssText = 'margin-top:0.5rem;display:block';
-    delC.addEventListener('click', () => { speakingObj.conversations.splice(ci,1); renderSpConv(); scheduleUpdate(); });
-    wrap.appendChild(delC); list.appendChild(wrap);
+    wrap.appendChild(makeActRow(speakingObj.conversations, ci, renderSpConv, '✕ Usuń konwersację'));
+    list.appendChild(wrap);
   });
 }
 
@@ -1843,8 +1849,7 @@ function renderIntroductionSections() {
       }
     }
 
-    const delBtn=el('button','del-btn abs','✕ Usuń');
-    delBtn.addEventListener('click',()=>{introductionSections.splice(si,1);renderIntroductionSections();scheduleUpdate();}); wrap.appendChild(delBtn);
+    wrap.appendChild(makeActRow(introductionSections, si, renderIntroductionSections, '✕ Usuń'));
     list.appendChild(wrap);
   });
 }
@@ -2697,8 +2702,7 @@ function renderRdEx() {
       const a=el('button','add-btn','+ Dodaj pytanie'); a.addEventListener('click',()=>{ex.items.push({q:'',hint:''});renderRdEx();scheduleUpdate();}); wrap.appendChild(iList); wrap.appendChild(a);
     }
 
-    const del=el('button','del-btn','✕ Usuń ćwiczenie'); del.style.cssText='margin-top:0.5rem;display:block';
-    del.addEventListener('click',()=>{readingExercises.splice(xi,1);renderRdEx();scheduleUpdate();}); wrap.appendChild(del);
+    wrap.appendChild(makeActRow(readingExercises, xi, renderRdEx, '✕ Usuń ćwiczenie'));
     list.appendChild(wrap);
   });
 }
@@ -2911,8 +2915,7 @@ function renderSpBlocks() {
     ulTa.addEventListener('input', () => { blk.usefulLanguage = ulTa.value; scheduleUpdate(); });
     wrap.appendChild(field('Useful language (widoczne pod ćwiczeniem)', ulTa));
 
-    const del=el('button','del-btn','✕ Usuń blok'); del.style.cssText='margin-top:0.5rem;display:block';
-    del.addEventListener('click',()=>{speakingBlocks.splice(bi,1);renderSpBlocks();scheduleUpdate();}); wrap.appendChild(del);
+    wrap.appendChild(makeActRow(speakingBlocks, bi, renderSpBlocks, '✕ Usuń blok'));
     list.appendChild(wrap);
   });
 }
@@ -2933,6 +2936,7 @@ document.querySelectorAll('[data-vbtype]').forEach(btn => {
     if (t==='gapfill')      vocabBlocks.push({type:'gapfill',      title:'Gap Fill',                 instruction:'Complete each sentence with the correct word from the box.', wordbank:[''], items:[{sentence:'',answer:''}]});
     if (t==='collocations') vocabBlocks.push({type:'collocations', title:'Collocations',             instruction:'', blocks:[{keyword:'',instruction:'',options:[{word:'',correct:true}],note:''}]});
     if (t==='wordform')     vocabBlocks.push({type:'wordform',     title:'Word Formation',           instruction:'', columns:['Noun','Verb','Adjective','Adverb'], rows:[{root:'',noun:{given:null,answer:''},verb:{given:null,answer:''},adj:{given:null,answer:''},adv:{given:null,answer:''}}]});
+    if (t==='image')        vocabBlocks.push({type:'image', title:'', image:'', caption:''});
     renderVbBlocks(); scheduleUpdate();
   });
 });
@@ -2941,9 +2945,10 @@ function renderVbBlocks() {
   const list = document.getElementById('vbBlockList'); if (!list) return; list.textContent = '';
   vocabBlocks.forEach((blk, bi) => {
     const wrap = el('div','item-row'); wrap.style.marginBottom='1.5rem';
-    const tt = el('p',null,blk.type==='collocations'?'Kolokacje':'Tworzenie wyrazów'); tt.style.cssText='font-family:"DM Sans",sans-serif;font-weight:800;font-size:0.8rem;color:var(--blue-mid);text-transform:uppercase;margin-bottom:0.6rem'; wrap.appendChild(tt);
+    const vbTypeLabels = {collocations:'Kolokacje',wordform:'Tworzenie wyrazów','vocab-mcq':'MCQ','vocab-sentcomp':'Dokańczanie zdań','vocab-scramble':'Sentence Scramble','vocab-discussion':'Dyskusja',flashcards:'Flashcardy',matching:'Dopasowanie',gapfill:'Uzupełnianie luk',image:'Obraz'};
+    const tt = el('p',null,vbTypeLabels[blk.type]||blk.type); tt.style.cssText='font-family:"DM Sans",sans-serif;font-weight:800;font-size:0.8rem;color:var(--blue-mid);text-transform:uppercase;margin-bottom:0.6rem'; wrap.appendChild(tt);
     wrap.appendChild(field('Tytuł',     textInput(blk.title||'','',v=>{blk.title=v;scheduleUpdate();})));
-    wrap.appendChild(field('Instrukcja',textInput(blk.instruction||'','',v=>{blk.instruction=v;scheduleUpdate();})));
+    if (blk.type!=='image') wrap.appendChild(field('Instrukcja',textInput(blk.instruction||'','',v=>{blk.instruction=v;scheduleUpdate();})));
 
     if (blk.type==='vocab-mcq') {
       wrap.appendChild(field('Instrukcja', textInput(blk.instruction||'','',v=>{blk.instruction=v;scheduleUpdate();})));
@@ -3087,6 +3092,19 @@ function renderVbBlocks() {
       const ag=el('button','add-btn','+ Dodaj grupę kolokacji'); ag.addEventListener('click',()=>{blk.blocks.push({keyword:'',instruction:'',options:[{word:'',correct:false}],note:''});renderVbBlocks();scheduleUpdate();}); wrap.appendChild(ag);
     }
 
+    if (blk.type==='image') {
+      const imgRow = el('div','img-upload-row');
+      if (blk.image) {
+        const th = document.createElement('img'); th.src=blk.image; th.className='img-thumb'; th.alt=''; imgRow.appendChild(th);
+        const rem = el('button','del-btn','✕ Obraz');
+        rem.addEventListener('click',()=>{delete blk.image;renderVbBlocks();scheduleUpdate();}); imgRow.appendChild(rem);
+      }
+      const addI = el('button','add-btn',blk.image?'🔄 Zmień':'🖼️ Dodaj obraz'); addI.style.cssText='padding:4px 8px;font-size:0.75rem';
+      addI.addEventListener('click',()=>pickImage(b64=>{blk.image=b64;renderVbBlocks();scheduleUpdate();})); imgRow.appendChild(addI);
+      wrap.appendChild(imgRow);
+      wrap.appendChild(field('Podpis (opcjonalny)', textInput(blk.caption||'','np. A family dinner in the UK',v=>{blk.caption=v;scheduleUpdate();})));
+    }
+
     if (blk.type==='wordform') {
       const colKeys=['noun','verb','adj','adv'];
       wrap.appendChild(el('span','sec-label','Wiersze (wyrazy do uzupełnienia)'));
@@ -3124,8 +3142,7 @@ function renderVbBlocks() {
       const ar=el('button','add-btn','+ Dodaj wiersz'); ar.addEventListener('click',()=>{blk.rows.push({root:'',noun:{given:null,answer:''},verb:{given:null,answer:''},adj:{given:null,answer:''},adv:{given:null,answer:''}});renderVbBlocks();scheduleUpdate();}); wrap.appendChild(ar);
     }
 
-    const del=el('button','del-btn','✕ Usuń blok'); del.style.cssText='margin-top:0.5rem;display:block';
-    del.addEventListener('click',()=>{vocabBlocks.splice(bi,1);renderVbBlocks();scheduleUpdate();}); wrap.appendChild(del);
+    wrap.appendChild(makeActRow(vocabBlocks, bi, renderVbBlocks, '✕ Usuń blok'));
     list.appendChild(wrap);
   });
 }
